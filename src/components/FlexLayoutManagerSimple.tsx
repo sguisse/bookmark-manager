@@ -121,6 +121,36 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
         // Ajouter les boutons d'action à la toolbar du tabset
         renderValues.buttons = renderValues.buttons || [];
 
+        // Bouton ouvrir tous les liens du groupe
+        renderValues.buttons.push(
+          <button
+            key="open-all-urls"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              group.bookmarks.forEach(bm => {
+                if (bm.url) {
+                  window.open(bm.url, '_blank', 'noopener,noreferrer');
+                }
+              });
+            }}
+            title="Ouvrir tous les liens du groupe"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ width: '1em', height: '1em', display: 'flex', alignItems: 'center' }}
+            >
+              <path d="M14 3h7v7" />
+              <path d="M5 12v-3a4 4 0 0 1 4-4h7" />
+              <path d="M3 21h18" />
+            </svg>
+          </button>
+        );
+
         // Expand all cards button
         renderValues.buttons.push(
           <button

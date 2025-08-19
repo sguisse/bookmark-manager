@@ -5,33 +5,36 @@ import { HeaderPanel } from './HeaderPanel';
 import { Sidebar } from './Sidebar';
 import { ControlPanel } from './ControlPanel';
 import { BottomBar } from './BottomBar';
+import { useFlexLayoutConfig } from '../hooks/useFlexLayoutConfig';
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [showGroupForm, setShowGroupForm] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  const handleExportLayout = () => {
-    // Export FlexLayout model to JSON file for download
-    console.log('Exporting layout...');
-    alert('Export layout functionality coming soon!');
-    setLastSaved(new Date()); // Update save time on export
+  // Use the FlexLayout configuration hook
+  const { exportConfig, importConfig, formatLastSaved } = useFlexLayoutConfig();
+
+  const handleExportLayout = async () => {
+    try {
+      await exportConfig();
+      console.log('FlexLayout configuration exported successfully');
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Erreur lors de l\'exportation du layout');
+    }
   };
 
-  const handleImportLayout = () => {
-    // Import FlexLayout model from uploaded JSON file
-    console.log('Importing layout...');
-    alert('Import layout functionality coming soon!');
-    setLastSaved(new Date()); // Update save time on import
-  };
-
-  const formatLastSaved = () => {
-    if (!lastSaved) return 'Jamais sauvegardé';
-    return `Sauvé le ${lastSaved.toLocaleDateString('fr-FR')} à ${lastSaved.toLocaleTimeString('fr-FR')}`;
-  };
-
-  return (
+  const handleImportLayout = async () => {
+    try {
+      await importConfig();
+      console.log('FlexLayout configuration imported successfully');
+      alert('Layout importé avec succès!');
+    } catch (error) {
+      console.error('Import failed:', error);
+      alert('Erreur lors de l\'importation du layout');
+    }
+  };  return (
     <div className="dashboard-layout">
       {/* Header */}
       <header className="dashboard-header">
