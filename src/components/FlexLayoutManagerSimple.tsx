@@ -3,10 +3,11 @@ import { Layout, Model, TabNode, IJsonModel } from 'flexlayout-react';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import { BookmarkGroup, Bookmark } from '../types/bookmark';
 import { DroppableGroupBookmarkList } from './DroppableGroupBookmarkList';
-import { HeaderPanel } from './HeaderPanel';
+import { HeaderPanel } from './layout/HeaderPanel';
 import { BookmarkForm } from './BookmarkForm';
 import { GroupForm } from './GroupForm';
 import { Plus } from 'lucide-react';
+import { FlexLayoutService } from '../services/flexLayoutService';
 import 'flexlayout-react/style/light.css';
 
 interface FlexLayoutManagerProps {
@@ -35,9 +36,14 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
     window.dispatchEvent(event);
   };
 
-  // Configuration du layout basée sur les groupes
+  // Use saved config if present, otherwise use default layout
   const model = useMemo(() => {
-    const layoutConfig: IJsonModel = {
+    const savedConfig = FlexLayoutService.getSavedConfig();
+    if (savedConfig) {
+      return Model.fromJson(savedConfig);
+    }
+    // fallback to default layout
+    const defaultConfig: IJsonModel = {
       global: {
         tabSetEnableClose: false,
         tabSetEnableDrop: true,
@@ -47,41 +53,49 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
         tabSetMinWidth: 250,
         tabSetMinHeight: 200
       },
-  borders: [],
+      borders: [],
       layout: {
         type: 'row',
         weight: 100,
-        children: groups.length === 0 ? [
-          {
-            type: "tabset",
-            children: [
-              {
-                type: "tab",
-                id: 'welcome',
-                name: 'Bienvenue',
-                component: 'Welcome'
-              }
-            ]
-          }
-        ] : groups.map((group) => ({
-          type: "tabset",
-          id: `tabset-${group.id}`,
-          weight: 100 / groups.length,
-          children: [
-            {
-              type: "tab",
-              id: `tab-${group.id}`,
-              name: group.title,
-              component: 'BookmarkGroup',
-              config: { groupId: group.id }
-            }
-          ]
-        }))
+        children:
+          groups.length === 0
+            ? [
+                {
+                  type: 'tabset',
+                  weight: 100,
+                  children: [
+                    {
+                      type: 'tab',
+                      id: 'welcome',
+                      name: 'Bienvenue',
+                      component: 'Welcome'
+                    }
+                  ]
+                }
+              ]
+            : groups.map((group) => ({
+                type: 'tabset',
+                id: `tabset-${group.id}`,
+                weight: 100 / groups.length,
+                children: [
+                  {
+                    type: 'tab',
+                    id: `tab-${group.id}`,
+                    name: group.title,
+                    component: 'BookmarkGroup',
+                    config: { groupId: group.id }
+                  }
+                ]
+              }))
       }
     };
-
-    return Model.fromJson(layoutConfig);
+    return Model.fromJson(defaultConfig);
   }, [groups]);
+
+  // Save layout config to localStorage whenever model changes
+  React.useEffect(() => {
+    FlexLayoutService.saveConfig(model.toJson());
+  }, [model]);
 
 
   // Personnalisation des onglets - ajouter la couleur du groupe
@@ -311,11 +325,13 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
                 setSelectedGroupId('');
                 setShowBookmarkForm(true);
               }}
-                onDelete={(bookmarkId) => {
-                  if (confirm('Êtes-vous sûr de vouloir supprimer ce bookmark ?')) {
-                    deleteBookmark(group.id, bookmarkId);
-                  }
-                }}
+              onDelete={(bookmarkId) => {
+                if (confirm('Êtes-vous sûr de vouloir supprimer ce bookmark ?')) {
+                  deleteBookmark(group.id, bookmarkId);
+                  // Save after delete
+                  FlexLayoutService.saveConfig(model.toJson());
+                }
+              }}
             />
           </div>
         );
@@ -375,6 +391,8 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
             setShowBookmarkForm(false);
             setEditingBookmark(null);
             setSelectedGroupId('');
+            // Save after add/edit
+            FlexLayoutService.saveConfig(model.toJson());
           }}
         />
       )}
@@ -389,6 +407,8 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
           onClose={() => {
             setShowGroupForm(false);
             setEditingGroup(null);
+            // Save after add/edit
+            FlexLayoutService.saveConfig(model.toJson());
           }}
         />
       )}

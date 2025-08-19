@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { GroupForm } from './GroupForm';
+import { GroupForm } from '../GroupForm';
 
 export const ControlPanel: React.FC<{
   open: boolean;
