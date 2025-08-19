@@ -43,10 +43,15 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
     return (window as any).__dragData;
   };
 
-  const handleOpenBookmark = () => {
+  const handleOpenBookmark = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Empêcher la propagation vers la carte parent
     if (!isDragging) {
       window.open(bookmark.url, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const handleCardClick = () => {
+    // Ne rien faire - empêcher l'ouverture automatique sur clic de carte
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -177,7 +182,7 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
       <div
         className={`bookmark-card draggable-bookmark ${isDragging ? 'dragging' : ''} ${isPreview ? 'preview-item' : ''} ${isCollapsed ? 'collapsed' : ''}`}
         style={{ '--group-color': groupColor } as React.CSSProperties}
-        onClick={handleOpenBookmark}
+        onClick={handleCardClick}
         draggable
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -189,41 +194,113 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
           <GripVertical size={14} />
         </div>
 
-        <div className="bookmark-actions">
-          <button
-            className="action-button collapse-toggle"
-            onClick={handleToggleCollapse}
-            title={isCollapsed ? 'Développer' : 'Réduire'}
+        <div className="bookmark-header">
+          <div
+            className="bookmark-title-section"
+            title={bookmark.url}
+            onClick={handleOpenBookmark}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(bookmark.url, '_blank');
+              }
+            }}
           >
-            {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-          </button>
-          <button
-            className="action-button"
-            onClick={handleEdit}
-            title="Modifier"
-          >
-            <Edit size={16} />
-          </button>
-          <button
-            className="action-button delete"
-            onClick={handleDelete}
-            title="Supprimer"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+            {!imageError && bookmark.favicon && (
+              <img
+                src={bookmark.favicon}
+                alt=""
+                className="bookmark-favicon"
+                onError={() => setImageError(true)}
+              />
+            )}
+            <span className="bookmark-title-text">{bookmark.title}</span>
+          </div>
 
-        <div className="bookmark-title">
-          {!imageError && bookmark.favicon && (
-            <img
-              src={bookmark.favicon}
-              alt=""
-              className="bookmark-favicon"
-              onError={() => setImageError(true)}
-            />
-          )}
-          <span>{bookmark.title}</span>
-          <ExternalLink size={16} style={{ opacity: 0.5, marginLeft: 'auto' }} />
+          <div className="bookmark-actions">
+            <div
+              className="action-icon"
+              onClick={handleToggleCollapse}
+              title={isCollapsed ? 'Développer' : 'Réduire'}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Create a synthetic mouse event for the handler
+                  const syntheticEvent = {
+                    preventDefault: () => {},
+                    stopPropagation: () => {}
+                  } as React.MouseEvent;
+                  handleToggleCollapse(syntheticEvent);
+                }
+              }}
+            >
+              {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            </div>
+            <div
+              className="action-icon"
+              onClick={handleOpenBookmark}
+              title="Ouvrir le lien"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(bookmark.url, '_blank');
+                }
+              }}
+            >
+              <ExternalLink size={16} />
+            </div>
+            <div
+              className="action-icon"
+              onClick={handleEdit}
+              title="Modifier"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Create a synthetic mouse event for the handler
+                  const syntheticEvent = {
+                    preventDefault: () => {},
+                    stopPropagation: () => {}
+                  } as React.MouseEvent;
+                  handleEdit(syntheticEvent);
+                }
+              }}
+            >
+              <Edit size={16} />
+            </div>
+            <div
+              className="action-icon delete"
+              onClick={handleDelete}
+              title="Supprimer"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Create a synthetic mouse event for the handler
+                  const syntheticEvent = {
+                    preventDefault: () => {},
+                    stopPropagation: () => {}
+                  } as React.MouseEvent;
+                  handleDelete(syntheticEvent);
+                }
+              }}
+            >
+              <Trash2 size={16} />
+            </div>
+          </div>
         </div>
 
         {!isCollapsed && (

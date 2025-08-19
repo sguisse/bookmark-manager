@@ -415,7 +415,7 @@ body {
   min-height: auto;
 }
 
-.draggable-bookmark.collapsed .bookmark-title {
+.draggable-bookmark.collapsed .bookmark-title-text {
   margin-bottom: 0;
 }
 
@@ -466,7 +466,7 @@ body {
 }
 
 /* Adjustements pour les cartes draggables */
-.draggable-bookmark .bookmark-title,
+.draggable-bookmark .bookmark-title-section,
 .draggable-bookmark .bookmark-url,
 .draggable-bookmark .bookmark-description {
   padding-left: 24px; /* Espace pour le handle */
@@ -642,14 +642,99 @@ body {
   background: var(--group-color, #3b82f6);
 }
 
-.bookmark-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #e1e1e1;
-  margin-bottom: 8px;
+/* Bookmark Card Header */
+.bookmark-header {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  min-height: 40px;
+}
+
+.bookmark-title-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  overflow: hidden;
+  position: relative;
+}
+
+.bookmark-title-section:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.bookmark-title-section:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.bookmark-title-text {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #e1e1e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.bookmark-title-section:hover .bookmark-title-text {
+  color: #3b82f6;
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+.bookmark-external-icon {
+  opacity: 0.5;
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.bookmark-title-section:hover .bookmark-external-icon {
+  opacity: 0.8;
+  color: #3b82f6;
+}
+
+/* Custom Tooltip for URL */
+.bookmark-title-section[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: #e1e1e1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #374151;
+  z-index: 1000;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+.bookmark-title-section[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: #1f2937;
+  z-index: 1001;
+  pointer-events: none;
 }
 
 .bookmark-favicon {
@@ -688,44 +773,54 @@ body {
 }
 
 .bookmark-actions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   display: flex;
+  align-items: center;
   gap: 4px;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
-.bookmark-card:hover .bookmark-actions {
+.bookmark-card:hover .bookmark-actions,
+.draggable-bookmark:hover .bookmark-actions {
   opacity: 1;
 }
 
-.action-button {
-  background: #404040;
-  border: none;
-  border-radius: 4px;
-  padding: 6px;
+.action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
   cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0.7;
   color: #e1e1e1;
-  transition: background-color 0.2s ease;
 }
 
-.action-button:hover {
-  background: #505050;
-}
-
-.action-button.delete:hover {
-  background: #dc2626;
-}
-
-.action-button.collapse-toggle {
-  background: #374151;
-}
-
-.action-button.collapse-toggle:hover {
-  background: #4b5563;
+.action-icon:hover {
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.1);
   color: #3b82f6;
+}
+
+.action-icon:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  opacity: 1;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.action-icon.delete:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.action-icon.delete:focus {
+  outline-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
 /* Styles pour les groupes */
