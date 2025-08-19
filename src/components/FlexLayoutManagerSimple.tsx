@@ -5,7 +5,7 @@ import { BookmarkGroup, Bookmark } from '../types/bookmark';
 import { GroupBookmarkList } from './GroupBookmarkList';
 import { BookmarkForm } from './BookmarkForm';
 import { GroupForm } from './GroupForm';
-import { Plus, Settings, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import 'flexlayout-react/style/light.css';
 
 interface FlexLayoutManagerProps {
@@ -92,6 +92,121 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
     return Model.fromJson(layoutConfig);
   }, [groups]);
 
+  // Personnalisation des onglets - ajouter la couleur du groupe
+  const onRenderTab = (node: TabNode, renderValues: any) => {
+    const config = node.getConfig();
+    const groupId = config?.groupId;
+    const group = groups.find(g => g.id === groupId);
+
+    if (node.getComponent() === 'BookmarkGroup' && group) {
+      // Ajouter la couleur du groupe avant le contenu de l'onglet
+      renderValues.leading = (
+        <div
+          className="group-color"
+          style={{
+            backgroundColor: group.color,
+            width: '4px',
+            height: '16px',
+            borderRadius: '2px',
+            marginRight: '8px',
+            display: 'inline-block'
+          }}
+        />
+      );
+    }
+  };
+
+  // Personnalisation des tabsets - ajouter les boutons d'action dans la toolbar
+  const onRenderTabSet = (tabSetNode: any, renderValues: any) => {
+    const selectedTabNode = tabSetNode.getSelectedNode();
+
+    if (selectedTabNode && selectedTabNode.getComponent() === 'BookmarkGroup') {
+      const config = selectedTabNode.getConfig();
+      const groupId = config?.groupId;
+      const group = groups.find(g => g.id === groupId);
+
+      if (group) {
+        // Ajouter les boutons d'action à la toolbar du tabset
+        renderValues.buttons = renderValues.buttons || [];
+
+        renderValues.buttons.push(
+          <button
+            key="add-bookmark"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setSelectedGroupId(group.id);
+              setEditingBookmark(null);
+              setShowBookmarkForm(true);
+            }}
+            title="Ajouter un bookmark"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ width: '1em', height: '1em', display: 'flex', alignItems: 'center' }}
+            >
+              <path d="M5 12h14M12 5v14" />
+            </svg>
+          </button>
+        );
+
+        renderValues.buttons.push(
+          <button
+            key="edit-group"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setEditingGroup(group);
+              setShowGroupForm(true);
+            }}
+            title="Éditer le groupe"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ width: '1em', height: '1em', display: 'flex', alignItems: 'center' }}
+            >
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        );
+
+        renderValues.buttons.push(
+          <button
+            key="delete-group"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              if (confirm('Êtes-vous sûr de vouloir supprimer ce groupe et tous ses bookmarks ?')) {
+                deleteGroup(group.id);
+              }
+            }}
+            title="Supprimer le groupe"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ width: '1em', height: '1em', display: 'flex', alignItems: 'center' }}
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        );
+      }
+    }
+  };
+
   const factory = (node: TabNode) => {
     const component = node.getComponent();
     const config = node.getConfig();
@@ -111,47 +226,6 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
 
         return (
           <div className="flex-layout-group">
-            <div className="group-header">
-              <div
-                className="group-color"
-                style={{ backgroundColor: group.color }}
-              />
-              <h3>{group.title}</h3>
-              <div className="group-actions">
-                <button
-                  className="btn-icon"
-                  onClick={() => {
-                    setSelectedGroupId(group.id);
-                    setEditingBookmark(null);
-                    setShowBookmarkForm(true);
-                  }}
-                  title="Ajouter un bookmark"
-                >
-                  <Plus size={16} />
-                </button>
-                <button
-                  className="btn-icon"
-                  onClick={() => {
-                    setEditingGroup(group);
-                    setShowGroupForm(true);
-                  }}
-                  title="Éditer le groupe"
-                >
-                  <Settings size={16} />
-                </button>
-                <button
-                  className="btn-icon danger"
-                  onClick={() => {
-                    if (confirm('Êtes-vous sûr de vouloir supprimer ce groupe et tous ses bookmarks ?')) {
-                      deleteGroup(group.id);
-                    }
-                  }}
-                  title="Supprimer le groupe"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </div>
             <GroupBookmarkList
               bookmarks={filteredBookmarks}
               groupId={group.id}
@@ -218,6 +292,8 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
         <Layout
           model={model}
           factory={factory}
+          onRenderTab={onRenderTab}
+          onRenderTabSet={onRenderTabSet}
         />
       </div>
 

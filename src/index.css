@@ -345,11 +345,41 @@ body {
 
 /* FlexLayout Container */
 .flex-layout-container {
-  height: 600px;
+  height: 100vh;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
   background: var(--bg-primary);
+}
+
+/* Boutons de toolbar FlexLayout personnalisés */
+.flexlayout__tab_toolbar_button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: var(--color-icon, var(--text-secondary));
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  margin-left: 2px;
+  transition: all 0.2s ease;
+}
+
+.flexlayout__tab_toolbar_button:hover {
+  background: var(--color-button-hover, var(--bg-hover));
+  color: var(--color-icon-hover, var(--text-primary));
+}
+
+.flexlayout__tab_toolbar_button svg {
+  width: 1em;
+  height: 1em;
+  display: flex;
+  align-items: center;
+  stroke: currentColor;
 }
 
 /* FlexLayout Group Styles */
@@ -359,56 +389,6 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
-}
-
-.flex-layout-group .group-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.flex-layout-group .group-color {
-  width: 4px;
-  height: 24px;
-  border-radius: 2px;
-}
-
-.flex-layout-group h3 {
-  flex: 1;
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.flex-layout-group .group-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.flex-layout-group .btn-icon {
-  padding: 6px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.flex-layout-group .btn-icon:hover {
-  background: var(--hover-bg);
-  border-color: var(--border-color);
-  color: var(--text-primary);
-}
-
-.flex-layout-group .btn-icon.danger:hover {
-  background: var(--error-color-10);
-  border-color: var(--error-color);
-  color: var(--error-color);
 }
 
 /* Group Bookmark List */
@@ -460,45 +440,6 @@ body {
 .welcome-message p {
   color: var(--text-secondary);
   margin-bottom: 24px;
-}
-
-/* Override FlexLayout theme */
-.flexlayout__layout {
-  background: var(--bg-primary) !important;
-}
-
-.flexlayout__tabset_header {
-  background: var(--card-bg) !important;
-  border-bottom: 1px solid var(--border-color) !important;
-}
-
-.flexlayout__tab {
-  background: transparent !important;
-  color: var(--text-secondary) !important;
-  border: none !important;
-}
-
-.flexlayout__tab_selected {
-  background: var(--primary-color) !important;
-  color: white !important;
-}
-
-.flexlayout__tab:hover {
-  background: var(--hover-bg) !important;
-  color: var(--text-primary) !important;
-}
-
-.flexlayout__border_inner {
-  background: var(--card-bg) !important;
-  border-top: 1px solid var(--border-color) !important;
-}
-
-.flexlayout__splitter {
-  background: var(--border-color) !important;
-}
-
-.flexlayout__splitter:hover {
-  background: var(--primary-color) !important;
 }
 
 .notification-close {
