@@ -411,6 +411,14 @@ body {
   animation: preview-pulse 1.5s ease-in-out infinite;
 }
 
+.draggable-bookmark.collapsed {
+  min-height: auto;
+}
+
+.draggable-bookmark.collapsed .bookmark-title {
+  margin-bottom: 0;
+}
+
 @keyframes preview-pulse {
   0%, 100% {
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
@@ -709,6 +717,15 @@ body {
 
 .action-button.delete:hover {
   background: #dc2626;
+}
+
+.action-button.collapse-toggle {
+  background: #374151;
+}
+
+.action-button.collapse-toggle:hover {
+  background: #4b5563;
+  color: #3b82f6;
 }
 
 /* Styles pour les groupes */

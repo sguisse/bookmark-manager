@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Edit, Trash2, Tag, GripVertical } from 'lucide-react';
+import { ExternalLink, Edit, Trash2, Tag, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { Bookmark } from '../types/bookmark';
 import { useBookmarks } from '../contexts/BookmarkContext';
 
@@ -28,6 +28,7 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
   const [imageError, setImageError] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOverPosition, setDragOverPosition] = useState<'top' | 'bottom' | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Trouver la couleur du groupe
   const group = groups.find(g => g.id === groupId);
@@ -60,6 +61,11 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
     if (onEdit) {
       onEdit(bookmark);
     }
+  };
+
+  const handleToggleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsCollapsed(!isCollapsed);
   };
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -169,7 +175,7 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
       />
 
       <div
-        className={`bookmark-card draggable-bookmark ${isDragging ? 'dragging' : ''} ${isPreview ? 'preview-item' : ''}`}
+        className={`bookmark-card draggable-bookmark ${isDragging ? 'dragging' : ''} ${isPreview ? 'preview-item' : ''} ${isCollapsed ? 'collapsed' : ''}`}
         style={{ '--group-color': groupColor } as React.CSSProperties}
         onClick={handleOpenBookmark}
         draggable
@@ -184,6 +190,13 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
         </div>
 
         <div className="bookmark-actions">
+          <button
+            className="action-button collapse-toggle"
+            onClick={handleToggleCollapse}
+            title={isCollapsed ? 'Développer' : 'Réduire'}
+          >
+            {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+          </button>
           <button
             className="action-button"
             onClick={handleEdit}
@@ -213,21 +226,25 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
           <ExternalLink size={16} style={{ opacity: 0.5, marginLeft: 'auto' }} />
         </div>
 
-        <div className="bookmark-url">{bookmark.url}</div>
+        {!isCollapsed && (
+          <>
+            <div className="bookmark-url">{bookmark.url}</div>
 
-        {bookmark.description && (
-          <div className="bookmark-description">{bookmark.description}</div>
-        )}
+            {bookmark.description && (
+              <div className="bookmark-description">{bookmark.description}</div>
+            )}
 
-        {bookmark.tags.length > 0 && (
-          <div className="bookmark-tags">
-            <Tag size={12} style={{ opacity: 0.7 }} />
-            {bookmark.tags.map((tag, tagIndex) => (
-              <span key={`tag-${tagIndex}`} className="bookmark-tag">
-                {tag}
-              </span>
-            ))}
-          </div>
+            {bookmark.tags.length > 0 && (
+              <div className="bookmark-tags">
+                <Tag size={12} style={{ opacity: 0.7 }} />
+                {bookmark.tags.map((tag, tagIndex) => (
+                  <span key={`tag-${tagIndex}`} className="bookmark-tag">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
