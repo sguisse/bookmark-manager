@@ -68,10 +68,10 @@ export const DroppableGroupBookmarkList: React.FC<DroppableGroupBookmarkListProp
 
   const handleReorder = (sourceIndex: number, destIndex: number) => {
     console.log(`DEBUG handleReorder: sourceIndex=${sourceIndex}, destIndex=${destIndex}`);
-    
+
     // S'assurer que drag-over est nettoyé lors d'une réorganisation
     setIsDragOver(false);
-    
+
     // Réorganisation dans le même groupe
     if (sourceIndex !== destIndex) {
       const adjustedDestIndex = sourceIndex < destIndex ? destIndex - 1 : destIndex;
