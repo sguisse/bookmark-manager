@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Layout, Model, TabNode, IJsonModel } from 'flexlayout-react';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import { BookmarkGroup, Bookmark } from '../types/bookmark';
-import { GroupBookmarkList } from './GroupBookmarkList';
+import { DroppableGroupBookmarkList } from './DroppableGroupBookmarkList';
 import { BookmarkForm } from './BookmarkForm';
 import { GroupForm } from './GroupForm';
 import { Plus } from 'lucide-react';
@@ -226,7 +226,7 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
 
         return (
           <div className="flex-layout-group">
-            <GroupBookmarkList
+            <DroppableGroupBookmarkList
               bookmarks={filteredBookmarks}
               groupId={group.id}
               onEdit={(bookmark) => {

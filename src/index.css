@@ -382,6 +382,66 @@ body {
   stroke: currentColor;
 }
 
+/* Drag & Drop Styles pour FlexLayout */
+.draggable-bookmark {
+  position: relative;
+  cursor: grab;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.draggable-bookmark:active {
+  cursor: grabbing;
+}
+
+.draggable-bookmark.dragging {
+  opacity: 0.5;
+  transform: rotate(3deg);
+}
+
+.bookmark-drag-handle {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: grab;
+  z-index: 2;
+}
+
+.draggable-bookmark:hover .bookmark-drag-handle {
+  opacity: 1;
+}
+
+.bookmark-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Zone de drop */
+.drop-zone {
+  transition: background-color 0.2s ease;
+  border-radius: 8px;
+  min-height: 100px;
+}
+
+.drop-zone.drag-over {
+  background-color: var(--primary-color-10, rgba(59, 130, 246, 0.1));
+  border: 2px dashed var(--primary-color, #3b82f6);
+}
+
+.empty-bookmarks.drag-over p {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* Adjustements pour les cartes draggables */
+.draggable-bookmark .bookmark-title,
+.draggable-bookmark .bookmark-url,
+.draggable-bookmark .bookmark-description {
+  padding-left: 24px; /* Espace pour le handle */
+}
+
 /* FlexLayout Group Styles */
 .flex-layout-group {
   padding: 16px;
