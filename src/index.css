@@ -311,7 +311,8 @@ body {
 .dashboard-header-panel {
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .dashboard-header-panel .header-title {
@@ -320,15 +321,34 @@ body {
   margin: 0;
 }
 
-.dashboard-header-panel .header-controls {
+.header-controls-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.header-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-icon-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-color);
+}
+
 .dashboard-header-panel .header-label {
   color: var(--text-secondary);
   font-size: 14px;
+  margin-left: 8px;
 }
 
 .dashboard-header-panel .header-select {

@@ -47,22 +47,7 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
         tabSetMinWidth: 250,
         tabSetMinHeight: 200
       },
-  borders: [
-        {
-          type: 'border',
-          location: 'bottom',
-          size: 50,
-          children: [
-            {
-              type: 'tab',
-              id: 'controls',
-              name: 'Contrôles',
-              component: 'Controls',
-              enableClose: false
-            }
-          ]
-        }
-      ],
+  borders: [],
       layout: {
         type: 'row',
         weight: 100,
@@ -306,24 +291,7 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
         );
       }
 
-      case 'Controls':
-        return (
-          <div className="layout-controls">
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                setEditingGroup(null);
-                setShowGroupForm(true);
-              }}
-            >
-              <Plus size={16} />
-              Nouveau Groupe
-            </button>
-            <span className="controls-info">
-              Faites glisser les onglets pour réorganiser les groupes • Redimensionnez les panneaux
-            </span>
-          </div>
-        );
+  // ...existing code...
 
       case 'Welcome':
         return (
