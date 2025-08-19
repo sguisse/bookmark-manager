@@ -3,6 +3,7 @@ import { Layout, Model, TabNode, IJsonModel } from 'flexlayout-react';
 import { useBookmarks } from '../contexts/BookmarkContext';
 import { BookmarkGroup, Bookmark } from '../types/bookmark';
 import { DroppableGroupBookmarkList } from './DroppableGroupBookmarkList';
+import { HeaderPanel } from './HeaderPanel';
 import { BookmarkForm } from './BookmarkForm';
 import { GroupForm } from './GroupForm';
 import { Plus } from 'lucide-react';
@@ -15,11 +16,7 @@ interface FlexLayoutManagerProps {
 export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ searchQuery }) => {
   const {
     groups,
-    addGroup,
-    updateGroup,
     deleteGroup,
-    addBookmark,
-    updateBookmark,
     deleteBookmark
   } = useBookmarks();
 
@@ -50,7 +47,7 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
         tabSetMinWidth: 250,
         tabSetMinHeight: 200
       },
-      borders: [
+  borders: [
         {
           type: 'border',
           location: 'bottom',
@@ -100,6 +97,7 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
 
     return Model.fromJson(layoutConfig);
   }, [groups]);
+
 
   // Personnalisation des onglets - ajouter la couleur du groupe
   const onRenderTab = (node: TabNode, renderValues: any) => {
@@ -269,6 +267,13 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
     const config = node.getConfig();
 
     switch (component) {
+      case 'Header':
+        return (
+          <div style={{ width: '100%' }}>
+            <HeaderPanel />
+          </div>
+        );
+
       case 'BookmarkGroup': {
         const groupId = config?.groupId;
         const group = groups.find(g => g.id === groupId);
@@ -291,11 +296,11 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
                 setSelectedGroupId('');
                 setShowBookmarkForm(true);
               }}
-              onDelete={(bookmarkId) => {
-                if (confirm('Êtes-vous sûr de vouloir supprimer ce bookmark ?')) {
-                  deleteBookmark(group.id, bookmarkId);
-                }
-              }}
+                onDelete={(bookmarkId) => {
+                  if (confirm('Êtes-vous sûr de vouloir supprimer ce bookmark ?')) {
+                    deleteBookmark(group.id, bookmarkId);
+                  }
+                }}
             />
           </div>
         );
@@ -352,6 +357,7 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
           onRenderTab={onRenderTab}
           onRenderTabSet={onRenderTabSet}
         />
+  {/* header is rendered outside of FlexLayout */}
       </div>
 
       {/* Modals */}
