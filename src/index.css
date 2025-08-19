@@ -442,6 +442,32 @@ body {
   padding-left: 24px; /* Espace pour le handle */
 }
 
+/* Wrapper pour la réorganisation */
+.bookmark-card-wrapper {
+  position: relative;
+}
+
+/* Indicateurs de drop pour la réorganisation */
+.drop-indicator {
+  height: 2px;
+  width: 100%;
+  background: transparent;
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+.drop-indicator.active {
+  background: var(--primary-color, #3b82f6);
+  opacity: 1;
+  height: 4px;
+  box-shadow: 0 0 8px var(--primary-color, #3b82f6);
+}
+
+/* Espacement entre les cartes pour les indicateurs */
+.group-bookmarks-list .bookmark-card-wrapper:not(:last-child) {
+  margin-bottom: 8px;
+}
+
 /* FlexLayout Group Styles */
 .flex-layout-group {
   padding: 16px;

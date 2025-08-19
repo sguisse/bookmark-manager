@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DraggableBookmarkCardFlexLayout } from './DraggableBookmarkCardFlexLayout';
+import { DraggableBookmarkCardWithReorder } from './DraggableBookmarkCardWithReorder';
 import { Bookmark } from '../types/bookmark';
 import { useBookmarks } from '../contexts/BookmarkContext';
 
@@ -44,22 +44,32 @@ export const DroppableGroupBookmarkList: React.FC<DroppableGroupBookmarkListProp
 
     try {
       const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
-      const { sourceGroupId, sourceIndex, bookmarkId } = dragData;
+      const { sourceGroupId, sourceIndex } = dragData;
 
-      // Si on déplace vers le même groupe, on ne fait rien
+      // Si on déplace vers le même groupe, on ne fait rien ici
+      // (la réorganisation interne est gérée par les cartes individuelles)
       if (sourceGroupId === groupId) {
         return;
       }
 
-      // Calculer la position de destination
+      // Calculer la position de destination pour un drop entre groupes
       const destIndex = bookmarks.length;
 
-      // Déplacer le bookmark
+      // Déplacer le bookmark vers un autre groupe
       moveBookmark(sourceGroupId, groupId, sourceIndex, destIndex);
 
       console.log(`Moved bookmark from ${sourceGroupId}[${sourceIndex}] to ${groupId}[${destIndex}]`);
     } catch (error) {
       console.error('Error parsing drag data:', error);
+    }
+  };
+
+  const handleReorder = (sourceIndex: number, destIndex: number) => {
+    // Réorganisation dans le même groupe
+    if (sourceIndex !== destIndex) {
+      const adjustedDestIndex = sourceIndex < destIndex ? destIndex - 1 : destIndex;
+      moveBookmark(groupId, groupId, sourceIndex, adjustedDestIndex);
+      console.log(`Reordered bookmark in ${groupId} from ${sourceIndex} to ${adjustedDestIndex}`);
     }
   };
 
@@ -84,12 +94,13 @@ export const DroppableGroupBookmarkList: React.FC<DroppableGroupBookmarkListProp
       onDrop={handleDrop}
     >
       {bookmarks.map((bookmark, index) => (
-        <DraggableBookmarkCardFlexLayout
+        <DraggableBookmarkCardWithReorder
           key={bookmark.id}
           bookmark={bookmark}
           groupId={groupId}
           index={index}
           onEdit={() => onEdit(bookmark)}
+          onReorder={handleReorder}
         />
       ))}
     </div>
