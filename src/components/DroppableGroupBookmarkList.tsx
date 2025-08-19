@@ -40,15 +40,17 @@ export const DroppableGroupBookmarkList: React.FC<DroppableGroupBookmarkListProp
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    // Toujours nettoyer l'état drag-over, même pour les réorganisations internes
     setIsDragOver(false);
 
     try {
       const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
       const { sourceGroupId, sourceIndex } = dragData;
 
-      // Si on déplace vers le même groupe, on ne fait rien ici
-      // (la réorganisation interne est gérée par les cartes individuelles)
+      // Si on déplace vers le même groupe, la réorganisation est gérée par les cartes individuelles
+      // mais on s'assure quand même de nettoyer l'état drag-over
       if (sourceGroupId === groupId) {
+        console.log(`Internal drag detected for group ${groupId} - drag-over cleared`);
         return;
       }
 
@@ -65,12 +67,25 @@ export const DroppableGroupBookmarkList: React.FC<DroppableGroupBookmarkListProp
   };
 
   const handleReorder = (sourceIndex: number, destIndex: number) => {
+    console.log(`DEBUG handleReorder: sourceIndex=${sourceIndex}, destIndex=${destIndex}`);
+    
+    // S'assurer que drag-over est nettoyé lors d'une réorganisation
+    setIsDragOver(false);
+    
     // Réorganisation dans le même groupe
     if (sourceIndex !== destIndex) {
       const adjustedDestIndex = sourceIndex < destIndex ? destIndex - 1 : destIndex;
+      console.log(`DEBUG: Moving bookmark from ${sourceIndex} to ${adjustedDestIndex}`);
       moveBookmark(groupId, groupId, sourceIndex, adjustedDestIndex);
       console.log(`Reordered bookmark in ${groupId} from ${sourceIndex} to ${adjustedDestIndex}`);
     }
+  };  const handleDragPreview = (sourceIndex: number, destIndex: number) => {
+    // Fonction conservée pour compatibilité mais pas utilisée en mode simple
+    console.log(`Preview: ${sourceIndex} -> ${destIndex}`);
+  };
+
+  const handleClearPreview = () => {
+    // Fonction conservée pour compatibilité
   };
 
   if (bookmarks.length === 0) {
@@ -93,16 +108,21 @@ export const DroppableGroupBookmarkList: React.FC<DroppableGroupBookmarkListProp
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {bookmarks.map((bookmark, index) => (
-        <DraggableBookmarkCardWithReorder
-          key={bookmark.id}
-          bookmark={bookmark}
-          groupId={groupId}
-          index={index}
-          onEdit={() => onEdit(bookmark)}
-          onReorder={handleReorder}
-        />
-      ))}
+      {bookmarks.map((bookmark, index) => {
+        return (
+          <DraggableBookmarkCardWithReorder
+            key={bookmark.id}
+            bookmark={bookmark}
+            groupId={groupId}
+            index={index}
+            onEdit={() => onEdit(bookmark)}
+            onReorder={handleReorder}
+            onDragPreview={handleDragPreview}
+            onClearPreview={handleClearPreview}
+            isPreview={false}
+          />
+        );
+      })}
     </div>
   );
 };

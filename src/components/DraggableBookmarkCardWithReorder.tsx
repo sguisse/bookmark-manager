@@ -9,6 +9,9 @@ interface DraggableBookmarkCardWithReorderProps {
   readonly index: number;
   readonly onEdit?: (bookmark: Bookmark) => void;
   readonly onReorder?: (sourceIndex: number, destIndex: number) => void;
+  readonly onDragPreview?: (sourceIndex: number, destIndex: number, bookmark: Bookmark) => void;
+  readonly onClearPreview?: () => void;
+  readonly isPreview?: boolean;
 }
 
 export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWithReorderProps> = ({
@@ -17,6 +20,9 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
   index,
   onEdit,
   onReorder,
+  onDragPreview,
+  onClearPreview,
+  isPreview = false,
 }) => {
   const { groups, deleteBookmark } = useBookmarks();
   const [imageError, setImageError] = useState(false);
@@ -26,6 +32,15 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
   // Trouver la couleur du groupe
   const group = groups.find(g => g.id === groupId);
   const groupColor = group?.color || '#3b82f6';
+
+  // Variable globale pour stocker les données de drag (workaround pour la limitation du navigateur)
+  const setDragData = (data: any) => {
+    (window as any).__dragData = data;
+  };
+
+  const getDragData = () => {
+    return (window as any).__dragData;
+  };
 
   const handleOpenBookmark = () => {
     if (!isDragging) {
@@ -58,37 +73,68 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
       bookmark: bookmark
     };
 
+    // Stocker dans le window pour contourner la limitation du navigateur
+    setDragData(dragData);
+
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    e.dataTransfer.setData('text/plain', `${groupId}:${index}`); // Format simple pour vérification
+    e.dataTransfer.setData('text/plain', `${groupId}:${index}`);
     e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleDragEnd = () => {
     setIsDragging(false);
     setDragOverPosition(null);
+    // Nettoyer la prévisualisation à la fin du drag
+    if (onClearPreview) {
+      onClearPreview();
+    }
+    // Nettoyer les données de drag
+    (window as any).__dragData = null;
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Vérifier si c'est un drag interne (même groupe)
-    const simpleData = e.dataTransfer.getData('text/plain');
-    if (simpleData && simpleData.startsWith(`${groupId}:`)) {
+    // Utiliser les données stockées dans window pour contourner la limitation du navigateur
+    const dragData = getDragData();
+    if (dragData && dragData.sourceGroupId === groupId) {
       const rect = e.currentTarget.getBoundingClientRect();
       const midY = rect.top + rect.height / 2;
       const position = e.clientY < midY ? 'top' : 'bottom';
       setDragOverPosition(position);
+
+      // Déclencher la prévisualisation si disponible
+      if (onDragPreview && dragData.sourceIndex !== index) {
+        const sourceIndex = dragData.sourceIndex;
+        const destIndex = position === 'top' ? index : index + 1;
+
+        if (sourceIndex !== destIndex && sourceIndex !== destIndex - 1) {
+          onDragPreview(sourceIndex, destIndex, dragData.bookmark);
+        }
+      }
     }
   };  const handleDragLeave = (e: React.DragEvent) => {
     e.stopPropagation();
     setDragOverPosition(null);
+    // Nettoyer la prévisualisation si on quitte la zone de drop
+    if (onClearPreview) {
+      onClearPreview();
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Sauvegarder la position avant de la réinitialiser
+    const savedPosition = dragOverPosition;
     setDragOverPosition(null);
+
+    // Nettoyer la prévisualisation dès le début du drop
+    if (onClearPreview) {
+      onClearPreview();
+    }
 
     try {
       const dragData = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -97,13 +143,15 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
       // Réorganisation dans le même groupe
       if (sourceGroupId === groupId && sourceIndex !== index && onReorder) {
         let destIndex = index;
-        if (dragOverPosition === 'bottom') {
+        if (savedPosition === 'bottom') {
           destIndex = index + 1;
         }
         // Si on drag vers le top, destIndex reste = index
 
-        console.log(`Reordering from ${sourceIndex} to ${destIndex}`);
+        console.log(`DEBUG: Reordering from ${sourceIndex} to ${destIndex}, current card index: ${index}, saved position: ${savedPosition}`);
         onReorder(sourceIndex, destIndex);
+      } else {
+        console.log(`DEBUG: No reorder - sourceGroupId: ${sourceGroupId}, groupId: ${groupId}, sourceIndex: ${sourceIndex}, index: ${index}`);
       }
     } catch (error) {
       console.error('Error parsing drag data:', error);
@@ -121,7 +169,7 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
       />
 
       <div
-        className={`bookmark-card draggable-bookmark ${isDragging ? 'dragging' : ''}`}
+        className={`bookmark-card draggable-bookmark ${isDragging ? 'dragging' : ''} ${isPreview ? 'preview-item' : ''}`}
         style={{ '--group-color': groupColor } as React.CSSProperties}
         onClick={handleOpenBookmark}
         draggable
