@@ -29,6 +29,15 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
   const [editingBookmark, setEditingBookmark] = useState<{ bookmark: Bookmark; groupId: string } | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
+  // Function to handle expand/collapse all cards in a group
+  const handleExpandCollapseAll = (groupId: string, expand: boolean) => {
+    // Dispatch a custom event that bookmark cards can listen to
+    const event = new CustomEvent('toggleAllCards', {
+      detail: { groupId, expand }
+    });
+    window.dispatchEvent(event);
+  };
+
   // Configuration du layout basée sur les groupes
   const model = useMemo(() => {
     const layoutConfig: IJsonModel = {
@@ -128,6 +137,54 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
       if (group) {
         // Ajouter les boutons d'action à la toolbar du tabset
         renderValues.buttons = renderValues.buttons || [];
+
+        // Expand all cards button
+        renderValues.buttons.push(
+          <button
+            key="expand-all"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              handleExpandCollapseAll(group.id, true);
+            }}
+            title="Développer toutes les cartes"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ width: '1em', height: '1em', display: 'flex', alignItems: 'center' }}
+            >
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        );
+
+        // Collapse all cards button
+        renderValues.buttons.push(
+          <button
+            key="collapse-all"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              handleExpandCollapseAll(group.id, false);
+            }}
+            title="Réduire toutes les cartes"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ width: '1em', height: '1em', display: 'flex', alignItems: 'center' }}
+            >
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+        );
 
         renderValues.buttons.push(
           <button

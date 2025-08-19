@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExternalLink, Edit, Trash2, Tag, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { Bookmark } from '../types/bookmark';
 import { useBookmarks } from '../contexts/BookmarkContext';
@@ -28,11 +28,27 @@ export const DraggableBookmarkCardWithReorder: React.FC<DraggableBookmarkCardWit
   const [imageError, setImageError] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOverPosition, setDragOverPosition] = useState<'top' | 'bottom' | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // Default to collapsed
 
   // Trouver la couleur du groupe
   const group = groups.find(g => g.id === groupId);
   const groupColor = group?.color || '#3b82f6';
+
+  // Listen for expand/collapse all events
+  useEffect(() => {
+    const handleToggleAllCards = (event: CustomEvent) => {
+      const { groupId: targetGroupId, expand } = event.detail;
+      if (targetGroupId === groupId) {
+        setIsCollapsed(!expand);
+      }
+    };
+
+    window.addEventListener('toggleAllCards', handleToggleAllCards as EventListener);
+
+    return () => {
+      window.removeEventListener('toggleAllCards', handleToggleAllCards as EventListener);
+    };
+  }, [groupId]);
 
   // Variable globale pour stocker les données de drag (workaround pour la limitation du navigateur)
   const setDragData = (data: any) => {
