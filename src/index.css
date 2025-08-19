@@ -760,7 +760,9 @@ body {
 .bookmark-tags {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
+  padding-left: 20px;
 }
 
 .bookmark-tag {
