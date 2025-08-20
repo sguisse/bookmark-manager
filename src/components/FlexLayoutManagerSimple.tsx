@@ -38,7 +38,7 @@ export const FlexLayoutManagerSimple: React.FC<FlexLayoutManagerProps> = ({ sear
 
   // Use saved config if present, otherwise use default layout
   const model = useMemo(() => {
-    const savedConfig = FlexLayoutService.getSavedConfig();
+    const savedConfig = FlexLayoutService.loadConfig();
     if (savedConfig) {
       return Model.fromJson(savedConfig);
     }

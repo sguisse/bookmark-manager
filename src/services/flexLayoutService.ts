@@ -3,8 +3,8 @@ import { IJsonModel } from 'flexlayout-react';
 export type FlexLayoutConfig = IJsonModel;
 
 export class FlexLayoutService {
-  private static readonly STORAGE_KEY = 'flexlayout-config';
-  private static readonly FILE_NAME = 'flexlayout-config.json';
+  private static readonly STORAGE_KEY = 'bookmark-manager-config-flexlayout';
+  private static readonly FILE_NAME = 'bookmark-manager-config-flexlayout.json';
 
   /**
    * Export FlexLayout configuration to JSON file
@@ -95,11 +95,12 @@ export class FlexLayoutService {
   /**
    * Get saved configuration from localStorage
    */
-  static getSavedConfig(): FlexLayoutConfig | null {
+  static loadConfig(): FlexLayoutConfig | null {
     try {
       const saved = localStorage.getItem(this.STORAGE_KEY);
       if (saved) {
         const config = JSON.parse(saved) as FlexLayoutConfig;
+        console.log('Configuration chargée depuis config flexlayout:', config);
         return this.isValidConfig(config) ? config : null;
       }
       return null;
@@ -116,6 +117,7 @@ export class FlexLayoutService {
     try {
       const jsonString = JSON.stringify(config, null, 2);
       localStorage.setItem(this.STORAGE_KEY, jsonString);
+      console.log('Configuration sauvegardée dans config flexlayout:', config);
     } catch (error) {
       console.error('Error saving configuration:', error);
     }
@@ -127,10 +129,13 @@ export class FlexLayoutService {
   static getDefaultConfig(): FlexLayoutConfig {
     return {
       global: {
-        tabEnableClose: true,
+        tabSetEnableClose: false,
+        tabSetEnableDrop: true,
+        tabSetEnableDrag: true,
+        tabEnableClose: false,
         tabEnableRename: true,
-        tabEnableDrag: true,
-        borderBarSize: 25
+        tabSetMinWidth: 250,
+        tabSetMinHeight: 200
       },
       borders: [],
       layout: {

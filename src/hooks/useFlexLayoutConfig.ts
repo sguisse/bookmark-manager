@@ -7,7 +7,7 @@ export const useFlexLayoutConfig = () => {
 
   // Load saved configuration on mount
   useEffect(() => {
-    const savedConfig = FlexLayoutService.getSavedConfig();
+    const savedConfig = FlexLayoutService.loadConfig();
     if (savedConfig) {
       setLayoutConfig(savedConfig);
       setLastSaved(new Date()); // Set last saved to current time if config exists

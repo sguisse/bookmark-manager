@@ -21,9 +21,9 @@ type BookmarkAction =
   | { type: 'SET_SELECTED_GROUP'; payload: string | null }
   | { type: 'IMPORT_DATA'; payload: BookmarkConfig };
 
-const STORAGE_KEY = 'bookmark-manager-config';
+const STORAGE_KEY = 'bookmark-manager-config-bookmarks';
 
-const defaultConfig: BookmarkConfig = {
+const defaultBookmarksTabConfig: BookmarkConfig = {
   version: '1.0.0',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -38,12 +38,12 @@ const defaultConfig: BookmarkConfig = {
 };
 
 // Fonction pour charger la configuration depuis localStorage
-const loadStoredConfig = (): BookmarkConfig => {
+export const loadStoredConfig = (): BookmarkConfig => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const config = JSON.parse(stored);
-      // Convertir les dates string en objets Date
+    // Try to load bookmarks config from dedicated key
+    const bookmarksRaw = localStorage.getItem(STORAGE_KEY);
+    if (bookmarksRaw) {
+      const config = JSON.parse(bookmarksRaw);
       config.createdAt = new Date(config.createdAt);
       config.updatedAt = new Date(config.updatedAt);
       config.groups.forEach((group: BookmarkGroup) => {
@@ -52,14 +52,14 @@ const loadStoredConfig = (): BookmarkConfig => {
           bookmark.updatedAt = new Date(bookmark.updatedAt);
         });
       });
-      console.log('Configuration chargée depuis localStorage:', config);
+      console.log('Configuration chargée depuis config bookmarks:', config);
       return config;
     }
   } catch (error) {
-    console.error('Erreur lors du chargement de la configuration:', error);
+    console.error('Erreur lors du chargement de la configuration des bookmarks:', error);
   }
   console.log('Utilisation de la configuration par défaut');
-  return defaultConfig;
+  return defaultBookmarksTabConfig;
 };
 
 function bookmarkReducer(state: BookmarkState, action: BookmarkAction): BookmarkState {
@@ -278,6 +278,7 @@ interface BookmarkContextType {
   importData: (data: string) => void;
   clearLocalStorage: () => void;
   lastSaved: Date | null;
+  notifySaved: (date?: Date) => void;
 }
 
 const BookmarkContext = createContext<BookmarkContextType | undefined>(undefined);
@@ -307,13 +308,9 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(configToSave));
         setLastSaved(new Date());
-        console.log('Configuration sauvegardée dans localStorage');
-
-        // Notification de sauvegarde réussie (optionnel, peut être désactivé pour éviter le spam)
-        // notifications.success('Sauvegarde réussie', 'Vos bookmarks ont été sauvegardés');
+        console.log('Configuration sauvegardée dans bookmarks config');
       } catch (error) {
         console.error('Erreur lors de la sauvegarde:', error);
-        // En cas d'erreur (quota dépassé, etc.), on peut informer l'utilisateur
         if (error instanceof DOMException && error.name === 'QuotaExceededError') {
           console.warn('Quota de stockage local dépassé');
           notifications.error('Erreur de sauvegarde', 'Quota de stockage dépassé. Veuillez libérer de l\'espace.');
@@ -322,8 +319,6 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
         }
       }
     };
-
-    // Debounce pour éviter trop de sauvegardes
     const timeoutId = setTimeout(saveToStorage, 500);
     return () => clearTimeout(timeoutId);
   }, [state.config, notifications]);
@@ -334,13 +329,18 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
       localStorage.removeItem(STORAGE_KEY);
       console.log('Cache local vidé');
       // Recharger avec la configuration par défaut
-      dispatch({ type: 'SET_CONFIG', payload: defaultConfig });
+      dispatch({ type: 'SET_CONFIG', payload: defaultBookmarksTabConfig });
       notifications.info('Cache vidé', 'Le cache local a été vidé et la configuration par défaut a été restaurée');
     } catch (error) {
       console.error('Erreur lors du vidage du cache:', error);
       notifications.error('Erreur', 'Impossible de vider le cache local');
     }
   }, [notifications]);
+
+  const notifySaved = useCallback((date?: Date) => {
+    const d = date || new Date();
+    setLastSaved(d);
+  }, []);
 
   const addGroup = useCallback((group: Omit<BookmarkGroup, 'id'>) => {
     dispatch({ type: 'ADD_GROUP', payload: group });
@@ -403,7 +403,8 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     exportData,
     importData,
     clearLocalStorage,
-    lastSaved,
+  lastSaved,
+  notifySaved,
   }), [
     state.config.groups,
     addGroup,
@@ -418,6 +419,7 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     importData,
     clearLocalStorage,
     lastSaved,
+  notifySaved,
   ]);
 
   return (
