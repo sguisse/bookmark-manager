@@ -1,63 +1,75 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { useNotification, Notification } from '../hooks/useNotification';
-import { NotificationContainer } from '../components/NotificationContainer';
-
-interface NotificationContextType {
-  addNotification: (notification: Omit<Notification, 'id'>) => string;
-  removeNotification: (id: string) => void;
-  clearAllNotifications: () => void;
-  success: (title: string, message?: string) => string;
-  error: (title: string, message?: string) => string;
-  warning: (title: string, message?: string) => string;
-  info: (title: string, message?: string) => string;
-}
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { Notification, NotificationContextType } from '../types/notification';
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 interface NotificationProviderProps {
-  readonly children: React.ReactNode;
+  children: ReactNode;
 }
 
-export function NotificationProvider({ children }: NotificationProviderProps) {
-  const { notifications, addNotification, removeNotification, clearAllNotifications } = useNotification();
+export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const success = (title: string, message?: string) =>
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp'>) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: uuidv4(),
+      timestamp: new Date(),
+    };
+
+    setNotifications(prev => [...prev, newNotification]);
+
+    // Auto remove after duration
+    const duration = notification.duration || 5000;
+    if (duration > 0) {
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
+      }, duration);
+    }
+  }, []);
+
+  const removeNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  const success = useCallback((title: string, message: string) => {
     addNotification({ type: 'success', title, message });
+  }, [addNotification]);
 
-  const error = (title: string, message?: string) =>
-    addNotification({ type: 'error', title, message });
+  const error = useCallback((title: string, message: string) => {
+    addNotification({ type: 'error', title, message, duration: 8000 });
+  }, [addNotification]);
 
-  const warning = (title: string, message?: string) =>
-    addNotification({ type: 'warning', title, message });
+  const warning = useCallback((title: string, message: string) => {
+    addNotification({ type: 'warning', title, message, duration: 6000 });
+  }, [addNotification]);
 
-  const info = (title: string, message?: string) =>
+  const info = useCallback((title: string, message: string) => {
     addNotification({ type: 'info', title, message });
+  }, [addNotification]);
 
-  const contextValue = useMemo<NotificationContextType>(() => ({
+  const value = useMemo(() => ({
+    notifications,
     addNotification,
     removeNotification,
-    clearAllNotifications,
     success,
     error,
     warning,
     info,
-  }), [addNotification, removeNotification, clearAllNotifications]);
+  }), [notifications, addNotification, removeNotification, success, error, warning, info]);
 
   return (
-    <NotificationContext.Provider value={contextValue}>
+    <NotificationContext.Provider value={value}>
       {children}
-      <NotificationContainer
-        notifications={notifications}
-        onRemove={removeNotification}
-      />
     </NotificationContext.Provider>
   );
-}
+};
 
-export function useNotifications() {
+export const useNotifications = (): NotificationContextType => {
   const context = useContext(NotificationContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useNotifications must be used within a NotificationProvider');
   }
   return context;
-}
+};

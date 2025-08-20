@@ -2,7 +2,6 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { v4 as uuidv4 } from 'uuid';
 import { BookmarkConfig, BookmarkGroup, Bookmark } from '../types/bookmark';
 import { useNotifications } from './NotificationContext';
-import { BookmarkService } from '../services/BookmarkService';
 
 interface BookmarkState {
   config: BookmarkConfig;
@@ -15,13 +14,14 @@ type BookmarkAction =
   | { type: 'UPDATE_GROUP'; payload: { id: string; group: Partial<BookmarkGroup> } }
   | { type: 'DELETE_GROUP'; payload: string }
   | { type: 'REORDER_GROUPS'; payload: { startIndex: number; endIndex: number } }
-  | { type: 'ADD_BOOKMARK'; payload: { groupId: string; bookmark: import('../types/bookmark').BookmarkInput } }
+  | { type: 'ADD_BOOKMARK'; payload: { groupId: string; bookmark: Omit<Bookmark, 'id'> } }
   | { type: 'UPDATE_BOOKMARK'; payload: { groupId: string; bookmarkId: string; bookmark: Partial<Bookmark> } }
   | { type: 'DELETE_BOOKMARK'; payload: { groupId: string; bookmarkId: string } }
   | { type: 'MOVE_BOOKMARK'; payload: { sourceGroupId: string; destGroupId: string; sourceIndex: number; destIndex: number } }
   | { type: 'SET_SELECTED_GROUP'; payload: string | null }
-  | { type: 'IMPORT_DATA'; payload: BookmarkConfig }
-  | { type: 'UPDATE_LAYOUT_CONFIG'; payload: any };
+  | { type: 'IMPORT_DATA'; payload: BookmarkConfig };
+
+const STORAGE_KEY = 'bookmark-manager-config-bookmarks';
 
 const defaultBookmarksTabConfig: BookmarkConfig = {
   version: '1.0.0',
@@ -30,19 +30,35 @@ const defaultBookmarksTabConfig: BookmarkConfig = {
   groups: [
     {
       id: 'default',
-      title: 'My Bookmarks',
+      title: 'Mes Bookmarks',
       color: '#3b82f6',
       bookmarks: [],
     }
-  ],
-  layoutConfig: null
+  ]
 };
 
+// Fonction pour charger la configuration depuis localStorage
 export const loadStoredConfig = (): BookmarkConfig => {
-  const config = BookmarkService.loadConfig();
-  if (config) {
-    return config;
+  try {
+    // Try to load bookmarks config from dedicated key
+    const bookmarksRaw = localStorage.getItem(STORAGE_KEY);
+    if (bookmarksRaw) {
+      const config = JSON.parse(bookmarksRaw);
+      config.createdAt = new Date(config.createdAt);
+      config.updatedAt = new Date(config.updatedAt);
+      config.groups.forEach((group: BookmarkGroup) => {
+        group.bookmarks.forEach((bookmark: Bookmark) => {
+          bookmark.createdAt = new Date(bookmark.createdAt);
+          bookmark.updatedAt = new Date(bookmark.updatedAt);
+        });
+      });
+      console.log('Configuration chargée depuis config bookmarks:', config);
+      return config;
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement de la configuration des bookmarks:', error);
   }
+  console.log('Utilisation de la configuration par défaut');
   return defaultBookmarksTabConfig;
 };
 
@@ -114,17 +130,12 @@ function bookmarkReducer(state: BookmarkState, action: BookmarkAction): Bookmark
     }
 
     case 'ADD_BOOKMARK': {
-  const incoming = action.payload.bookmark;
       const newBookmark: Bookmark = {
         id: uuidv4(),
-        title: incoming.title,
-        url: incoming.url,
-        description: incoming.description,
-        tags: incoming.tags || [],
-        category: incoming.category,
+        ...action.payload.bookmark,
         createdAt: new Date(),
         updatedAt: new Date(),
-        favicon: `https://www.google.com/s2/favicons?domain=${new URL(incoming.url).hostname}&sz=32`
+        favicon: `https://www.google.com/s2/favicons?domain=${new URL(action.payload.bookmark.url).hostname}&sz=32`
       };
 
       return {
@@ -185,6 +196,7 @@ function bookmarkReducer(state: BookmarkState, action: BookmarkAction): Bookmark
       const { sourceGroupId, destGroupId, sourceIndex, destIndex } = action.payload;
 
       if (sourceGroupId === destGroupId) {
+        // Réorganiser dans le même groupe
         return {
           ...state,
           config: {
@@ -202,6 +214,7 @@ function bookmarkReducer(state: BookmarkState, action: BookmarkAction): Bookmark
           }
         };
       } else {
+        // Déplacer entre groupes différents
         let bookmarkToMove: Bookmark | undefined;
         const updatedGroups = state.config.groups.map(group => {
           if (group.id === sourceGroupId) {
@@ -243,20 +256,7 @@ function bookmarkReducer(state: BookmarkState, action: BookmarkAction): Bookmark
     case 'IMPORT_DATA':
       return {
         ...state,
-        config: {
-          ...action.payload,
-          updatedAt: new Date()
-        }
-      };
-
-    case 'UPDATE_LAYOUT_CONFIG':
-      return {
-        ...state,
-        config: {
-          ...state.config,
-          layoutConfig: action.payload,
-          updatedAt: new Date()
-        }
+        config: action.payload
       };
 
     default:
@@ -266,20 +266,16 @@ function bookmarkReducer(state: BookmarkState, action: BookmarkAction): Bookmark
 
 interface BookmarkContextType {
   groups: BookmarkGroup[];
-  config: BookmarkConfig;
-  selectedGroupId: string | null;
   addGroup: (group: Omit<BookmarkGroup, 'id'>) => void;
   updateGroup: (id: string, group: Partial<BookmarkGroup>) => void;
   deleteGroup: (id: string) => void;
   reorderGroups: (startIndex: number, endIndex: number) => void;
   moveBookmark: (sourceGroupId: string, destGroupId: string, sourceIndex: number, destIndex: number) => void;
-  addBookmark: (groupId: string, bookmark: import('../types/bookmark').BookmarkInput) => void;
+  addBookmark: (groupId: string, bookmark: Omit<Bookmark, 'id'>) => void;
   updateBookmark: (groupId: string, bookmarkId: string, bookmark: Partial<Bookmark>) => void;
   deleteBookmark: (groupId: string, bookmarkId: string) => void;
-  setSelectedGroup: (id: string | null) => void;
-  exportData: () => void;
-  importData: () => Promise<void>;
-  updateLayoutConfig: (config: any) => void;
+  exportData: () => string;
+  importData: (data: string) => void;
   clearLocalStorage: () => void;
   lastSaved: Date | null;
   notifySaved: (date?: Date) => void;
@@ -287,8 +283,13 @@ interface BookmarkContextType {
 
 const BookmarkContext = createContext<BookmarkContextType | undefined>(undefined);
 
-const initialConfig = loadStoredConfig();
+// Load initial state only once at module level
+const initialConfig = (() => {
+  console.log('[BookmarkContext] Loading initial bookmark configuration...');
+  return loadStoredConfig();
+})();
 
+// Fonction pour obtenir l'état initial avec les données sauvegardées
 const getInitialState = (): BookmarkState => ({
   config: initialConfig,
   selectedGroupId: null
@@ -303,22 +304,44 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const notifications = useNotifications();
 
-  // Save configuration when it changes
+  // Sauvegarder la configuration dans le localStorage à chaque changement
   useEffect(() => {
     const saveToStorage = () => {
       try {
-        BookmarkService.saveConfig(state.config);
+        const configToSave = {
+          ...state.config,
+          updatedAt: new Date() // Mise à jour automatique de la date
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(configToSave));
         setLastSaved(new Date());
-        console.log('Configuration saved');
+        console.log('Configuration sauvegardée dans bookmarks config');
       } catch (error) {
-        console.error('Error saving configuration:', error);
-        notifications.error('Save Error', 'Failed to save bookmarks locally.');
+        console.error('Erreur lors de la sauvegarde:', error);
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          console.warn('Quota de stockage local dépassé');
+          notifications.error('Erreur de sauvegarde', 'Quota de stockage dépassé. Veuillez libérer de l\'espace.');
+        } else {
+          notifications.error('Erreur de sauvegarde', 'Impossible de sauvegarder vos bookmarks localement.');
+        }
       }
     };
-
     const timeoutId = setTimeout(saveToStorage, 500);
     return () => clearTimeout(timeoutId);
   }, [state.config, notifications]);
+
+  // Fonction pour vider le cache local (utile pour le debug)
+  const clearLocalStorage = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      console.log('Cache local vidé');
+      // Recharger avec la configuration par défaut
+      dispatch({ type: 'SET_CONFIG', payload: defaultBookmarksTabConfig });
+      notifications.info('Cache vidé', 'Le cache local a été vidé et la configuration par défaut a été restaurée');
+    } catch (error) {
+      console.error('Erreur lors du vidage du cache:', error);
+      notifications.error('Erreur', 'Impossible de vider le cache local');
+    }
+  }, [notifications]);
 
   const notifySaved = useCallback((date?: Date) => {
     const d = date || new Date();
@@ -327,19 +350,15 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
 
   const addGroup = useCallback((group: Omit<BookmarkGroup, 'id'>) => {
     dispatch({ type: 'ADD_GROUP', payload: group });
-    notifications.success('Group Added', `Group "${group.title}" was created successfully.`);
-  }, [notifications]);
+  }, []);
 
   const updateGroup = useCallback((id: string, group: Partial<BookmarkGroup>) => {
     dispatch({ type: 'UPDATE_GROUP', payload: { id, group } });
-    notifications.success('Group Updated', 'Group was updated successfully.');
-  }, [notifications]);
+  }, []);
 
   const deleteGroup = useCallback((id: string) => {
-    const group = state.config.groups.find(g => g.id === id);
     dispatch({ type: 'DELETE_GROUP', payload: id });
-    notifications.success('Group Deleted', `Group "${group?.title || 'Unknown'}" was deleted.`);
-  }, [state.config.groups, notifications]);
+  }, []);
 
   const reorderGroups = useCallback((startIndex: number, endIndex: number) => {
     dispatch({ type: 'REORDER_GROUPS', payload: { startIndex, endIndex } });
@@ -349,67 +368,36 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     dispatch({ type: 'MOVE_BOOKMARK', payload: { sourceGroupId, destGroupId, sourceIndex, destIndex } });
   }, []);
 
-  const addBookmark = useCallback((groupId: string, bookmark: import('../types/bookmark').BookmarkInput) => {
+  const addBookmark = useCallback((groupId: string, bookmark: Omit<Bookmark, 'id'>) => {
     dispatch({ type: 'ADD_BOOKMARK', payload: { groupId, bookmark } });
-    notifications.success('Bookmark Added', `"${bookmark.title}" was added successfully.`);
-  }, [notifications]);
+  }, []);
 
   const updateBookmark = useCallback((groupId: string, bookmarkId: string, bookmark: Partial<Bookmark>) => {
     dispatch({ type: 'UPDATE_BOOKMARK', payload: { groupId, bookmarkId, bookmark } });
-    notifications.success('Bookmark Updated', 'Bookmark was updated successfully.');
-  }, [notifications]);
-
-  const deleteBookmark = useCallback((groupId: string, bookmarkId: string) => {
-    const group = state.config.groups.find(g => g.id === groupId);
-    const bookmark = group?.bookmarks.find(b => b.id === bookmarkId);
-    dispatch({ type: 'DELETE_BOOKMARK', payload: { groupId, bookmarkId } });
-    notifications.success('Bookmark Deleted', `"${bookmark?.title || 'Unknown'}" was deleted.`);
-  }, [state.config.groups, notifications]);
-
-  const setSelectedGroup = useCallback((id: string | null) => {
-    dispatch({ type: 'SET_SELECTED_GROUP', payload: id });
   }, []);
 
-  const updateLayoutConfig = useCallback((config: any) => {
-    dispatch({ type: 'UPDATE_LAYOUT_CONFIG', payload: config });
+  const deleteBookmark = useCallback((groupId: string, bookmarkId: string) => {
+    dispatch({ type: 'DELETE_BOOKMARK', payload: { groupId, bookmarkId } });
   }, []);
 
   const exportData = useCallback(() => {
-    try {
-      BookmarkService.exportConfig(state.config);
-      notifications.success('Export Complete', 'Configuration exported successfully.');
-    } catch (error) {
-      console.error('Export error:', error);
-      notifications.error('Export Failed', 'Failed to export configuration.');
-    }
-  }, [state.config, notifications]);
+    return JSON.stringify(state.config, null, 2);
+  }, [state.config]);
 
-  const importData = useCallback(async () => {
+  const importData = useCallback((jsonData: string) => {
     try {
-      const config = await BookmarkService.importConfig();
-      dispatch({ type: 'IMPORT_DATA', payload: config });
-      notifications.success('Import Complete', 'Configuration imported successfully.');
+      const data = JSON.parse(jsonData);
+      dispatch({ type: 'IMPORT_DATA', payload: data });
+      notifications.success('Import réussi', 'Votre configuration a été importée avec succès');
     } catch (error) {
-      console.error('Import error:', error);
-      notifications.error('Import Failed', 'Failed to import configuration.');
-    }
-  }, [notifications]);
-
-  const clearLocalStorage = useCallback(() => {
-    try {
-      localStorage.clear();
-      dispatch({ type: 'SET_CONFIG', payload: defaultBookmarksTabConfig });
-      notifications.info('Cache Cleared', 'Local storage cleared and default configuration restored.');
-    } catch (error) {
-      console.error('Clear storage error:', error);
-      notifications.error('Clear Failed', 'Failed to clear local storage.');
+      console.error('Failed to import configuration:', error);
+      notifications.error('Erreur d\'import', 'Format de fichier invalide');
+      throw new Error('Invalid JSON format');
     }
   }, [notifications]);
 
   const contextValue = useMemo(() => ({
     groups: state.config.groups,
-    config: state.config,
-    selectedGroupId: state.selectedGroupId,
     addGroup,
     updateGroup,
     deleteGroup,
@@ -418,17 +406,13 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     addBookmark,
     updateBookmark,
     deleteBookmark,
-    setSelectedGroup,
     exportData,
     importData,
-    updateLayoutConfig,
     clearLocalStorage,
-    lastSaved,
-    notifySaved,
+  lastSaved,
+  notifySaved,
   }), [
     state.config.groups,
-    state.config,
-    state.selectedGroupId,
     addGroup,
     updateGroup,
     deleteGroup,
@@ -437,13 +421,11 @@ export function BookmarkProvider({ children }: BookmarkProviderProps) {
     addBookmark,
     updateBookmark,
     deleteBookmark,
-    setSelectedGroup,
     exportData,
     importData,
-    updateLayoutConfig,
     clearLocalStorage,
     lastSaved,
-    notifySaved,
+  notifySaved,
   ]);
 
   return (

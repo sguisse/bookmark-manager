@@ -7,7 +7,6 @@ export interface Bookmark {
   createdAt: Date;
   updatedAt: Date;
   favicon?: string;
-  category?: string;
 }
 
 export interface BookmarkGroup {
@@ -16,10 +15,6 @@ export interface BookmarkGroup {
   color: string;
   bookmarks: Bookmark[];
   collapsed?: boolean;
-  // optional: which component to use for this group's flexlayout tab
-  tabComponent?: string;
-  // optional configuration for the tab component (e.g. markdown content)
-  tabConfig?: any;
 }
 
 export interface BookmarkConfig {
@@ -37,11 +32,3 @@ export interface BookmarkFormData {
   tags: string[];
   groupId: string;
 }
-
-export type BookmarkInput = {
-  title: string;
-  url: string;
-  description?: string;
-  tags?: string[];
-  category?: string;
-};

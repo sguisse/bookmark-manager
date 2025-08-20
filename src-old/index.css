@@ -1,162 +1,83 @@
-/* Reset and Base Styles */:root {
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
 
-* {  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-
-  margin: 0;  line-height: 1.5;
-
-  padding: 0;  font-weight: 400;
-
-  box-sizing: border-box;
-
-}  color-scheme: light dark;
-
+  color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+  --header-height: 48px;
 
-html, body {  background-color: #242424;
-
-  height: 100%;  --header-height: 48px;
-
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
-  -webkit-font-smoothing: antialiased;  font-synthesis: none;
-
-  -moz-osx-font-smoothing: grayscale;  text-rendering: optimizeLegibility;
-
-}  -webkit-font-smoothing: antialiased;
-
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-#root {  -webkit-text-size-adjust: 100%;
-
-  height: 100%;}
-
+  -webkit-text-size-adjust: 100%;
 }
 
 * {
-
-/* Light Theme */  box-sizing: border-box;
-
-[data-theme="light"] {}
-
-  color-scheme: light;
-
-}html, body {
-
-  margin: 0;
-
-/* Dark Theme */  padding: 0;
-
-[data-theme="dark"] {  height: 100%;
-
-  color-scheme: dark;  width: 100%;
-
-}}
-
-
-
-/* Base Component Styles */#root {
-
-button {  margin: 0;
-
-  border: none;  padding: 0;
-
-  background: none;  height: 100vh;
-
-  cursor: pointer;  width: 100%;
-
-  font: inherit;  overflow: auto; /* allow scrolling so sticky header works */
-
-}}
-
-
-
-input, textarea, select {body {
-
-  font: inherit;  margin: 0;
-
-}  display: flex;
-
-  place-items: center;
-
-/* Scrollbar Styling */  min-width: 320px;
-
-::-webkit-scrollbar {  min-height: 100vh;
-
-  width: 8px;}
-
-  height: 8px;
-
-}/* #root is styled above to allow the header to stick and content to scroll */
-
-
-
-::-webkit-scrollbar-track {/* Styles pour react-flexlayout */
-
-  background: transparent;.flexlayout__layout {
-
-}  background-color: #1a1a1a;
-
-  padding-top: calc(var(--header-height)); /* keep content below header */
-
-::-webkit-scrollbar-thumb {}
-
-  background: rgba(0, 0, 0, 0.2);
-
-  border-radius: 4px;/* Header Panel (dashboard top bar) */
-
+  box-sizing: border-box;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: auto; /* allow scrolling so sticky header works */
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* #root is styled above to allow the header to stick and content to scroll */
+
+/* Styles pour react-flexlayout */
+.flexlayout__layout {
+  background-color: #1a1a1a;
+  padding-top: calc(var(--header-height)); /* keep content below header */
+}
+
+/* Header Panel (dashboard top bar) */
 
 
-::-webkit-scrollbar-thumb:hover {.flexlayout__tab {
-
-  background: rgba(0, 0, 0, 0.3);  background-color: #2a2a2a;
-
-}  border: 1px solid #404040;
-
+.flexlayout__tab {
+  background-color: #2a2a2a;
+  border: 1px solid #404040;
   color: #e1e1e1;
+}
 
-[data-theme="dark"] ::-webkit-scrollbar-thumb {}
-
-  background: rgba(255, 255, 255, 0.2);
-
-}.flexlayout__tab_button {
-
+.flexlayout__tab_button {
   background-color: transparent;
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {  color: #e1e1e1;
-
-  background: rgba(255, 255, 255, 0.3);  border: none;
-
-}  padding: 8px 16px;
-
+  color: #e1e1e1;
+  border: none;
+  padding: 8px 16px;
   cursor: pointer;
+  border-radius: 4px 4px 0 0;
+}
 
-/* Focus Styles */  border-radius: 4px 4px 0 0;
+.flexlayout__tab_button:hover {
+  background-color: #404040;
+}
 
-button:focus-visible,}
-
-input:focus-visible,
-
-textarea:focus-visible,.flexlayout__tab_button:hover {
-
-select:focus-visible {  background-color: #404040;
-
-  outline: 2px solid #3b82f6;}
-
-  outline-offset: 2px;
-
-}.flexlayout__tab_button--selected {
-
+.flexlayout__tab_button--selected {
   background-color: #3b82f6;
+  color: white;
+}
 
-/* Transitions */  color: white;
-
-* {}
-
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-
-}.flexlayout__tabset_header {
+.flexlayout__tabset_header {
   background-color: #2a2a2a;
   border-bottom: 1px solid #404040;
 }
