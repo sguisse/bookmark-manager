@@ -1,5 +1,7 @@
 import { IJsonModel } from 'flexlayout-react';
 
+//const STORAGE_KEY = 'flexlayout-config-{ID}';
+
 export type FlexLayoutConfig = IJsonModel;
 
 export class FlexLayoutService {
@@ -47,44 +49,5 @@ export class FlexLayoutService {
     return true;
   }
 
-  /**
-   * Create layout configuration for bookmark groups
-   */
-  static createLayoutForGroups(groups: any[]): FlexLayoutConfig {
-    const defaultConfig = this.getDefaultConfig();
 
-    if (groups.length === 0) {
-      defaultConfig.layout.children = [
-        {
-          type: 'tabset',
-          weight: 100,
-          children: [
-            {
-              type: 'tab',
-              id: 'welcome',
-              name: 'Welcome',
-              component: 'Welcome'
-            }
-          ]
-        }
-      ];
-    } else {
-      defaultConfig.layout.children = groups.map((group) => ({
-        type: 'tabset',
-        id: `tabset-${group.id}`,
-        weight: 100 / groups.length,
-        children: [
-          {
-            type: 'tab',
-            id: `tab-${group.id}`,
-            name: group.title,
-            component: 'BookmarkGroup',
-            config: { groupId: group.id }
-          }
-        ]
-      }));
-    }
-
-    return defaultConfig;
-  }
 }

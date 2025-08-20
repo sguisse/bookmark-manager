@@ -1,3 +1,5 @@
+import { FlexTabConfig } from "./flexTabConfig";
+
 export interface Bookmark {
   id: string;
   title: string;
@@ -10,25 +12,12 @@ export interface Bookmark {
   category?: string;
 }
 
-export interface BookmarkGroup {
-  id: string;
-  title: string;
-  color: string;
+
+export interface BookmarksTabConfig extends FlexTabConfig {
   bookmarks: Bookmark[];
   collapsed?: boolean;
-  // optional: which component to use for this group's flexlayout tab
-  tabComponent?: string;
-  // optional configuration for the tab component (e.g. markdown content)
-  tabConfig?: any;
 }
 
-export interface BookmarkConfig {
-  version: string;
-  createdAt: Date;
-  updatedAt: Date;
-  groups: BookmarkGroup[];
-  layoutConfig?: any;
-}
 
 export interface BookmarkFormData {
   title: string;

@@ -1,20 +1,9 @@
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface BottomPanelProps {
-  onExport: () => void;
-  onImport: () => void;
-  onClearCache: () => void;
-  lastSaved: Date | null;
-  onThemeToggle: () => void;
 }
 
-export default function BottomPanel({
-  onExport,
-  onImport,
-  onClearCache,
-  lastSaved,
-  onThemeToggle
-}: BottomPanelProps) {
+export default function BottomPanel(props: BottomPanelProps) {
   const { theme } = useTheme();
 
   const formatLastSaved = (date: Date | null) => {
@@ -63,80 +52,16 @@ export default function BottomPanel({
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              backgroundColor: lastSaved ? theme.colors.success : theme.colors.warning
+              backgroundColor: theme.colors.success
             }}
           />
-          <span>Last saved: {formatLastSaved(lastSaved)}</span>
+          <span>Last saved: todo</span>
         </div>
       </div>
 
       {/* Right side - Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <button
-          onClick={onThemeToggle}
-          style={{
-            ...buttonStyle,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.primary;
-            e.currentTarget.style.color = '#ffffff';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.surface;
-            e.currentTarget.style.color = theme.colors.text.primary;
-          }}
-        >
-          <span>{theme.name === 'light' ? '🌙' : '☀️'}</span>
-          {theme.name === 'light' ? 'Dark' : 'Light'}
-        </button>
-
-        <button
-          onClick={onImport}
-          style={buttonStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.info;
-            e.currentTarget.style.color = '#ffffff';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.surface;
-            e.currentTarget.style.color = theme.colors.text.primary;
-          }}
-        >
-          📥 Import
-        </button>
-
-        <button
-          onClick={onExport}
-          style={buttonStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.success;
-            e.currentTarget.style.color = '#ffffff';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.surface;
-            e.currentTarget.style.color = theme.colors.text.primary;
-          }}
-        >
-          📤 Export
-        </button>
-
-        <button
-          onClick={onClearCache}
-          style={buttonStyle}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.error;
-            e.currentTarget.style.color = '#ffffff';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = theme.colors.surface;
-            e.currentTarget.style.color = theme.colors.text.primary;
-          }}
-        >
-          🗑️ Clear
-        </button>
+        Actions
       </div>
     </div>
   );

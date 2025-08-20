@@ -1,44 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { BookmarkGroup } from '../../types/bookmark';
+import { FlexTabComponent, FlexTabConfig } from '../../types/flexTabConfig';
 
 interface FlexTabFormProps {
-  group?: BookmarkGroup | null;
-  onSave: (update: Partial<BookmarkGroup>) => void;
+  flexTabConfig: FlexTabConfig,
+  components?: Array<{ value: string; label: string }>;
+  onSave: (update: { title?: string; color?: string; component?: string; componentConfig?: Record<string, any> }) => void;
   onCancel: () => void;
 }
 
 export default function FlexTabForm(props: Readonly<FlexTabFormProps>) {
-  const { group, onSave, onCancel } = props;
+  const { flexTabConfig, components, onSave, onCancel } = props;
   const { theme } = useTheme();
 
-  const [title, setTitle] = useState(group?.title || '');
-  const [color, setColor] = useState(group?.color || '#3b82f6');
-  const [tabComponent, setTabComponent] = useState(group?.tabComponent || 'BookmarkGroup');
-  const [markdownContent, setMarkdownContent] = useState<string>(group?.tabConfig?.content || '');
+  // Default components list derived from the FlexTabComponent enum. This
+  // ensures a single source of truth for available tab component types.
+  const defaultComponents = Object.values(FlexTabComponent).map((v) => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
+  const availableComponents = components && components.length > 0 ? components : defaultComponents;
 
-  useEffect(() => {
-    setTitle(group?.title || '');
-    setColor(group?.color || '#3b82f6');
-    setTabComponent(group?.tabComponent || 'BookmarkGroup');
-    setMarkdownContent(group?.tabConfig?.content || '');
-  }, [group]);
+  const [title, setTitle] = useState<string>(flexTabConfig?.title || '');
+  const [color, setColor] = useState<string>(flexTabConfig?.color || '#3b82f6');
+  const [component, setComponent] = useState<string>(flexTabConfig?.component || '');
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const update: Partial<BookmarkGroup> = {
-      title: title.trim(),
-      color,
-      tabComponent,
-      tabConfig: tabComponent === 'MarkdownTab' ? { content: markdownContent } : undefined
-    };
-    onSave(update);
+    console.log('Form submitted:', { title, color, component });
+    onSave({ title, color, component });
   };
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div>
-        <label htmlFor="flex-title" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Group Title</label>
+        <label htmlFor="flex-title" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>flexTabConfig Title</label>
         <input id="flex-title" value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
       </div>
 
@@ -49,18 +43,12 @@ export default function FlexTabForm(props: Readonly<FlexTabFormProps>) {
 
       <div>
         <label htmlFor="flex-component" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Tab Component</label>
-        <select id="flex-component" value={tabComponent} onChange={(e) => setTabComponent(e.target.value)} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, width: '100%' }}>
-          <option value="BookmarkGroup">Bookmarks Tab</option>
-          <option value="MarkdownTab">Markdown Tab</option>
+
+        <select id="flex-component" value={component} onChange={(e) => setComponent(e.target.value)} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, width: '100%' }}>
+          <option value="">(choose)</option>
+          {availableComponents.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
       </div>
-
-      {tabComponent === 'MarkdownTab' && (
-        <div>
-          <label htmlFor="flex-markdown" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Markdown Content</label>
-          <textarea id="flex-markdown" value={markdownContent} onChange={(e) => setMarkdownContent(e.target.value)} rows={8} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
-        </div>
-      )}
 
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
         <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: theme.colors.surface }}>Cancel</button>
