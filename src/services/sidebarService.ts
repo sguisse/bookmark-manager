@@ -23,9 +23,16 @@ export class SidebarService {
         },
         {
           id: 'settings',
-          title: 'Settings',
+          title: 'Settings sgu',
           icon: 'settings',
-          flexLayoutId: 'flexlayout-config-settings'
+          children: [
+            {
+          id: 'child',
+          title: 'child',
+          icon: 'child',
+          flexLayoutId: 'flexlayout-config-child'
+        }
+          ]
         }
       ]
     };
