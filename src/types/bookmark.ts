@@ -1,4 +1,4 @@
-import { FlexTabConfig } from "./flexTabConfig";
+import { FlexTabConfig } from "./flexTab";
 
 export interface Bookmark {
   id: string;

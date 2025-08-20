@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FlexTabComponent, FlexTabConfig } from '../../types/flexTabConfig';
+import { FlexTabComponent, FlexTabConfig } from '../../types/flexTab';
 
 interface FlexTabFormProps {
   flexTabConfig: FlexTabConfig,

@@ -1,13 +1,11 @@
-import { useTheme } from '../../contexts/ThemeContext';
-import { BookmarksTabConfig } from '../../types/bookmark';
+import { useTheme } from '../../../contexts/ThemeContext';
+import { SidebarConfig } from '../../../types/sidebar';
 
 interface SidebarProps {
-
+  sideBarConfig: SidebarConfig;
 }
 
-export default function Sidebar({
-
-}: SidebarProps) {
+export default function SideBar({ sideBarConfig }: SidebarProps) {
   const { theme } = useTheme();
 
   return (
@@ -21,7 +19,7 @@ export default function Sidebar({
         fontFamily: theme.fonts.family
       }}
     >
-      Sidebar
+      Sidebar sgu
     </div>
   );
 }

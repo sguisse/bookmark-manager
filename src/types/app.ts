@@ -1,3 +1,5 @@
+import { MenuItem } from "./sidebar";
+
 export interface ApplicationConfig {
-  lastFlexlayoutOpened: string;
+  lastSelectedMenuItem: MenuItem;
 }

@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import HeaderPanel from './HeaderPanel';
-import Sidebar from './Sidebar';
+import SideBar from './sidebar/Sidebar';
 import BottomPanel from './BottomPanel';
 import BodyContentPanel from './BodyContentPanel';
 import BookmarksTab from '../bookmark/BookmarksTab';
 import { FlexLayoutManager } from '../manager/FlexLayoutManager';
+import { SidebarManager } from '../manager/SidebarManager';
 
 
 interface DashboardLayoutProps {
@@ -61,7 +62,7 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
           backgroundColor: theme.colors.sidebarBackground
         }}
       >
-        <Sidebar {...sidebarProps} />
+        <SidebarManager />
       </div>
 
       {/* Header */}
