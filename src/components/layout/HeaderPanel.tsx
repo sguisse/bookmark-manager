@@ -95,4 +95,4 @@ export const HeaderPanel: React.FC<HeaderPanelProps> = ({ onAddGroup, onExportLa
       </div>
     </div>
   );
-}
+};

@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Menu, Settings } from 'lucide-react';
 import { HeaderPanel } from './HeaderPanel';
 import { Sidebar } from './Sidebar';
 import { ControlPanel } from './ControlPanel';
-import { BottomBar } from './BottomPanel';
+import { BottomPanel } from './BottomPanel';
 import { useFlexLayoutConfig } from '../../hooks/useFlexLayoutConfig';
 
 export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -34,7 +33,9 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       console.error('Import failed:', error);
       alert('Erreur lors de l\'importation du layout');
     }
-  };  return (
+  };
+
+  return (
     <div className="dashboard-layout">
       {/* Header */}
       <header className="dashboard-header">
@@ -83,7 +84,7 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
       </div>
 
       {/* Bottom Bar */}
-      <BottomBar formatLastSaved={formatLastSaved} />
+      <BottomPanel formatLastSaved={formatLastSaved} />
     </div>
   );
 };

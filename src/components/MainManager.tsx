@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlexLayoutManagerSimple } from './FlexLayoutManagerSimple';
-import { DashboardLayout } from './DashboardLayout';
+import { DashboardLayout } from './layout/DashboardLayout';
 
 export const MainManager: React.FC = () => {
   return (

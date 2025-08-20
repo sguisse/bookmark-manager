@@ -147,7 +147,6 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = ({ searchQuer
         tabSetEnableClose: false,
         tabSetEnableDrop: true,
         tabSetEnableDrag: true,
-        tabSetEnableRename: false,
         tabSetEnableTabStrip: true,
         tabEnableClose: false,
         tabEnableRename: true,

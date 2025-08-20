@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const BottomBar: React.FC<{
+export const BottomPanel: React.FC<{
   formatLastSaved: () => string;
 }> = ({ formatLastSaved }) => (
   <footer className="dashboard-footer">
