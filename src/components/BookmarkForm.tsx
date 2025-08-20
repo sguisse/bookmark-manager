@@ -17,7 +17,7 @@ export const BookmarkForm: React.FC<BookmarkFormProps> = ({
   const { groups, addBookmark, updateBookmark } = useBookmarks();
   const [formData, setFormData] = useState<BookmarkFormData>({
     title: initialData?.title || '',
-    url: initialData?.url || '',
+    url: initialData?.url || 'https://www.google.com',
     description: initialData?.description || '',
     tags: initialData?.tags || [],
     groupId: initialData?.groupId || groups[0]?.id || '',

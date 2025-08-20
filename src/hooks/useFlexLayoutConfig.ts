@@ -25,18 +25,13 @@ export const useFlexLayoutConfig = () => {
 
   // Export current configuration
   const exportConfig = useCallback(async (): Promise<void> => {
-    if (!layoutConfig) {
-      throw new Error('No layout configuration available to export');
-    }
-
     try {
-      FlexLayoutService.exportLayout(layoutConfig);
-      setLastSaved(new Date());
+      const exportedConfig = FlexLayoutService.exportLayout();
     } catch (error) {
       console.error('Export failed:', error);
       throw error;
     }
-  }, [layoutConfig]);
+  }, []);
 
   // Import configuration from file
   const importConfig = useCallback(async (): Promise<void> => {

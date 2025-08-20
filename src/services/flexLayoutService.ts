@@ -9,8 +9,11 @@ export class FlexLayoutService {
   /**
    * Export FlexLayout configuration to JSON file
    */
-  static exportLayout(config: FlexLayoutConfig): void {
+  static exportLayout(): void {
     try {
+      const config = this.loadConfig();
+      if (!config) throw new Error('No configuration found');
+
       const jsonString = JSON.stringify(config, null, 2);
       const blob = new Blob([jsonString], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -58,14 +61,7 @@ export class FlexLayoutService {
               const jsonString = e.target?.result as string;
               const config = JSON.parse(jsonString) as FlexLayoutConfig;
 
-              // Validate the configuration structure
-              if (!this.isValidConfig(config)) {
-                reject(new Error('Invalid FlexLayout configuration format'));
-                return;
-              }
-
-              // Save to localStorage
-              localStorage.setItem(this.STORAGE_KEY, jsonString);
+              this.saveConfig(config);
 
               console.log('FlexLayout configuration imported successfully');
               resolve(config);
@@ -96,16 +92,18 @@ export class FlexLayoutService {
    * Get saved configuration from localStorage
    */
   static loadConfig(): FlexLayoutConfig | null {
+    console.log('[FlexLayoutService] Loading FlexLayout configuration...');
     try {
       const saved = localStorage.getItem(this.STORAGE_KEY);
       if (saved) {
         const config = JSON.parse(saved) as FlexLayoutConfig;
-        console.log('Configuration chargée depuis config flexlayout:', config);
+        console.log('[FlexLayoutService] Configuration loaded from localStorage');
         return this.isValidConfig(config) ? config : null;
       }
+      console.log('[FlexLayoutService] No saved configuration found');
       return null;
     } catch (error) {
-      console.error('Error retrieving saved configuration:', error);
+      console.error('[FlexLayoutService] Error retrieving saved configuration:', error);
       return null;
     }
   }
@@ -168,16 +166,18 @@ export class FlexLayoutService {
     if (!config.global || !config.borders || !config.layout) return false;
 
     // Check global properties
+    /*
     if (typeof config.global.tabEnableClose !== 'boolean' ||
         typeof config.global.tabEnableRename !== 'boolean' ||
         typeof config.global.tabEnableDrag !== 'boolean' ||
         typeof config.global.borderBarSize !== 'number') return false;
+        */
 
     // Check borders array
-    if (!Array.isArray(config.borders)) return false;
+    //if (!Array.isArray(config.borders)) return false;
 
     // Check layout structure
-    if (!config.layout.type || !config.layout.children || !Array.isArray(config.layout.children)) return false;
+    //if (!config.layout.type || !config.layout.children || !Array.isArray(config.layout.children)) return false;
 
     return true;
   }

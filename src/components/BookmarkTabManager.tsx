@@ -4,10 +4,9 @@ import { useBookmarks } from '../contexts/BookmarkContext';
 import { DraggableGroup } from './DraggableGroup';
 import { BookmarkForm } from './BookmarkForm';
 import { GroupForm } from './GroupForm';
-import { Toolbar } from './Toolbar';
 import { BookmarkGroup, Bookmark } from '../types/bookmark';
 
-export const BookmarkManager: React.FC = () => {
+export const BookmarkTabManager: React.FC = () => {
   const {
     groups,
     reorderGroups,
@@ -15,7 +14,6 @@ export const BookmarkManager: React.FC = () => {
     deleteGroup
   } = useBookmarks();
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [showBookmarkForm, setShowBookmarkForm] = useState(false);
   const [showGroupForm, setShowGroupForm] = useState(false);
   const [editingGroup, setEditingGroup] = useState<BookmarkGroup | null>(null);
@@ -59,17 +57,7 @@ export const BookmarkManager: React.FC = () => {
 
   return (
     <div className="bookmark-manager">
-      <Toolbar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onAddGroup={() => setShowGroupForm(true)}
-        onAddBookmark={() => {
-          if (groups.length > 0) {
-            setSelectedGroupId(groups[0].id);
-            setShowBookmarkForm(true);
-          }
-        }}
-      />
+
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="groups" type="group">

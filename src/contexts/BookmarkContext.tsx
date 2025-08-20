@@ -283,9 +283,15 @@ interface BookmarkContextType {
 
 const BookmarkContext = createContext<BookmarkContextType | undefined>(undefined);
 
+// Load initial state only once at module level
+const initialConfig = (() => {
+  console.log('[BookmarkContext] Loading initial bookmark configuration...');
+  return loadStoredConfig();
+})();
+
 // Fonction pour obtenir l'état initial avec les données sauvegardées
 const getInitialState = (): BookmarkState => ({
-  config: loadStoredConfig(),
+  config: initialConfig,
   selectedGroupId: null
 });
 
