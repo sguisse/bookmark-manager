@@ -1,4 +1,4 @@
-import { SidebarConfig } from "../types/sidebar";
+import { MenuItem, SidebarConfig } from "../types/sidebar";
 
 const STORAGE_KEY = 'app-fusion-sidebar';
 
@@ -61,5 +61,11 @@ export class SidebarService {
   static saveConfig(config: SidebarConfig): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   }
+
+  // Open the selected flex layout
+  static openSelectedFlexLayout(menuItem: MenuItem): void {
+    console.log('Opening flex layout for menu item:', menuItem.flexLayoutId);
+  }
+
 
 }

@@ -1,5 +1,7 @@
 export interface SidebarConfig {
+  lastSelectedItemId: string | null;
   menuItems: MenuItem[];
+  lastUpdateDate: string | null;
 }
 
 export interface MenuItem {
