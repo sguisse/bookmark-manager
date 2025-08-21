@@ -10,12 +10,12 @@ export interface Bookmark {
   updatedAt: Date;
   favicon?: string;
   category?: string;
+  collapsed?: boolean;
 }
 
 
 export interface BookmarksTabConfig extends FlexTabConfig {
   bookmarks: Bookmark[];
-  collapsed?: boolean;
 }
 
 

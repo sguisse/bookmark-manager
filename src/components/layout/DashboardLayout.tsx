@@ -4,7 +4,7 @@ import HeaderPanel from './HeaderPanel';
 import SideBar from './sidebar/Sidebar';
 import BottomPanel from './BottomPanel';
 import BodyContentPanel from './BodyContentPanel';
-import BookmarksTab from '../bookmark/BookmarksTab';
+import BookmarksTabManager from '../manager/BookmarksTabManager';
 import { FlexLayoutManager } from '../manager/FlexLayoutManager';
 import { SidebarManager } from '../manager/SidebarManager';
 
