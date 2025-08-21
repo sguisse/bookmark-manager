@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { FlexTabComponent, FlexTabFormData } from '../../types/flexTab';
+import { FlexTabComponent, FlexTabFormData, FlexTabConfig } from '../../types/flexTab';
 import { FormDisplayMode } from '../../types/app';
+import { formatDate } from '../../services/Utils';
 
 interface FlexTabFormProps {
-  flexTabConfig: Partial<FlexTabFormData>;
+  flexTabConfig: Partial<FlexTabConfig>;
   components?: Array<{ value: string; label: string }>;
   onSave: (update: FlexTabFormData) => void;
   onCancel: () => void;
@@ -60,7 +61,26 @@ export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
     <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
   <button onClick={() => onCancel && onCancel()} aria-label="Close modal" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', border: 'none', padding: 0, cursor: 'pointer' }} />
       <div style={{ position: 'relative', background: theme.colors.surface, padding: 20, borderRadius: 8, minWidth: 360, boxShadow: '0 6px 24px rgba(0,0,0,0.2)' }}>
-        <h3 style={{ marginTop: 0 }}>Edit Tab</h3>
+        <h3 style={{ marginTop: 0, marginBottom: 12 }}>{mode === FormDisplayMode.Create ? 'Add new Tab' : 'Edit Tab'}</h3>
+        {/* ID and dates (readonly) */}
+        {flexTabConfig?.id && (
+          <div style={{ marginBottom: 12 }}>
+            <label htmlFor="flex-id" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>ID</label>
+            <input id="flex-id" readOnly value={flexTabConfig.id} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
+          </div>
+        )}
+        { (flexTabConfig?.creationDate || flexTabConfig?.lastUpdateDate) && (
+          <div style={{ marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label htmlFor="flex-created" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Created</label>
+              <input id="flex-created" readOnly value={formatDate(flexTabConfig?.creationDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
+            </div>
+            <div>
+              <label htmlFor="flex-updated" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Updated</label>
+              <input id="flex-updated" readOnly value={formatDate(flexTabConfig?.lastUpdateDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
+            </div>
+          </div>
+        )}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
             <label htmlFor="flex-title" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Title</label>
@@ -84,7 +104,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
 
           <div>
             <label htmlFor="flex-component" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Tab Component</label>
-            <select id="flex-component" value={componentValue} onChange={(e) => setComponentValue(e.target.value)} disabled={mode === 'edit'} aria-disabled={mode === 'edit'} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, width: '100%', opacity: mode === 'edit' ? 0.6 : 1 }}>
+            <select id="flex-component" value={componentValue} onChange={(e) => setComponentValue(e.target.value)} disabled={mode === FormDisplayMode.Edit} aria-disabled={mode === FormDisplayMode.Edit} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, width: '100%', opacity: mode === FormDisplayMode.Edit ? 0.6 : 1 }}>
               <option value="">(choose)</option>
               {availableComponents.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
@@ -92,7 +112,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button type="button" onClick={() => { onCancel && onCancel(); }} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: theme.colors.surface }}>Cancel</button>
-            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, border: 'none', background: theme.colors.primary, color: '#fff' }}>Save</button>
+            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, border: 'none', background: theme.colors.primary, color: '#fff' }}>{mode === FormDisplayMode.Edit ? 'Update Tab' : 'Add Tab'}</button>
           </div>
         </form>
       </div>

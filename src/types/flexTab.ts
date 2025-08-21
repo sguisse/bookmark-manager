@@ -26,4 +26,6 @@ export interface FlexTabFormData {
   bgcolor?: string;
   icon?: string;
   component?: FlexTabComponent;
+  creationDate?: Date;
+  lastUpdateDate?: Date;
 }

@@ -96,8 +96,8 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
                   e.stopPropagation();
                   const nodeId = selectedTabNode.getId();
                   try { console.log('[FlexLayoutTabFactory] bookmark-editor-open-add clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
-                                if (openTabEditor) openTabEditor(nodeId, FormDisplayMode.Edit);
-                  try { window.dispatchEvent(new CustomEvent('bookmark:open-editor', { detail: { nodeId, mode: FormDisplayMode.Create } })); } catch (err) { console.warn('Event dispatch failed', err); }
+                  // signal the bookmarks manager (it listens for this event) to open the add-bookmark modal
+                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:toolbar', { detail: { nodeId, mode: FormDisplayMode.Create } })); } catch (err) { console.warn('Event dispatch failed', err); }
                 }}
                 title="Add new Bookmark"
               >

@@ -229,7 +229,8 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   } else {
     setCreateTargetNodeId(null);
     setEditingNodeId(nodeId);
-    setEditingConfig(tab?.config || {});
+  // include top-level tab dates (if present) in the editing config so the form can display them
+  setEditingConfig({ ...(tab?.config || {}), creationDate: tab?.creationDate, lastUpdateDate: tab?.lastUpdateDate });
   }
   setEditingMode(mode ?? FormDisplayMode.Edit);
   }, []);
@@ -269,7 +270,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           />
           {(editingNodeId || createTargetNodeId) && (
             <FlexLayoutTabForm
-              flexTabConfig={(editingConfig || {}) as any}
+              flexTabConfig={{ id: editingNodeId || undefined, ...(editingConfig || {}) } as any}
               mode={editingMode}
               onSave={(update) => {
                 if (editingMode === FormDisplayMode.Create) {

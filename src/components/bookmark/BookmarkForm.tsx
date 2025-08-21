@@ -1,22 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bookmark, BookmarkInput } from '../../types/bookmark';
-
-interface TabProperties {
-  title?: string;
-  icon?: string;
-  color?: string;
-  bgcolor?: string;
-  collapsed?: boolean;
-}
+import { FormDisplayMode } from '../../types/app';
+import { formatDate } from '../../services/Utils';
 
 interface BookmarkFormProps {
   bookmark?: Bookmark | null;
-  onSubmit: (bookmarkData: BookmarkInput | TabProperties) => void;
+  onSubmit: (bookmarkData: BookmarkInput) => void;
   onCancel: () => void;
-  // mode: 'bookmark' (default) or 'tab' to edit tab properties
-  mode?: 'bookmark' | 'tab';
-  initialTabProps?: TabProperties;
+  mode?: FormDisplayMode;
 }
 
 export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
@@ -29,12 +21,12 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     tags: ''
   });
 
-  const [tabData, setTabData] = useState<TabProperties>({ title: '', icon: '', color: '', bgcolor: '', collapsed: false });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // derive effective mode: prefer explicit prop, fallback to Edit when bookmark exists
+  const effectiveMode = props.mode ?? (bookmark ? FormDisplayMode.Edit : FormDisplayMode.Create);
 
   useEffect(() => {
-    if (bookmark) {
+    if (effectiveMode === FormDisplayMode.Edit && bookmark) {
       setFormData({
         title: bookmark.title || '',
         url: bookmark.url || '',
@@ -42,11 +34,12 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
         tags: bookmark.tags?.join(', ') || ''
       });
     }
-    // initialize tab data when provided
-    if (props.initialTabProps) {
-      setTabData({ ...(props.initialTabProps || {}) });
+
+    if (effectiveMode === FormDisplayMode.Create) {
+      // clear form for create mode
+      setFormData({ title: '', url: '', description: '', tags: '' });
     }
-  }, [bookmark]);
+  }, [bookmark, props.mode]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -72,20 +65,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (props.mode === 'tab') {
-      // submit tab properties
-      const tabProps: TabProperties = {
-        title: tabData.title?.trim(),
-        icon: tabData.icon?.trim(),
-        color: tabData.color || '',
-        bgcolor: tabData.bgcolor || '',
-        collapsed: !!tabData.collapsed
-      };
-      onSubmit(tabProps);
-      return;
-    }
-
-    if (!validateForm()) {
+  if (!validateForm()) {
       return;
     }
 
@@ -98,14 +78,10 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
         : undefined
     };
 
-    onSubmit(bookmarkData);
+  onSubmit(bookmarkData);
   };
 
   const handleChange = (field: string, value: string) => {
-    if (props.mode === 'tab') {
-      setTabData(prev => ({ ...prev, [field]: value } as any));
-      return;
-    }
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
@@ -113,9 +89,6 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     }
   };
 
-  const handleTabCheckbox = (field: string, value: boolean) => {
-    setTabData(prev => ({ ...prev, [field]: value } as any));
-  };
 
   const inputStyle = {
     width: '100%',
@@ -145,82 +118,61 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
           color: theme.colors.text.primary
         }}
       >
-        {(() => {
-          if (props.mode === 'tab') return 'Edit Tab Properties';
-          if (bookmark) return 'Edit Bookmark';
-          return 'Add New Bookmark';
-        })()}
+  {effectiveMode === FormDisplayMode.Edit ? 'Edit Bookmark' : 'Add New Bookmark'}
       </h2>
-
+      {/* show id after the popup title (Edit mode) as a readonly field */}
+      {effectiveMode === FormDisplayMode.Edit && bookmark && (
+        <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>
+          <label htmlFor="bookmark-id" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>ID</label>
+          <input id="bookmark-id" type="text" readOnly value={bookmark.id} style={{ ...inputStyle, width: '100%', backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
-        {props.mode === 'tab' ? (
-          <>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="tab-title">Tab title</label>
-              <input id="tab-title" type="text" value={tabData.title || ''} onChange={(e) => handleChange('title', e.target.value)} style={inputStyle} placeholder="Tab title" autoFocus />
-            </div>
+        {/* Title Field */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-title">Title *</label>
+          <input id="bookmark-title" type="text" value={formData.title} onChange={(e) => handleChange('title', e.target.value)} style={errors.title ? errorInputStyle : inputStyle} placeholder="Enter bookmark title" autoFocus />
+          {errors.title && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.title}</div>)}
+        </div>
 
-            <div style={{ marginBottom: '1rem', display: 'flex', gap: 8, alignItems: 'center' }}>
-              <div style={{ flex: '0 0 140px' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="tab-icon">Icon</label>
-                <input id="tab-icon" type="text" value={tabData.icon || ''} onChange={(e) => handleChange('icon', e.target.value)} style={inputStyle} placeholder="Emoji or text" />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="tab-color">Color</label>
-                <input id="tab-color" type="color" value={tabData.color || ''} onChange={(e) => handleChange('color', e.target.value)} />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="tab-bgcolor">BG color</label>
-                <input id="tab-bgcolor" type="color" value={tabData.bgcolor || ''} onChange={(e) => setTabData(prev => ({ ...prev, bgcolor: e.target.value }))} />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <label htmlFor="tab-collapsed" style={{ fontSize: theme.fonts.sizes.small, color: theme.colors.text.primary }}>Collapsed</label>
-                <input id="tab-collapsed" type="checkbox" checked={!!tabData.collapsed} onChange={(e) => handleTabCheckbox('collapsed', e.target.checked)} />
-              </div>
-            </div>
+        {/* URL Field */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-url">URL *</label>
+          <input id="bookmark-url" type="url" value={formData.url} onChange={(e) => handleChange('url', e.target.value)} style={errors.url ? errorInputStyle : inputStyle} placeholder="https://example.com" />
+          {errors.url && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.url}</div>)}
+        </div>
 
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={onCancel} style={{ padding: '0.75rem 1.5rem', border: `1px solid ${theme.colors.border}`, borderRadius: '6px', backgroundColor: 'transparent', color: theme.colors.text.primary }}>Cancel</button>
-              <button type="submit" style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '6px', backgroundColor: theme.colors.primary, color: '#ffffff' }}>{'Save'}</button>
-            </div>
-          </>
-        ) : (
-          // bookmark editing
-          <>
-            {/* Title Field */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-title">Title *</label>
-              <input id="bookmark-title" type="text" value={formData.title} onChange={(e) => handleChange('title', e.target.value)} style={errors.title ? errorInputStyle : inputStyle} placeholder="Enter bookmark title" autoFocus />
-              {errors.title && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.title}</div>)}
-            </div>
+        {/* Description Field */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-description">Description</label>
+          <textarea id="bookmark-description" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Optional description" rows={3} />
+        </div>
 
-            {/* URL Field */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-url">URL *</label>
-              <input id="bookmark-url" type="url" value={formData.url} onChange={(e) => handleChange('url', e.target.value)} style={errors.url ? errorInputStyle : inputStyle} placeholder="https://example.com" />
-              {errors.url && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.url}</div>)}
-            </div>
+        {/* Tags Field */}
+        <div style={{ marginBottom: '2rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-tags">Tags</label>
+          <input id="bookmark-tags" type="text" value={formData.tags} onChange={(e) => handleChange('tags', e.target.value)} style={inputStyle} placeholder="Enter tags separated by commas" />
+          <div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.text.secondary }}>Separate multiple tags with commas (e.g., work, documentation, reference)</div>
+        </div>
 
-            {/* Description Field */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-description">Description</label>
-              <textarea id="bookmark-description" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Optional description" rows={3} />
-            </div>
+  {/* show created/updated timestamps when editing existing bookmark as two readonly fields */}
+  {effectiveMode === FormDisplayMode.Edit && bookmark && (
+    <div style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div>
+        <label htmlFor="bookmark-created" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>Created</label>
+        <input id="bookmark-created" type="text" readOnly value={formatDate(bookmark.createdAt)} style={{ ...inputStyle, backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
+      </div>
+      <div>
+        <label htmlFor="bookmark-updated" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>Updated</label>
+        <input id="bookmark-updated" type="text" readOnly value={formatDate(bookmark.updatedAt)} style={{ ...inputStyle, backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
+      </div>
+    </div>
+  )}
 
-            {/* Tags Field */}
-            <div style={{ marginBottom: '2rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-tags">Tags</label>
-              <input id="bookmark-tags" type="text" value={formData.tags} onChange={(e) => handleChange('tags', e.target.value)} style={inputStyle} placeholder="Enter tags separated by commas" />
-              <div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.text.secondary }}>Separate multiple tags with commas (e.g., work, documentation, reference)</div>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={onCancel} style={{ padding: '0.75rem 1.5rem', border: `1px solid ${theme.colors.border}`, borderRadius: '6px', backgroundColor: 'transparent', color: theme.colors.text.primary }}>Cancel</button>
-              <button type="submit" style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '6px', backgroundColor: theme.colors.primary, color: '#ffffff' }}>{bookmark ? 'Update Bookmark' : 'Add Bookmark'}</button>
-            </div>
-          </>
-        )}
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onCancel} style={{ padding: '0.75rem 1.5rem', border: `1px solid ${theme.colors.border}`, borderRadius: '6px', backgroundColor: 'transparent', color: theme.colors.text.primary }}>Cancel</button>
+          <button type="submit" style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '6px', backgroundColor: theme.colors.primary, color: '#ffffff' }}>{effectiveMode === FormDisplayMode.Edit ? 'Update Bookmark' : 'Add Bookmark'}</button>
+        </div>
       </form>
     </div>
   );
