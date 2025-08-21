@@ -4,6 +4,11 @@ import { useApplication } from '../../contexts/ApplicationContext';
 import { Layout, Model, TabNode } from 'flexlayout-react';
 import 'flexlayout-react/style/light.css';
 import { FlexTabComponent } from '../../types/flexTab';
+import WelcomeTab from '../welcome/WelcomeTab';
+import BookmarksTab from '../bookmark/BookmarksTab';
+import MarkdownTab from '../markdown/MarkdownTab';
+import { BookmarksTabConfig } from '../../types/bookmark';
+import { MarkdownTabConfig } from '../../types/markdown';
 
 interface FlexLayoutManagerProps {}
 
@@ -48,17 +53,37 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = () => {
 
   const factoryCallback = useCallback((node: TabNode) => {
     const component = node.getComponent();
-    // Convert component to FlexTabComponent
-    const flexTabComponent = component as FlexTabComponent;
     const config = node.getConfig();
 
-    // Simple renderer: show component name and any config
+    // Normalize component string to handle different casings/names (e.g. "Welcome" vs "welcome", "BookmarkGroup")
+    const compKey = String(component || '').toLowerCase();
+
+    // Map several possible component keys to the intended tab components
+    if (compKey === 'welcosme') {
+      return <WelcomeTab />;
+    }
+
+    if (compKey === 'markdown') {
+      return <MarkdownTab config={config as MarkdownTabConfig} />;
+    }
+
+    if (compKey === 'bookmarks') {
+      return <BookmarksTab config={config as BookmarksTabConfig} />;
+    }
+
+    // Fallback: render unknown component name + raw config
     return (
       <div style={{ padding: 12 }}>
-        <strong>{component}</strong> with config :
-        {config && Object.keys(config).length > 0 && (
-          <div style={{ marginTop: 8, fontSize: 12, color: '#444' }}>{JSON.stringify(config)}</div>
-        )}
+        <div><strong>{String(component)}</strong> component not found !</div>
+        <div style={{ marginTop: 8, fontSize: 16, color: '#444' }}>Here, it is his configuration :</div>
+        <pre>
+          {config && Object.keys(config).length > 0 && (
+            <div style={{ marginTop: 8, fontSize: 12, color: '#444' }}>{JSON.stringify(config)}</div>
+          )}
+          {(!config || Object.keys(config).length === 0) && (
+            <div style={{ marginTop: 8, fontSize: 12, color: '#444' }}>No configuration found</div>
+          )}
+        </pre>
       </div>
     );
   }, []);

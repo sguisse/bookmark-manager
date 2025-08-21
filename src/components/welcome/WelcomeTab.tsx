@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export default function WelcomeTab() {
@@ -12,7 +12,46 @@ export default function WelcomeTab() {
 
   return (
     <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
-      Welcome
+      Welcome Home
+
+      <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div><div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
+    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+      Welcome Home
+    </div>
     </div>
   );
 }

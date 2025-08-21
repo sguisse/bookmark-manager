@@ -32,7 +32,20 @@ export class FlexLayoutService {
               {
                 type: "tab",
                 name: "Welcome",
-                component: "Welcome"
+                component: "Welcome",
+                config: {
+                  "color": "#ff0000",
+                  "fontSize": "16px"
+                }
+              },
+              {
+                type: "tab",
+                name: "Markdown",
+                component: "Markdown",
+                config: {
+                  "color": "#00ff00",
+                  "content": "# Markdown Content",
+                }
               }
             ]
           }
