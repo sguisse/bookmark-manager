@@ -5,6 +5,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { Layout, Model } from 'flexlayout-react';
 import 'flexlayout-react/style/light.css';
 import createFlexLayoutFactory, { onRenderTab as defaultOnRenderTab } from './FlexLayoutTabFactory';
+import { v4 as uuidv4 } from 'uuid';
 import { FormDisplayMode } from '../../types/app';
 import FlexLayoutTabForm from '../common/FlexLayoutTabForm';
 import { SidebarMenuItem } from '../../types/sidebar';
@@ -25,7 +26,6 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   useEffect(() => {
     if (selectedMenuItem) {
       const id = selectedMenuItem.id;
-      console.log('menuItem selected :', id);
       // attempt to load layout for this id
       try {
         const config = FlexLayoutService.loadConfig(id);
@@ -205,11 +205,12 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editingConfig, setEditingConfig] = useState<Record<string, any> | null>(null);
   const [editingMode, setEditingMode] = useState<FormDisplayMode>(FormDisplayMode.Edit);
+  // when creating a new tab we keep track of the selected node that indicates the target tabset
+  const [createTargetNodeId, setCreateTargetNodeId] = useState<string | null>(null);
 
   const openTabEditor = useCallback((nodeId: string, mode: FormDisplayMode = FormDisplayMode.Edit) => {
     if (!modelRef.current) return;
     const json = modelRef.current.toJson();
-  try { console.debug('[FlexLayoutManager] openTabEditor called', { nodeId }); } catch (err) { console.warn('Failed to debug log', err); }
     const findTab = (children: Array<Record<string, any>> | undefined): Record<string, any> | null => {
       if (!Array.isArray(children)) return null;
       for (const child of children) {
@@ -220,11 +221,17 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
       return null;
     };
     const tab = json.layout ? findTab([json.layout]) : null;
-  try { console.debug('[FlexLayoutManager] tab found?', { nodeId, found: !!tab }); } catch (err) { console.warn('Failed to debug log', err); }
-  try { console.debug('[FlexLayoutManager] tab found?', { nodeId, found: !!tab }); } catch (err) { console.warn('Failed to debug log', err); }
-  setEditingNodeId(nodeId);
-  setEditingConfig(tab?.config || {});
-  setEditingMode(mode || 'edit');
+  if (mode === FormDisplayMode.Create) {
+    // For creation we remember the target (selected) node so we can insert a new tab in the same tabset.
+    setCreateTargetNodeId(nodeId);
+    setEditingNodeId(null);
+    setEditingConfig({}); // empty form fields for creation
+  } else {
+    setCreateTargetNodeId(null);
+    setEditingNodeId(nodeId);
+    setEditingConfig(tab?.config || {});
+  }
+  setEditingMode(mode ?? FormDisplayMode.Edit);
   }, []);
 
   // fallback listener for toolbar events that dispatch a global open-editor event
@@ -244,7 +251,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   }, [openTabEditor]);
 
   const { factory, onRenderTabSet, onRenderTab: boundOnRenderTab } = (createFlexLayoutFactory as any)(handleChildConfigChange, openTabEditor);
-  try { console.log('[FlexLayoutManager] factory created, boundOnRenderTab?', !!boundOnRenderTab); } catch (err) { console.warn('log failed', err); }
+  // factory created
 
 
   return (
@@ -260,16 +267,64 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
             onRenderTab={boundOnRenderTab || defaultOnRenderTab}
             onRenderTabSet={onRenderTabSet}
           />
-          {editingNodeId && (
+          {(editingNodeId || createTargetNodeId) && (
             <FlexLayoutTabForm
               flexTabConfig={(editingConfig || {}) as any}
               mode={editingMode}
               onSave={(update) => {
-                updateTabConfigAndSave(editingNodeId, update);
+                if (editingMode === FormDisplayMode.Create) {
+                  // create a new tab in the same tabset as createTargetNodeId
+                  const m = modelRef.current;
+                  if (m) {
+                    const json = m.toJson();
+
+                    // find the parent tabset of the createTargetNodeId
+                    const findParentTabset = (children: Array<Record<string, any>> | undefined, parent: Record<string, any> | null = null): Record<string, any> | null => {
+                      if (!Array.isArray(children)) return null;
+                      for (const child of children) {
+                        if (child.type === 'tab' && child.id === createTargetNodeId) return parent;
+                        const found = findParentTabset(child.children as Array<Record<string, any>> | undefined, child.type === 'tabset' ? child : parent);
+                        if (found) return found;
+                      }
+                      return null;
+                    };
+
+                    const parentTabset = json.layout ? findParentTabset([json.layout], null) : null;
+
+                    const newId = uuidv4();
+                    const newTab: any = {
+                      type: 'tab',
+                      id: newId,
+                      name: update.title || 'New Tab',
+                      component: update.component || 'welcome',
+                      config: { ...(update || {}) }
+                    };
+
+                    if (parentTabset && Array.isArray(parentTabset.children)) {
+                      parentTabset.children.push(newTab);
+                    } else if (json.layout?.children && Array.isArray(json.layout.children)) {
+                      // fallback: append to top-level layout children
+                      json.layout.children.push(newTab);
+                    } else {
+                      // if layout is empty, create a new tabset with this tab
+                      json.layout = { type: 'row', children: [{ type: 'tabset', children: [newTab] }] };
+                    }
+
+                    const newModel = Model.fromJson(json as any);
+                    setModel(newModel);
+                    modelRef.current = newModel;
+                    FlexLayoutService.saveConfig(selectedMenuItem?.id || '', json as any);
+                  }
+                } else if (editingNodeId) {
+                  updateTabConfigAndSave(editingNodeId, update);
+                }
+
+                // reset modal state
                 setEditingNodeId(null);
                 setEditingConfig(null);
+                setCreateTargetNodeId(null);
               }}
-              onCancel={() => { setEditingNodeId(null); setEditingConfig(null); }}
+              onCancel={() => { setEditingNodeId(null); setEditingConfig(null); setCreateTargetNodeId(null); }}
             />
           )}
         </div>

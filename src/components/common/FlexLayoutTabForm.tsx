@@ -19,21 +19,21 @@ export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
   const defaultComponents = Object.values(FlexTabComponent).map((v) => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
   const availableComponents = components && components.length > 0 ? components : defaultComponents;
 
-  const [title, setTitle] = useState<string>(flexTabConfig?.title || '');
-  const [color, setColor] = useState<string>(flexTabConfig?.color || '#3b82f6');
-  const [bgcolor, setBgcolor] = useState<string>(flexTabConfig?.bgcolor || '');
-  const [icon, setIcon] = useState<string>(flexTabConfig?.icon || '');
-  const [componentValue, setComponentValue] = useState<string>(flexTabConfig?.component || '');
+  const [title, setTitle] = useState<string>(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.title || ''));
+  const [color, setColor] = useState<string>(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.color || '#3b82f6'));
+  const [bgcolor, setBgcolor] = useState<string>(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.bgcolor || ''));
+  const [icon, setIcon] = useState<string>(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.icon || ''));
+  const [componentValue, setComponentValue] = useState<string>(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.component || ''));
 
   // sync initial values only when the tab id changes to avoid clobbering user edits
   useEffect(() => {
-    // sync when a new tab is opened (id change)
-    setTitle(flexTabConfig?.title || '');
-    setColor(flexTabConfig?.color || '#3b82f6');
-    setBgcolor(flexTabConfig?.bgcolor || '');
-    setIcon(flexTabConfig?.icon || '');
-    setComponentValue(flexTabConfig?.component || '');
-  }, [flexTabConfig?.id]);
+    // sync when a new tab is opened (id change) or when mode changes (create vs edit)
+    setTitle(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.title || ''));
+    setColor(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.color || '#3b82f6'));
+    setBgcolor(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.bgcolor || ''));
+    setIcon(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.icon || ''));
+    setComponentValue(mode === FormDisplayMode.Create ? '' : (flexTabConfig?.component || ''));
+  }, [flexTabConfig?.id, mode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

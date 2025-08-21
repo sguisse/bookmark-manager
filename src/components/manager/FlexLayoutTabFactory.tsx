@@ -71,12 +71,12 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
 
         renderValues.buttons.push(
           <button
-            key="bm-open-add"
+            key="tab-editor-open-add"
             className="flexlayout__tab_toolbar_button"
               onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   const nodeId = selectedTabNode.getId();
-                      try { console.log('[FlexLayoutTabFactory] bm-open-add clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
+                      try { console.log('[FlexLayoutTabFactory] tab-editor-open-add clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
                             if (openTabEditor) openTabEditor(nodeId, FormDisplayMode.Create);
                       // fallback: dispatch a global event so listeners (including older code) can respond
                       try { window.dispatchEvent(new CustomEvent('flexlayout:tab:open-editor', { detail: { nodeId, mode: FormDisplayMode.Create } })); } catch (err) { console.warn('Event dispatch failed', err); }
@@ -87,15 +87,35 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
           </button>
         );
 
+        if (comp === 'bookmarks') {
+              renderValues.buttons.push(
+              <button
+                key="bookmark-editor-open-add"
+                className="flexlayout__tab_toolbar_button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  const nodeId = selectedTabNode.getId();
+                  try { console.log('[FlexLayoutTabFactory] bookmark-editor-open-add clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
+                                if (openTabEditor) openTabEditor(nodeId, FormDisplayMode.Edit);
+                  try { window.dispatchEvent(new CustomEvent('bookmark:open-editor', { detail: { nodeId, mode: FormDisplayMode.Create } })); } catch (err) { console.warn('Event dispatch failed', err); }
+                }}
+                title="Add new Bookmark"
+              >
+                📑
+              </button>
+            );
+
+        }
+
 
         renderValues.buttons.push(
           <button
-            key="bm-open-edit"
+            key="tab-editor-open-edit"
             className="flexlayout__tab_toolbar_button"
             onClick={(e: React.MouseEvent) => {
               e.stopPropagation();
               const nodeId = selectedTabNode.getId();
-              try { console.log('[FlexLayoutTabFactory] bm-open-edit clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
+              try { console.log('[FlexLayoutTabFactory] tab-editor-open-edit clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
                             if (openTabEditor) openTabEditor(nodeId, FormDisplayMode.Edit);
               try { window.dispatchEvent(new CustomEvent('flexlayout:tab:open-editor', { detail: { nodeId, mode: FormDisplayMode.Edit } })); } catch (err) { console.warn('Event dispatch failed', err); }
             }}
@@ -106,9 +126,7 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
         );
 
 
-      if (comp === 'bookmarks') {
 
-      }
 
       if (comp === 'markdown') {
 
