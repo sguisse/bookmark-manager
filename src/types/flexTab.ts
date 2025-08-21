@@ -10,5 +10,6 @@ export interface FlexTabConfig {
 export enum FlexTabComponent {
   Bookmarks = "bookmarks",
   Markdown = "markdown",
+  Welcome = "welcome",
   // add more as needed
 }

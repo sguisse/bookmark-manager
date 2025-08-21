@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FlexLayoutConfig, FlexLayoutService } from '../../services/flexLayoutService';
 import { useApplication } from '../../contexts/ApplicationContext';
+import { Layout, Model, TabNode } from 'flexlayout-react';
+import 'flexlayout-react/style/light.css';
+import { FlexTabComponent } from '../../types/flexTab';
 
 interface FlexLayoutManagerProps {}
 
 
 export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = () => {
   const [layout, setLayout] = useState<FlexLayoutConfig | null>(null);
+  const [model, setModel] = useState<Model | null>(null);
   const { selectedMenuItem } = useApplication();
 
+  // Load layout configuration when a menu item is selected
   useEffect(() => {
     if (selectedMenuItem) {
       const id = selectedMenuItem.id;
@@ -25,13 +30,51 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = () => {
     }
   }, [selectedMenuItem]);
 
+  // When a layout config is available, create a flexlayout Model
+  useEffect(() => {
+    if (!layout) {
+      setModel(null);
+      return;
+    }
+
+    try {
+      const m = Model.fromJson(layout as any);
+      setModel(m);
+    } catch (err) {
+      console.warn('Failed to create Model from layout', err);
+      setModel(null);
+    }
+  }, [layout]);
+
+  const factoryCallback = useCallback((node: TabNode) => {
+    const component = node.getComponent();
+    // Convert component to FlexTabComponent
+    const flexTabComponent = component as FlexTabComponent;
+    const config = node.getConfig();
+
+    // Simple renderer: show component name and any config
+    return (
+      <div style={{ padding: 12 }}>
+        <strong>{component}</strong> with config :
+        {config && Object.keys(config).length > 0 && (
+          <div style={{ marginTop: 8, fontSize: 12, color: '#444' }}>{JSON.stringify(config)}</div>
+        )}
+      </div>
+    );
+  }, []);
+
 
   return (
     <div style={{ padding: 16 }}>
       <h3>Flex Layout Manager</h3>
 
-      {layout ? (
-        <pre style={{ whiteSpace: 'pre-wrap', background: '#f7f7f7', padding: 12, borderRadius: 6 }}>{JSON.stringify(layout, null, 2)}</pre>
+      {model ? (
+        <div style={{ height: 400 }}>
+          <Layout
+            model={model}
+            factory={factoryCallback}
+          />
+        </div>
       ) : (
         <div>No layout configuration found.</div>
       )}
