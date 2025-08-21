@@ -43,8 +43,8 @@ function Favicon(props: Readonly<{ src?: string; size?: number; onError?: () => 
 }
 
 // Card view component moved out; accepts props rather than closing over parent scope
-function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; theme: any; }>) {
-  const { bookmark, onEdit, onDelete, onOpen, theme } = props;
+function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
+  const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme } = props;
   const [isHovered, setIsHovered] = useState(false);
 
   const handleEditClick = (e: React.MouseEvent) => { e.stopPropagation(); onEdit(bookmark); };
@@ -73,6 +73,9 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
       onMouseLeave={() => setIsHovered(false)}
     >
       <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', display: 'flex', gap: '0.25rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s ease' }}>
+        {onCollapse && (
+          <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row" style={actionButtonStyle(theme.colors.surface)}>🔺</button>
+        )}
         <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>✏️</button>
         <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>🗑️</button>
       </div>
@@ -143,7 +146,7 @@ export default function BookmarkCard(props: Readonly<BookmarkCardProps>) {
       ) : (
         <>
           {expandedInRow ? (
-            <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} theme={theme} />
+            <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} onCollapse={() => setExpandedInRow(false)} theme={theme} />
           ) : (
             <TableRowView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onToggleExpand={() => setExpandedInRow(v => !v)} expanded={expandedInRow} theme={theme} />
           )}
