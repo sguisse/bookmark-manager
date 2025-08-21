@@ -7,7 +7,7 @@ import { DynamicIcon } from 'lucide-react/dynamic';
 export const SidebarManager: React.FC = () => {
   const [sidebarConfig, setSidebarConfig] = useState<SidebarConfig | undefined>(undefined);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  const { setSelectedMenuItem } = useApplication();
+  const { setSelectedMenuItem, selectedMenuItem } = useApplication();
 
   useEffect(() => {
     // Try to load from SidebarService/localStorage first
@@ -52,7 +52,7 @@ export const SidebarManager: React.FC = () => {
     }
     if (found && sidebarConfig) {
       sidebarConfig.lastSelectedItemId = found.id;
-      sidebarConfig.lastUpdateDate = new Date().toISOString();
+      sidebarConfig.lastUpdateDate = new Date();
       SidebarService.saveConfig(sidebarConfig);
     }
   }
@@ -69,13 +69,15 @@ export const SidebarManager: React.FC = () => {
         {items.map((item) => {
           const hasChildren = !!(item.children && item.children.length > 0);
           const isOpen = !!openGroups[item.id];
+          const isSelected = !!(selectedMenuItem && selectedMenuItem.id === item.id);
           return (
             <li key={item.id} id={item.id} style={{ margin: '6px 0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button
                   type="button"
                   onClick={() => menuItemSelectionHandler(sidebarConfig, item.id)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                  aria-current={isSelected ? 'true' : undefined}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: isSelected ? '#e6f7ff' : 'none', border: 'none', cursor: 'pointer', padding: '6px 8px', borderRadius: 6 }}
                 >
                   {renderIcon(item.icon)}
                   <span>{item.title}</span>
@@ -109,7 +111,7 @@ export const SidebarManager: React.FC = () => {
     if (icon.startsWith('http')) {
       return <img src={icon} alt="" style={{ width: 20, height: 20, objectFit: 'contain' }} />;
     }
-    return <DynamicIcon name={icon} color="black" size={24} />;
+  return <DynamicIcon name={icon as any} color="black" size={24} />;
   };
 
   return (

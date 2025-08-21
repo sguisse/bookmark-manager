@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { FlexTabComponent, FlexTabFormData } from '../../types/flexTab';
+import { FormDisplayMode } from '../../types/app';
 
 interface FlexTabFormProps {
   flexTabConfig: Partial<FlexTabFormData>;
   components?: Array<{ value: string; label: string }>;
   onSave: (update: FlexTabFormData) => void;
   onCancel: () => void;
-  mode?: 'create' | 'edit';
+  mode?: FormDisplayMode;
 }
 
 export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
-  const { flexTabConfig, components, onSave, onCancel, mode = 'edit' } = props;
+  const { flexTabConfig, components, onSave, onCancel, mode = FormDisplayMode.Edit } = props;
   const { theme } = useTheme();
 
   // Default components list derived from the FlexTabComponent enum.

@@ -5,6 +5,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { Layout, Model } from 'flexlayout-react';
 import 'flexlayout-react/style/light.css';
 import createFlexLayoutFactory, { onRenderTab as defaultOnRenderTab } from './FlexLayoutTabFactory';
+import { FormDisplayMode } from '../../types/app';
 import FlexLayoutTabForm from '../common/FlexLayoutTabForm';
 import { SidebarMenuItem } from '../../types/sidebar';
 
@@ -203,8 +204,9 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   // modal state for editing a tab's config
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
   const [editingConfig, setEditingConfig] = useState<Record<string, any> | null>(null);
+  const [editingMode, setEditingMode] = useState<FormDisplayMode>(FormDisplayMode.Edit);
 
-  const openTabEditor = useCallback((nodeId: string) => {
+  const openTabEditor = useCallback((nodeId: string, mode: FormDisplayMode = FormDisplayMode.Edit) => {
     if (!modelRef.current) return;
     const json = modelRef.current.toJson();
   try { console.debug('[FlexLayoutManager] openTabEditor called', { nodeId }); } catch (err) { console.warn('Failed to debug log', err); }
@@ -219,17 +221,20 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
     };
     const tab = json.layout ? findTab([json.layout]) : null;
   try { console.debug('[FlexLayoutManager] tab found?', { nodeId, found: !!tab }); } catch (err) { console.warn('Failed to debug log', err); }
+  try { console.debug('[FlexLayoutManager] tab found?', { nodeId, found: !!tab }); } catch (err) { console.warn('Failed to debug log', err); }
   setEditingNodeId(nodeId);
   setEditingConfig(tab?.config || {});
+  setEditingMode(mode || 'edit');
   }, []);
 
   // fallback listener for toolbar events that dispatch a global open-editor event
   useEffect(() => {
     const handler = (e: Event) => {
       try {
-        const ce = e as CustomEvent<{ nodeId: string }>;
+        const ce = e as CustomEvent<{ nodeId: string; mode?: FormDisplayMode }>;
         const nid = ce?.detail?.nodeId;
-        if (nid) openTabEditor(nid);
+  const mode = ce?.detail?.mode;
+        if (nid) openTabEditor(nid, mode || FormDisplayMode.Edit);
       } catch (err) {
         console.warn('fallback open-editor handler failed', err);
       }
@@ -258,7 +263,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           {editingNodeId && (
             <FlexLayoutTabForm
               flexTabConfig={(editingConfig || {}) as any}
-              mode="edit"
+              mode={editingMode}
               onSave={(update) => {
                 updateTabConfigAndSave(editingNodeId, update);
                 setEditingNodeId(null);
