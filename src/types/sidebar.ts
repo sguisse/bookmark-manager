@@ -1,13 +1,13 @@
 export interface SidebarConfig {
   lastSelectedItemId: string | null;
-  menuItems: MenuItem[];
+  menuItems: SidebarMenuItem[];
   lastUpdateDate: string | null;
 }
 
-export interface MenuItem {
+export interface SidebarMenuItem {
   id: string;
   title: string;
   icon?: string;
   flexLayoutId?: string;
-  children?: MenuItem[];
+  children?: SidebarMenuItem[];
 }

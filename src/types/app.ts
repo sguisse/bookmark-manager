@@ -1,5 +1,5 @@
-import { MenuItem } from "./sidebar";
+import { SidebarMenuItem } from "./sidebar";
 
 export interface ApplicationConfig {
-  lastSelectedMenuItem: MenuItem;
+  lastSelectedMenuItem: SidebarMenuItem;
 }

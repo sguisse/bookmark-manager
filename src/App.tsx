@@ -1,14 +1,13 @@
 import { ThemeProvider } from './contexts/ThemeContext';
-import { NotificationProvider, useNotifications } from './contexts/NotificationContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { ApplicationProvider } from './contexts/ApplicationContext';
 import DashboardLayout from './components/layout/DashboardLayout';
 
 function AppContent() {
-
-
-  const notifications = useNotifications();
+  // Keep AppContent minimal; no need to call useNotifications here
 
   return (
-    <DashboardLayout/>
+    <DashboardLayout />
   );
 }
 
@@ -16,7 +15,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <NotificationProvider>
-        <AppContent />
+        <ApplicationProvider>
+          <AppContent />
+        </ApplicationProvider>
       </NotificationProvider>
     </ThemeProvider>
   );

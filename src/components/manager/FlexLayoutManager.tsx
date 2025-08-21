@@ -1,34 +1,29 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlexLayoutConfig, FlexLayoutService } from '../../services/flexLayoutService';
+import { useApplication } from '../../contexts/ApplicationContext';
 
 interface FlexLayoutManagerProps {}
 
-const STORAGE_KEY = 'bookmark-manager-config-flexlayout';
 
 export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = () => {
   const [layout, setLayout] = useState<FlexLayoutConfig | null>(null);
+  const { selectedMenuItem } = useApplication();
 
   useEffect(() => {
-    // Try to load from localStorage first
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (FlexLayoutService.isValidConfig(parsed)) {
-          setLayout(parsed as FlexLayoutConfig);
-          return;
+    if (selectedMenuItem) {
+      const id = selectedMenuItem.id;
+      console.log('menuItem selected :', id);
+      // attempt to load layout for this id
+      try {
+        const config = FlexLayoutService.loadConfig(id);
+        if (config) {
+          setLayout(config);
         }
+      } catch (err) {
+        console.warn('Error loading layout for selected menu item', err);
       }
-    } catch (err) {
-      // ignore and fall back to default
-      console.warn('Failed to load flex layout from storage, using default', err);
     }
-
-    // Fallback to default config
-    setLayout(FlexLayoutService.getDefaultConfig());
-  }, []);
-
-
+  }, [selectedMenuItem]);
 
 
   return (

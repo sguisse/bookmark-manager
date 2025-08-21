@@ -1,10 +1,11 @@
 import { IJsonModel } from 'flexlayout-react';
 
-//const STORAGE_KEY = 'flexlayout-config-{ID}';
-
 export type FlexLayoutConfig = IJsonModel;
 
 export class FlexLayoutService {
+
+  static readonly STORAGE_KEY_PREFIX = 'app-fusion-flexlayout-{MENU_ITEM_ID}';
+
   /**
    * Get default FlexLayout configuration
    */
@@ -38,6 +39,20 @@ export class FlexLayoutService {
         ]
       }
     };
+  }
+
+  // Load FlexLayout configuration from local storage for the selected menu item
+  static loadConfig(menuItemId: string): FlexLayoutConfig | null {
+    const config = localStorage.getItem(FlexLayoutService.STORAGE_KEY_PREFIX.replace('{MENU_ITEM_ID}', menuItemId));
+    if (config) {
+      try {
+        let parsedConfig = JSON.parse(config);
+        return parsedConfig;
+      } catch (error) {
+        console.error("Failed to parse flex layout config:", error);
+      }
+    }
+    return FlexLayoutService.getDefaultConfig();
   }
 
   /**

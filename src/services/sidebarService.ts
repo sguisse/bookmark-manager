@@ -1,25 +1,28 @@
-import { MenuItem, SidebarConfig } from "../types/sidebar";
-
-const STORAGE_KEY = 'app-fusion-sidebar';
+import { SidebarMenuItem, SidebarConfig } from "../types/sidebar";
 
 export class SidebarService {
+
+  static readonly STORAGE_KEY = 'app-fusion-sidebar';
+
   /**
    * Get default Sidebar configuration
    */
   static getDefaultConfig(): SidebarConfig {
     return {
+      lastSelectedItemId: "bookmarks",
+      lastUpdateDate: null,
       menuItems: [
         {
           id: 'bookmarks',
           title: 'Bookmarks',
           icon: 'bookmark',
-          flexLayoutId: 'flexlayout-config-bookmarks'
+          flexLayoutId: 'app-fusion-flexlayout-bookmarks'
         },
         {
           id: 'groups',
           title: 'Groups',
           icon: 'group',
-          flexLayoutId: 'flexlayout-config-groups'
+          flexLayoutId: 'app-fusion-flexlayout-groups'
         },
         {
           id: 'settings',
@@ -27,11 +30,11 @@ export class SidebarService {
           icon: 'settings',
           children: [
             {
-          id: 'child',
-          title: 'child',
-          icon: 'child',
-          flexLayoutId: 'flexlayout-config-child'
-        }
+              id: 'child',
+              title: 'child',
+              icon: 'child',
+              flexLayoutId: 'app-fusion-flexlayout-child'
+            }
           ]
         }
       ]
@@ -40,7 +43,7 @@ export class SidebarService {
 
   // Load Sidebar configuration from local storage
   static loadConfig(): SidebarConfig | null {
-    const config  = localStorage.getItem(STORAGE_KEY);
+    const config  = localStorage.getItem(SidebarService.STORAGE_KEY);
     if (config) {
       try {
         let parsedConfig = JSON.parse(config);
@@ -59,13 +62,7 @@ export class SidebarService {
 
   // Save Sidebar configuration to local storage
   static saveConfig(config: SidebarConfig): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    localStorage.setItem(SidebarService.STORAGE_KEY, JSON.stringify(config));
   }
-
-  // Open the selected flex layout
-  static openSelectedFlexLayout(menuItem: MenuItem): void {
-    console.log('Opening flex layout for menu item:', menuItem.flexLayoutId);
-  }
-
 
 }
