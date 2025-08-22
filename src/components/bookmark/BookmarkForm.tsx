@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Bookmark, BookmarkInput } from '../../types/bookmark';
+import { Bookmark, BookmarkFormData } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import { formatDate } from '../../services/Utils';
 
@@ -16,45 +16,39 @@ function IconPreview(props: Readonly<{ src?: string; errored: boolean; onError: 
 
 interface BookmarkFormProps {
   bookmark?: Bookmark | null;
-  onSubmit: (bookmarkData: BookmarkInput) => void;
-  onCancel: () => void;
   mode?: FormDisplayMode;
+  onSave: (bookmarkData: BookmarkFormData) => void;
+  onCancel: () => void;
 }
 
 export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
-  const { bookmark, onSubmit, onCancel } = props;
+  const { bookmark, mode = FormDisplayMode.Edit, onSave, onCancel } = props;
   const { theme } = useTheme();
-  const [formData, setFormData] = useState({
-    title: '',
-    color: '',
-    icon: '',
-    url: '',
-    description: '',
-    tags: ''
-  });
+  const [formData, setFormData] = useState(() => ({
+    title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
+    color: mode === FormDisplayMode.Create ? '' : (bookmark?.color || ''),
+    icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
+    url: mode === FormDisplayMode.Create ? '' : (bookmark?.url || ''),
+    description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
+    tags: mode === FormDisplayMode.Create ? '' : (bookmark?.tags?.join(', ') || '')
+  }));
+
+  // use the explicit mode prop (caller controls create vs edit)
+
+  // sync initial values only when the bookmark id changes to avoid clobbering user edits
+  useEffect(() => {
+    setFormData({
+      title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
+      color: mode === FormDisplayMode.Create ? '' : (bookmark?.color || ''),
+      icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
+      url: mode === FormDisplayMode.Create ? '' : (bookmark?.url || ''),
+      description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
+      tags: mode === FormDisplayMode.Create ? '' : (bookmark?.tags?.join(', ') || '')
+    });
+  }, [bookmark?.id, mode]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [iconError, setIconError] = useState(false);
-  // derive effective mode: prefer explicit prop, fallback to Edit when bookmark exists
-  const effectiveMode = props.mode ?? (bookmark ? FormDisplayMode.Edit : FormDisplayMode.Create);
-
-  useEffect(() => {
-    if (effectiveMode === FormDisplayMode.Edit && bookmark) {
-      setFormData({
-        title: bookmark.title || '',
-        color: bookmark.color || '',
-        icon: bookmark.icon || '',
-        url: bookmark.url || '',
-        description: bookmark.description || '',
-        tags: bookmark.tags?.join(', ') || ''
-      });
-    }
-
-    if (effectiveMode === FormDisplayMode.Create) {
-      // clear form for create mode
-      setFormData({ title: '', color: '', icon: '', url: '', description: '', tags: '' });
-    }
-  }, [bookmark, props.mode]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -95,7 +89,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
         : undefined
     };
 
-  onSubmit(bookmarkData);
+  onSave(bookmarkData);
   };
 
   const handleChange = (field: string, value: string) => {
@@ -139,10 +133,10 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
           color: theme.colors.text.primary
         }}
       >
-  {effectiveMode === FormDisplayMode.Edit ? 'Edit Bookmark' : 'Add New Bookmark'}
+  {mode === FormDisplayMode.Edit ? 'Edit Bookmark' : 'Add New Bookmark'}
       </h2>
-      {/* show id after the popup title (Edit mode) as a readonly field */}
-      {effectiveMode === FormDisplayMode.Edit && bookmark && (
+  {/* show id after the popup title (Edit mode) as a readonly field */}
+  {mode === FormDisplayMode.Edit && bookmark && (
         <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>
           <label htmlFor="bookmark-id" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>ID</label>
           <input id="bookmark-id" type="text" readOnly value={bookmark.id} style={{ ...inputStyle, width: '100%', backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
@@ -195,7 +189,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
         </div>
 
   {/* show created/updated timestamps when editing existing bookmark as two readonly fields */}
-  {effectiveMode === FormDisplayMode.Edit && bookmark && (
+  {mode === FormDisplayMode.Edit && bookmark && (
     <div style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
       <div>
         <label htmlFor="bookmark-created" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>Created</label>
@@ -210,7 +204,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
           <button type="button" onClick={onCancel} style={{ padding: '0.75rem 1.5rem', border: `1px solid ${theme.colors.border}`, borderRadius: '6px', backgroundColor: 'transparent', color: theme.colors.text.primary }}>Cancel</button>
-          <button type="submit" style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '6px', backgroundColor: theme.colors.primary, color: '#ffffff' }}>{effectiveMode === FormDisplayMode.Edit ? 'Update Bookmark' : 'Add Bookmark'}</button>
+          <button type="submit" style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '6px', backgroundColor: theme.colors.primary, color: '#ffffff' }}>{mode === FormDisplayMode.Edit ? 'Update Bookmark' : 'Add Bookmark'}</button>
         </div>
       </form>
     </div>

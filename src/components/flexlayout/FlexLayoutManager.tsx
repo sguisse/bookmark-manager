@@ -125,7 +125,8 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
         for (const child of children) {
           if (child.type === 'tab' && child.id === nodeId) {
             // merge config
-            child.config = { ...(child.config || {}), ...(newConfig || {}) };
+            // update lastModifiedDate for edits
+            child.config = { ...(child.config || {}), ...(newConfig || {}), lastModifiedDate: new Date() };
             if (typeof newConfig?.title === 'string') child.name = newConfig.title;
             if (typeof newConfig?.icon === 'string') child.icon = newConfig.icon;
             return true;
@@ -250,18 +251,21 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
       return null;
     };
     const tab = json.layout ? findTab([json.layout]) : null;
+  // ensure mode is set first so the form renders in the expected mode (avoids race where modal opens with stale mode)
+  setEditingMode(mode ?? FormDisplayMode.Edit);
+
   if (mode === FormDisplayMode.Create) {
     // For creation we remember the target (selected) node so we can insert a new tab in the same tabset.
     setCreateTargetNodeId(nodeId);
     setEditingNodeId(null);
     setEditingConfig({}); // empty form fields for creation
-  } else {
+    } else {
     setCreateTargetNodeId(null);
     setEditingNodeId(nodeId);
-  // include top-level tab dates (if present) in the editing config so the form can display them
-  setEditingConfig({ ...(tab?.config || {}), creationDate: tab?.creationDate, lastUpdateDate: tab?.lastUpdateDate });
+    // include top-level tab dates (if present) in the editing config so the form can display them
+    // also include the tab's name and component so the form fields are pre-filled when editing
+    setEditingConfig({ ...(tab?.config || {}), title: tab?.name, component: tab?.component, creationDate: tab?.creationDate, lastUpdateDate: tab?.lastUpdateDate });
   }
-  setEditingMode(mode ?? FormDisplayMode.Edit);
   }, []);
 
   // fallback listener for toolbar events that dispatch a global open-editor event
@@ -327,7 +331,8 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
                       id: newId,
                       name: update.title || 'New Tab',
                       component: update.component || 'welcome',
-                      config: { ...(update || {}) }
+                      // stamp auditing fields for a newly created tab
+                      config: { ...(update || {}), createdDate: new Date(), lastModifiedDate: new Date() }
                     };
 
                     if (parentTabset && Array.isArray(parentTabset.children)) {

@@ -7,17 +7,16 @@ import { formatDate } from '../../services/Utils';
 interface FlexTabFormProps {
   flexTabConfig: Partial<FlexTabConfig>;
   mode?: FormDisplayMode;
-  onSave: (update: FlexTabFormData) => void;
+  onSave: (flexTabFormData: FlexTabFormData) => void;
   onCancel: () => void;
 }
+
+// Build components list derived from the FlexTabComponent enum to fill the combo box
+  const componentsPair = Object.values(FlexTabComponent).map((v) => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
 
 export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
   const { flexTabConfig, mode = FormDisplayMode.Edit, onSave, onCancel } = props;
   const { theme } = useTheme();
-
-  // components list derived from the FlexTabComponent enum.
-  const componentsPair = Object.values(FlexTabComponent).map((v) => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
-
   const [formData, setFormData] = useState<{ title: string; color: string; bgcolor: string; icon: string; component: string }>(() => ({
     title: mode === FormDisplayMode.Create ? '' : (flexTabConfig?.title || ''),
     color: mode === FormDisplayMode.Create ? '' : (flexTabConfig?.color || '#3b82f6'),
@@ -64,25 +63,14 @@ export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
   <button onClick={() => onCancel && onCancel()} aria-label="Close modal" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', border: 'none', padding: 0, cursor: 'pointer' }} />
       <div style={{ position: 'relative', background: theme.colors.surface, padding: 20, borderRadius: 8, minWidth: 360, boxShadow: '0 6px 24px rgba(0,0,0,0.2)' }}>
         <h3 style={{ marginTop: 0, marginBottom: 12 }}>{mode === FormDisplayMode.Create ? 'Add new Tab' : 'Edit Tab'}</h3>
-        {/* ID and dates (readonly) */}
+        {/* ID (readonly) */}
         {flexTabConfig?.id && (
           <div style={{ marginBottom: 12 }}>
             <label htmlFor="flex-id" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>ID</label>
             <input id="flex-id" readOnly value={flexTabConfig.id} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
           </div>
         )}
-        { (flexTabConfig?.createdDate || flexTabConfig?.lastModifiedDate) && (
-          <div style={{ marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label htmlFor="flex-created" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Created</label>
-              <input id="flex-created" readOnly value={formatDate(flexTabConfig?.createdDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
-            </div>
-            <div>
-              <label htmlFor="flex-updated" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Updated</label>
-              <input id="flex-updated" readOnly value={formatDate(flexTabConfig?.lastModifiedDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
-            </div>
-          </div>
-        )}
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
             <label htmlFor="flex-title" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Title</label>
@@ -111,6 +99,20 @@ export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
               {componentsPair.map((c: { value: string; label: string }) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
+
+          {/* Dates (readonly) */}
+          { (flexTabConfig?.createdDate || flexTabConfig?.lastModifiedDate) && (
+          <div style={{ marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label htmlFor="flex-created" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Created</label>
+              <input id="flex-created" readOnly value={formatDate(flexTabConfig?.createdDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
+            </div>
+            <div>
+              <label htmlFor="flex-updated" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Updated</label>
+              <input id="flex-updated" readOnly value={formatDate(flexTabConfig?.lastModifiedDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
+            </div>
+          </div>
+        )}
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button type="button" onClick={() => { onCancel && onCancel(); }} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: theme.colors.surface }}>Cancel</button>

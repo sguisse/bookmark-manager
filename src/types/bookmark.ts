@@ -26,12 +26,3 @@ export interface BookmarkFormData {
   description?: string;
   tags?: string[];
 }
-
-export type BookmarkInput = {
-  title: string;
-  color?: string;
-  icon?: string;
-  url: string;
-  description?: string;
-  tags?: string[];
-};

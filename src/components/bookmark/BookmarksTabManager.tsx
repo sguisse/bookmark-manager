@@ -93,7 +93,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <button onClick={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} aria-label="Close modal" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', border: 'none', padding: 0, cursor: 'pointer' }} />
           <div style={{ position: 'relative', width: 720, maxWidth: '95%', background: '#fff', padding: 20, borderRadius: 8 }}>
-            <BookmarkForm bookmark={editingBookmark} onSubmit={(d) => handleSubmit(d as BookmarkInput)} onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} />
+            <BookmarkForm bookmark={editingBookmark} onSave={(d) => handleSubmit(d as BookmarkInput)} onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} />
           </div>
         </div>
       )}
