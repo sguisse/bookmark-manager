@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { SidebarService } from '../../services/sidebarService';
-import { SidebarConfig, SidebarMenuItem } from '../../types/sidebar';
-import { useApplication } from '../../contexts/ApplicationContext';
+import { SidebarService } from '../../../services/sidebarService';
+import { SidebarConfig, SidebarMenuItem } from '../../../types/sidebar';
+import { useApplication } from '../../../contexts/ApplicationContext';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
 export const SidebarManager: React.FC = () => {

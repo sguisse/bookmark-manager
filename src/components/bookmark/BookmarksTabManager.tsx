@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import BookmarkForm from '../bookmark/BookmarkForm';
+import BookmarkForm from './BookmarkForm';
 // ...existing code...
 import { Bookmark, BookmarkInput, BookmarksTabConfig } from '../../types/bookmark';
-import BookmarkCard from '../bookmark/BookmarkCard';
+import BookmarkCard from './BookmarkCard';
 
 interface BookmarksTabProps {
   config?: BookmarksTabConfig;

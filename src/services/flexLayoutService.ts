@@ -13,10 +13,11 @@ export class FlexLayoutService {
     return {
       global: {
         tabSetEnableClose: false,
+        tabSetEnableMaximize: false,
         tabSetEnableDrop: true,
         tabSetEnableDrag: true,
         tabEnableClose: false,
-        tabEnableRename: true,
+        tabEnableRename: false,
         tabSetMinWidth: 250,
         tabSetMinHeight: 200,
       },
@@ -81,6 +82,19 @@ export class FlexLayoutService {
                       "createdBy": "user-3",
                       "lastModifiedDate": "2025-08-22T08:00:00.000Z",
                       "lastModifiedBy": "user-4"
+                    },
+                    {
+                      "id": "bm-3",
+                      "title": "Flexlayout React",
+                      "color": "#f46e42ff",
+                      "icon": "🔥",
+                      "url": "https://www.npmjs.com/package/flexlayout-react",
+                      "description": "Build the future of web applications",
+                      "tags": ["component", "react"],
+                      "createdDate": "2025-08-21T00:00:00.000Z",
+                      "createdBy": "user-5",
+                      "lastModifiedDate": "2025-08-22T09:00:00.000Z",
+                      "lastModifiedBy": "user-6"
                     }
                   ]
                 }

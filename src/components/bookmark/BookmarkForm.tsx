@@ -7,7 +7,7 @@ import { formatDate } from '../../services/Utils';
 // small helper to render icon preview
 function IconPreview(props: Readonly<{ src?: string; errored: boolean; onError: () => void }>) {
   const { src, errored, onError } = props;
-  if (!src || errored) return <span style={{ fontSize: 18, opacity: 0.45 }}>🔗</span>;
+  if (!src || errored) return <span style={{ fontSize: 18, opacity: 0.45 }}>🌐</span>;
   if (src.startsWith('http') || src.startsWith('data:')) {
     return <img src={src} alt="icon" style={{ width: 24, height: 24, objectFit: 'cover' }} onError={onError} />;
   }

@@ -1,11 +1,12 @@
 import React from 'react';
-import { TabNode } from 'flexlayout-react';
-import WelcomeTab from './WelcomeTabManager';
-import BookmarksTabManager from './BookmarksTabManager';
-import MarkdownTabManager from './MarkdownTabManager';
+import { BorderNode, ITabSetRenderValues, TabNode, TabSetNode } from 'flexlayout-react';
+import WelcomeTab from '../welcome/WelcomeTabManager';
+import BookmarksTabManager from '../bookmark/BookmarksTabManager';
+import MarkdownTabManager from '../markdown/MarkdownTabManager';
 import { FlexTabConfig } from '../../types/flexTab';
 import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
+import { Plus, Settings, Bookmark as BookmarkIcon, BookmarkPlusIcon } from 'lucide-react';
 
 // small helper to pick readable text color for a background
 const readableTextColor = (bg: string) => {
@@ -60,16 +61,16 @@ export const onRenderTab = (node: TabNode, renderValues: any) => {
 import { FormDisplayMode } from '../../types/app';
 
 const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplayMode) => void) => {
-  return (tabSetNode: any, renderValues: any) => {
+  return (tabSetNode: (TabSetNode | BorderNode), renderValues: ITabSetRenderValues) => {
     try {
-      const selectedTabNode = tabSetNode.getSelectedNode();
+      const selectedTabNode: TabNode | null = tabSetNode.getSelectedNode() as TabNode | null;
       if (!selectedTabNode) return;
       const comp = String(selectedTabNode.getComponent() || '').toLowerCase();
 
       renderValues.buttons = renderValues.buttons || [];
+      renderValues.stickyButtons = renderValues.stickyButtons || [];
 
-
-        renderValues.buttons.push(
+      renderValues.stickyButtons.push(
           <button
             key="tab-editor-open-add"
             className="flexlayout__tab_toolbar_button"
@@ -83,11 +84,29 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
                 }}
             title="Add new Tab"
           >
-            ➕
+            <Plus size={16} />
           </button>
         );
 
-        if (comp === 'bookmarks') {
+        renderValues.stickyButtons.push(
+          <button
+            key="tab-editor-open-edit"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              const nodeId = selectedTabNode.getId();
+              try { console.log('[FlexLayoutTabFactory] tab-editor-open-edit clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
+                            if (openTabEditor) openTabEditor(nodeId, FormDisplayMode.Edit);
+              try { window.dispatchEvent(new CustomEvent('flexlayout:tab:open-editor', { detail: { nodeId, mode: FormDisplayMode.Edit } })); } catch (err) { console.warn('Event dispatch failed', err); }
+            }}
+            title="Edit tab config"
+          >
+            <Settings size={16} />
+          </button>
+        );
+
+
+  if (comp === 'bookmarks') {
               renderValues.buttons.push(
               <button
                 key="bookmark-editor-open-add"
@@ -101,36 +120,12 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
                 }}
                 title="Add new Bookmark"
               >
-                📑
+                <BookmarkPlusIcon size={16} />
               </button>
             );
 
         }
-
-
-        renderValues.buttons.push(
-          <button
-            key="tab-editor-open-edit"
-            className="flexlayout__tab_toolbar_button"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              const nodeId = selectedTabNode.getId();
-              try { console.log('[FlexLayoutTabFactory] tab-editor-open-edit clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
-                            if (openTabEditor) openTabEditor(nodeId, FormDisplayMode.Edit);
-              try { window.dispatchEvent(new CustomEvent('flexlayout:tab:open-editor', { detail: { nodeId, mode: FormDisplayMode.Edit } })); } catch (err) { console.warn('Event dispatch failed', err); }
-            }}
-            title="Edit tab config"
-          >
-            ⚙️
-          </button>
-        );
-
-
-
-
-      if (comp === 'markdown') {
-
-      }
+      // future: render markdown-specific controls if needed
 
     } catch (err) {
       console.warn('onRenderTabSet error', err);

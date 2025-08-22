@@ -4,9 +4,9 @@ import HeaderPanel from './HeaderPanel';
 import SideBar from './sidebar/Sidebar';
 import BottomPanel from './BottomPanel';
 import BodyContentPanel from './BodyContentPanel';
-import BookmarksTabManager from '../manager/BookmarksTabManager';
-import { FlexLayoutManager } from '../manager/FlexLayoutManager';
-import { SidebarManager } from '../manager/SidebarManager';
+import BookmarksTabManager from '../bookmark/BookmarksTabManager';
+import { FlexLayoutManager } from '../flexlayout/FlexLayoutManager';
+import { SidebarManager } from './sidebar/SidebarManager';
 
 
 interface DashboardLayoutProps {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bookmark } from '../../types/bookmark';
 import { formatDate } from '../../services/Utils';
+import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
 type ViewMode = 'card' | 'table';
 
@@ -14,7 +15,7 @@ interface BookmarkCardProps {
 
 // helper to render an icon element (emoji/text or image). Keeps JSX readable and avoids nested ternaries.
 function renderIconElement(src: string | undefined, size: number) {
-  if (!src) return <span style={{ fontSize: Math.max(16, size - 4), opacity: 0.55 }}>🔗</span>;
+  if (!src) return <span style={{ fontSize: Math.max(16, size - 4), opacity: 0.55 }}>🌐</span>;
   if (!(src.startsWith('http') || src.startsWith('data:'))) {
     return <span style={{ fontSize: size }}>{src}</span>;
   }
@@ -78,14 +79,20 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
 
         <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', opacity: isHovered ? 1 : 0, transition: 'opacity 0.18s ease' }}>
           {onCollapse && (
-            <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row" style={actionButtonStyle(theme.colors.surface)}>🔺</button>
+            <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row view" style={actionButtonStyle(theme.colors.info)}>
+              <ChevronUp size={16} />
+            </button>
           )}
-          <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>✏️</button>
-          <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>🗑️</button>
+          <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>
+            <Edit size={16} />
+          </button>
+          <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>
+            <Trash2 size={16} />
+          </button>
         </div>
       </div>
 
-      <div style={{ paddingRight: '2rem' }}>
+      <div style={{ paddingRight: '0px' }}>
         {/* show URL first, then description */}
         <div style={{ ...urlStyle(theme) }} title={bookmark.url}>{bookmark.url}</div>
         {bookmark.description && <p style={descriptionStyle(theme)} title={bookmark.description}>{bookmark.description}</p>}
@@ -130,10 +137,14 @@ function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark
 
       <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
         <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme)}>
-          {expanded ? '▴' : '▾'}
+          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit" style={smallIconButtonStyle(theme)}>✏️</button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete" style={smallIconButtonStyle(theme)}>🗑️</button>
+        <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit" style={smallIconButtonStyle(theme)}>
+          <Edit size={16} />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete" style={smallIconButtonStyle(theme)}>
+          <Trash2 size={16} />
+        </button>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ import 'flexlayout-react/style/light.css';
 import createFlexLayoutFactory, { onRenderTab as defaultOnRenderTab } from './FlexLayoutTabFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { FormDisplayMode } from '../../types/app';
-import FlexLayoutTabForm from '../common/FlexLayoutTabForm';
+import FlexLayoutTabForm from './FlexLayoutTabForm';
 import { SidebarMenuItem } from '../../types/sidebar';
 
 interface FlexLayoutManagerProps {
