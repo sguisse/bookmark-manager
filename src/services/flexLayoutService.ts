@@ -12,11 +12,11 @@ export class FlexLayoutService {
   static getDefaultConfig(): FlexLayoutConfig {
     return {
       global: {
-        tabSetEnableClose: false,
-        tabSetEnableMaximize: false,
+        tabSetEnableClose: true,
+        tabSetEnableMaximize: true,
         tabSetEnableDrop: true,
         tabSetEnableDrag: true,
-        tabEnableClose: false,
+        tabEnableClose: true,
         tabEnableRename: false,
         tabSetMinWidth: 250,
         tabSetMinHeight: 200,
