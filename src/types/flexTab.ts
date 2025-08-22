@@ -12,9 +12,8 @@ export interface FlexTabConfig extends BaseAuditing {
 export enum FlexTabComponent {
   Bookmarks = "bookmarks",
   Markdown = "markdown",
-  Html = "html",
-  Welcome = "welcome",
   Web = "web",
+  Html = "html",
   // add more as needed
 }
 
