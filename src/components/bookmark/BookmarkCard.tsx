@@ -99,7 +99,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', fontSize: theme.fonts.sizes.small, color: theme.colors.text.secondary }}>
-          <span>{new Date(bookmark.createdAt).toLocaleDateString()}</span>
+          <span>{new Date(bookmark.createdDate).toLocaleDateString()}</span>
           {bookmark.category && <span style={categoryStyle(theme)}>{bookmark.category}</span>}
         </div>
       </div>

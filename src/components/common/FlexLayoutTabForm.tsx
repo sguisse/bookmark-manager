@@ -69,15 +69,15 @@ export default function FlexLayoutTabForm(props: Readonly<FlexTabFormProps>) {
             <input id="flex-id" readOnly value={flexTabConfig.id} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
           </div>
         )}
-        { (flexTabConfig?.creationDate || flexTabConfig?.lastUpdateDate) && (
+        { (flexTabConfig?.createdDate || flexTabConfig?.lastModifiedDate) && (
           <div style={{ marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label htmlFor="flex-created" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Created</label>
-              <input id="flex-created" readOnly value={formatDate(flexTabConfig?.creationDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
+              <input id="flex-created" readOnly value={formatDate(flexTabConfig?.createdDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
             </div>
             <div>
               <label htmlFor="flex-updated" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Updated</label>
-              <input id="flex-updated" readOnly value={formatDate(flexTabConfig?.lastUpdateDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
+              <input id="flex-updated" readOnly value={formatDate(flexTabConfig?.lastModifiedDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
             </div>
           </div>
         )}

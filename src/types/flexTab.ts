@@ -1,12 +1,12 @@
-export interface FlexTabConfig {
+import { BaseAuditing } from "./app";
+
+export interface FlexTabConfig extends BaseAuditing {
   id: string;
   title: string;
   color?: string;
   bgcolor?: string;
   icon?: string;
   component: FlexTabComponent;
-  creationDate?: Date;
-  lastUpdateDate?: Date;
 }
 
 // add enum for component types
@@ -19,13 +19,11 @@ export enum FlexTabComponent {
   // add more as needed
 }
 
-export interface FlexTabFormData {
+export interface FlexTabFormData extends BaseAuditing {
   id: string;
   title?: string;
   color?: string;
   bgcolor?: string;
   icon?: string;
   component?: FlexTabComponent;
-  creationDate?: Date;
-  lastUpdateDate?: Date;
 }

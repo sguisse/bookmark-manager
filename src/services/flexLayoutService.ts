@@ -55,32 +55,33 @@ export class FlexLayoutService {
                 component: "Bookmarks",
                 config: {
                   component: "Bookmarks",
-                  "color": "#00ff00",
+                  "color": "#001effff",
                   "bookmarks": [
                     {
                       "id": "bm-1",
                       "title": "Vite 01",
+                      "icon": "https://vitejs.dev/logo.svg",
                       "url": "https://vitejs.dev",
                       "description": "Next generation frontend tooling",
                       "tags": ["dev", "tooling"],
-                      "createdAt": "2025-08-21T00:00:00.000Z",
-                      "updatedAt": "2025-08-21T00:00:00.000Z",
-                      "favicon": "https://vitejs.dev/logo.svg",
-                      "category": "tools"
+                      "createdDate": "2025-08-21T00:00:00.000Z",
+                      "createdBy": "user-1",
+                      "lastModifiedDate": "2025-08-22T10:00:00.000Z",
+                      "lastModifiedBy": "user-2"
                     },
                     {
                       "id": "bm-2",
-                      "title": "Vite 0",
-                      "url": "https://vitejs.dev",
-                      "description": "Next generation frontend tooling 02",
-                      "tags": ["dev", "tooling"],
-                      "createdAt": "2025-08-21T00:00:00.000Z",
-                      "updatedAt": "2025-08-21T00:00:00.000Z",
-                      "favicon": "https://vitejs.dev/logo.svg",
-                      "category": "tools"
+                      "title": "Google",
+                      "icon": "https://www.google.com/favicon.ico",
+                      "url": "https://www.google.com",
+                      "description": "Search the world's information",
+                      "tags": ["search", "tooling"],
+                      "createdDate": "2025-08-21T00:00:00.000Z",
+                      "createdBy": "user-3",
+                      "lastModifiedDate": "2025-08-22T08:00:00.000Z",
+                      "lastModifiedBy": "user-4"
                     }
-                  ],
-                  "collapsed": false
+                  ]
                 }
               }
             ]

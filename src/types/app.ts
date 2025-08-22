@@ -10,3 +10,10 @@ export enum FormDisplayMode {
   View = "view",
   Delete = "delete"
 }
+
+export interface BaseAuditing {
+  createdBy?: string;
+  createdDate?: Date;
+  lastModifiedBy?: string;
+  lastModifiedDate?: Date;
+}

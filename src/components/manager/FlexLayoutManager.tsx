@@ -11,12 +11,12 @@ import FlexLayoutTabForm from '../common/FlexLayoutTabForm';
 import { SidebarMenuItem } from '../../types/sidebar';
 
 interface FlexLayoutManagerProps {
-  onTabConfigUpdated?: (menuItem: SidebarMenuItem, nodeId: string, config: any) => void;
+  onFlexLayoutTabUpdate?: (menuItem: SidebarMenuItem, nodeId: string, config: any) => void;
 }
 
 
 export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
-  const { onTabConfigUpdated } = props;
+  const { onFlexLayoutTabUpdate } = props;
   const [layout, setLayout] = useState<FlexLayoutConfig | null>(null);
   const [model, setModel] = useState<Model | null>(null);
   const { selectedMenuItem } = useApplication();
@@ -140,9 +140,9 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
 
       // call external callback if provided
       try {
-  onTabConfigUpdated && onTabConfigUpdated(selectedMenuItem, nodeId, cfg);
+  onFlexLayoutTabUpdate && onFlexLayoutTabUpdate(selectedMenuItem, nodeId, cfg);
       } catch (err) {
-        console.warn('onTabConfigUpdated threw', err);
+        console.warn('onFlexLayoutTabUpdate threw', err);
       }
     }
   }, [updateTabConfigAndSave, selectedMenuItem]);

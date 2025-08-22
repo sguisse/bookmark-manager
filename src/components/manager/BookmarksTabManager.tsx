@@ -49,8 +49,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       url: data.url || '',
       description: data.description,
       tags: data.tags || [],
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdDate: new Date(),
+      lastModifiedDate: new Date()
     };
 
     const updated = [...bookmarks, newBookmark];

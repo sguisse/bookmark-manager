@@ -4,6 +4,16 @@ import { Bookmark, BookmarkInput } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import { formatDate } from '../../services/Utils';
 
+// small helper to render icon preview
+function IconPreview(props: Readonly<{ src?: string; errored: boolean; onError: () => void }>) {
+  const { src, errored, onError } = props;
+  if (!src || errored) return <span style={{ fontSize: 18, opacity: 0.45 }}>🔗</span>;
+  if (src.startsWith('http') || src.startsWith('data:')) {
+    return <img src={src} alt="icon" style={{ width: 24, height: 24, objectFit: 'cover' }} onError={onError} />;
+  }
+  return <span style={{ fontSize: 18 }}>{src}</span>;
+}
+
 interface BookmarkFormProps {
   bookmark?: Bookmark | null;
   onSubmit: (bookmarkData: BookmarkInput) => void;
@@ -16,12 +26,15 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
   const { theme } = useTheme();
   const [formData, setFormData] = useState({
     title: '',
+    color: '',
+    icon: '',
     url: '',
     description: '',
     tags: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [iconError, setIconError] = useState(false);
   // derive effective mode: prefer explicit prop, fallback to Edit when bookmark exists
   const effectiveMode = props.mode ?? (bookmark ? FormDisplayMode.Edit : FormDisplayMode.Create);
 
@@ -29,6 +42,8 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     if (effectiveMode === FormDisplayMode.Edit && bookmark) {
       setFormData({
         title: bookmark.title || '',
+        color: bookmark.color || '',
+        icon: bookmark.icon || '',
         url: bookmark.url || '',
         description: bookmark.description || '',
         tags: bookmark.tags?.join(', ') || ''
@@ -37,7 +52,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
 
     if (effectiveMode === FormDisplayMode.Create) {
       // clear form for create mode
-      setFormData({ title: '', url: '', description: '', tags: '' });
+      setFormData({ title: '', color: '', icon: '', url: '', description: '', tags: '' });
     }
   }, [bookmark, props.mode]);
 
@@ -71,6 +86,8 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
 
     const bookmarkData = {
       title: formData.title.trim(),
+      color: formData.color.trim() || undefined,
+      icon: formData.icon.trim() || undefined,
       url: formData.url.trim(),
       description: formData.description.trim() || undefined,
       tags: formData.tags
@@ -86,6 +103,10 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    if (field === 'icon') {
+      // reset image error when user edits the icon field
+      setIconError(false);
     }
   };
 
@@ -135,6 +156,24 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
           {errors.title && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.title}</div>)}
         </div>
 
+        {/* Color Field */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-color">Color</label>
+          <input id="bookmark-color" type="color" value={formData.color || '#3b82f6'} onChange={(e) => handleChange('color', e.target.value)} style={{ ...inputStyle, padding: '0.25rem', width: '56px', height: '36px' }} />
+        </div>
+
+        {/* Icon Field with preview */}
+        <div style={{ marginBottom: '1rem' }}>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-icon">Icon</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 6, border: `1px solid ${theme.colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.colors.background, overflow: 'hidden' }}>
+              <IconPreview src={formData.icon} errored={iconError} onError={() => setIconError(true)} />
+            </div>
+
+            <input id="bookmark-icon" type="text" value={formData.icon} onChange={(e) => handleChange('icon', e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 0 }} placeholder="emoji (e.g. 🔖) or https://example.com/icon.png" />
+          </div>
+        </div>
+
         {/* URL Field */}
         <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-url">URL *</label>
@@ -160,11 +199,11 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     <div style={{ marginBottom: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
       <div>
         <label htmlFor="bookmark-created" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>Created</label>
-        <input id="bookmark-created" type="text" readOnly value={formatDate(bookmark.createdAt)} style={{ ...inputStyle, backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
+        <input id="bookmark-created" type="text" readOnly value={formatDate(bookmark.createdDate)} style={{ ...inputStyle, backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
       </div>
       <div>
         <label htmlFor="bookmark-updated" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>Updated</label>
-        <input id="bookmark-updated" type="text" readOnly value={formatDate(bookmark.updatedAt)} style={{ ...inputStyle, backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
+        <input id="bookmark-updated" type="text" readOnly value={formatDate(bookmark.lastModifiedDate)} style={{ ...inputStyle, backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
       </div>
     </div>
   )}
