@@ -125,6 +125,23 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
             );
 
         }
+      if (comp === 'markdown') {
+        renderValues.buttons.push(
+          <button
+            key="markdown-editor-toggle"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              const nodeId = selectedTabNode.getId();
+              try { console.log('[FlexLayoutTabFactory] markdown-editor-toggle clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
+              try { window.dispatchEvent(new CustomEvent('flexlayout:markdown:toolbar', { detail: { nodeId, mode: FormDisplayMode.Edit } })); } catch (err) { console.warn('Event dispatch failed', err); }
+            }}
+            title="Edit markdown"
+          >
+            <Settings size={16} />
+          </button>
+        );
+      }
       // future: render markdown-specific controls if needed
 
     } catch (err) {
@@ -187,7 +204,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const compKey = String(component || '').toLowerCase();
 
     if (compKey === 'welcome') return <WelcomeTab />;
-    if (compKey === 'markdown') return <MarkdownTabManager config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+    if (compKey === 'markdown') return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
     if (compKey === 'bookmarks') return <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
 
     return (

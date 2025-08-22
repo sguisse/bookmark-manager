@@ -4,7 +4,7 @@ import { SidebarConfig, SidebarMenuItem } from '../../../types/sidebar';
 import { useApplication } from '../../../contexts/ApplicationContext';
 import { DynamicIcon } from 'lucide-react/dynamic';
 
-export const SidebarManager: React.FC = () => {
+export const SidebarPanel: React.FC = () => {
   const [sidebarConfig, setSidebarConfig] = useState<SidebarConfig | undefined>(undefined);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
@@ -116,7 +116,6 @@ export const SidebarManager: React.FC = () => {
 
   return (
     <div style={{ padding: 12 }}>
-      <h3>Sidebar Manager</h3>
       {sidebarConfig ? (
         <nav aria-label="Sidebar configuration">
           {renderMenu(sidebarConfig.menuItems)}

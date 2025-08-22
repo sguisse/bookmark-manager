@@ -15,7 +15,11 @@
     "lucide-react": "^0.540.0",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
-    "react-dom": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "react-markdown": "latest",
+  "@uiw/react-md-editor": "latest",
+  "@uiw/react-markdown-preview": "latest",
+  "remark-gfm": "latest",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
