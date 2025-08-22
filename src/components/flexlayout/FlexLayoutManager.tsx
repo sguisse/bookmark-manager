@@ -14,7 +14,6 @@ interface FlexLayoutManagerProps {
   onFlexLayoutTabUpdate?: (menuItem: SidebarMenuItem, nodeId: string, config: any) => void;
 }
 
-
 export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   const { onFlexLayoutTabUpdate } = props;
   const [layout, setLayout] = useState<FlexLayoutConfig | null>(null);

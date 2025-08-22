@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import BookmarkForm from './BookmarkForm';
 // ...existing code...
 import { Bookmark, BookmarkInput, BookmarksTabConfig } from '../../types/bookmark';
-import BookmarkCard from './BookmarkCard';
+import BookmarkCard from './BookmarksViewer';
 
 interface BookmarksTabProps {
   config?: BookmarksTabConfig;

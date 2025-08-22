@@ -8,9 +8,9 @@ type ViewMode = 'card' | 'table';
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
+  view?: ViewMode; // 'card' (default) or 'table'
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
-  view?: ViewMode; // 'card' (default) or 'table'
 }
 
 // helper to render an icon element (emoji/text or image). Keeps JSX readable and avoids nested ternaries.
@@ -22,7 +22,6 @@ function renderIconElement(src: string | undefined, size: number) {
   return <img src={src} alt="icon" style={{ width: size, height: size, objectFit: 'cover', borderRadius: Math.max(4, Math.floor(size / 6)) }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />;
 }
 
-// Note: using inline <img> elements instead of a Favicon helper to keep markup straightforward here.
 
 // Card view component moved out; accepts props rather than closing over parent scope
 function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
