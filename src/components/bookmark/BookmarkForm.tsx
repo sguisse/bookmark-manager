@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bookmark, BookmarkFormData } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
-import { formatDate } from '../../services/Utils';
+import { formatDate, normalizeColorForInput } from '../../services/Utils';
 
 // small helper to render icon preview
 function IconPreview(props: Readonly<{ src?: string; errored: boolean; onError: () => void }>) {
@@ -26,7 +26,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
   const { theme } = useTheme();
   const [formData, setFormData] = useState(() => ({
     title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
-    color: mode === FormDisplayMode.Create ? '' : (bookmark?.color || ''),
+    color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
     icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
     url: mode === FormDisplayMode.Create ? '' : (bookmark?.url || ''),
     description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
@@ -39,7 +39,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
   useEffect(() => {
     setFormData({
       title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
-      color: mode === FormDisplayMode.Create ? '' : (bookmark?.color || ''),
+      color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
       icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
       url: mode === FormDisplayMode.Create ? '' : (bookmark?.url || ''),
       description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
@@ -151,9 +151,9 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
         </div>
 
         {/* Color Field */}
-        <div style={{ marginBottom: '1rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-color">Color</label>
-          <input id="bookmark-color" type="color" value={formData.color || '#3b82f6'} onChange={(e) => handleChange('color', e.target.value)} style={{ ...inputStyle, padding: '0.25rem', width: '56px', height: '36px' }} />
+          <input id="bookmark-color" type="color" value={formData.color || normalizeColorForInput(String(bookmark?.color || '')) || '#3b82f6'} onChange={(e) => handleChange('color', e.target.value)} style={{ ...inputStyle, padding: '0.25rem', width: '56px', height: '36px' }} />
         </div>
 
         {/* Icon Field with preview */}

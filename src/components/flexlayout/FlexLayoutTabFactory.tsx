@@ -177,44 +177,50 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const cfg = node.getConfig();
     const color = cfg?.color;
     const icon = cfg?.icon;
+    const title = cfg?.title;
     const bgcolor = cfg?.bgcolor;
 
-    const elements: any[] = [];
+    const leadingElements: any[] = [];
+    const contentElements: any[] = [];
+    const trailingElements: any[] = [];
 
-    const makeClickable = (child: any) => {
-      if (!openTabEditor) return child;
-      return (
-        <button onClick={(e: React.MouseEvent) => { e.stopPropagation(); try { openTabEditor(node.getId(), FormDisplayMode.Edit); } catch (err) { console.warn('openTabEditor failed', err); } }} style={{ cursor: 'pointer', border: 'none', background: 'transparent', padding: 0 }} aria-label="Edit tab">
-          {child}
-        </button>
-      );
-    };
+    if (icon) {
+      leadingElements.push(<span key="icon" style={{ marginRight: 0 }}>{icon}</span>);
+    }
+
+    if (title) {
+      contentElements.push(<span key="title" style={{ marginRight: 0, color: color }}>{title}</span>);
+    }
 
     if (bgcolor) {
-      const text = icon || (String(node.getName ? node.getName() : node.getId()).charAt(0).toUpperCase());
-      elements.push(
-        makeClickable(
-          <span key="bgpill" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: 6, background: bgcolor, color: readableTextColor(bgcolor), fontSize: 12, marginRight: 8 }}>
-            {text}
-          </span>
-        )
-      );
-    } else if (icon) {
-      elements.push(makeClickable(<span key="icon" style={{ marginRight: 8 }}>{icon}</span>));
+      contentElements.push(<span key="colordot" style={{ width: 10, height: 10, background: bgcolor, borderRadius: 3, display: 'inline-block', marginLeft: 8 }} />);
     }
 
-    if (color) {
-      elements.push(makeClickable(<span key="colordot" style={{ width: 10, height: 10, background: color, borderRadius: 3, display: 'inline-block', marginRight: 8 }} />));
-    }
-
-    if (elements.length > 0) {
+    if (leadingElements.length > 0) {
       renderValues.leading = (
-        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
-          {elements}
-          {renderValues.leading}
+        <div style={{ display: 'inline-flex', alignItems: 'center'}}>
+          {leadingElements}
         </div>
       );
     }
+
+    if (contentElements.length > 0) {
+      renderValues.content = (
+        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+          {contentElements}
+        </div>
+      );
+    }
+
+    if (trailingElements.length > 0) {
+      renderValues.trailing = (
+        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+          {trailingElements}
+        </div>
+      );
+    }
+
+
   };
 
   const factory = (node: TabNode) => {

@@ -37,7 +37,11 @@ export class FlexLayoutService {
                 config: {
                   component: "Welcome",
                   "color": "#ff0000",
-                  "fontSize": "16px"
+                  "fontSize": "16px",
+                  "createdDate": "2025-08-21T00:00:00.000Z",
+                  "createdBy": "user-1",
+                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
+                  "lastModifiedBy": "user-2"
                 }
               },
               {
@@ -48,6 +52,10 @@ export class FlexLayoutService {
                   component: "Markdown",
                   "color": "#00ff00",
                   "content": "# Markdown Content",
+                  "createdDate": "2025-08-21T00:00:00.000Z",
+                  "createdBy": "user-1",
+                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
+                  "lastModifiedBy": "user-2"
                 }
               },
               {
@@ -56,7 +64,11 @@ export class FlexLayoutService {
                 component: "Bookmarks",
                 config: {
                   component: "Bookmarks",
-                  "color": "#001effff",
+                  "color": "#2d76eb",
+                  "createdDate": "2025-08-21T00:00:00.000Z",
+                  "createdBy": "user-1",
+                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
+                  "lastModifiedBy": "user-2",
                   "bookmarks": [
                     {
                       "id": "bm-1",
