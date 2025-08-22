@@ -59,11 +59,23 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
     modelRef.current = model;
   }, [model]);
 
+  // keep a ref to the last-known selected menu item id so we can still
+  // persist layout even if the selection transiently becomes null
+  const menuItemIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedMenuItem?.id) menuItemIdRef.current = selectedMenuItem.id;
+  }, [selectedMenuItem]);
+
   // persist model for the selected menu item
   const saveModelForSelected = useCallback(() => {
-    if (!modelRef.current || !selectedMenuItem) return;
+    if (!modelRef.current) return;
+    const menuId = selectedMenuItem?.id || menuItemIdRef.current;
+    if (!menuId) {
+      console.warn('No menu id available to save flexlayout model');
+      return;
+    }
     try {
-      FlexLayoutService.saveConfig(selectedMenuItem.id, modelRef.current.toJson());
+      FlexLayoutService.saveConfig(menuId, modelRef.current.toJson());
     } catch (err) {
       console.warn('Failed to save flexlayout model', err);
     }
@@ -71,12 +83,30 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
 
   // handle flexlayout actions and save layout when relevant
   const onAction = useCallback((action: any) => {
-    // common action types that indicate structural changes
-    if (action?.type && /move|model|add|remove|close|rename|split/i.exec(String(action.type))) {
-      if (!String(action.type).includes('drag')) {
-        // slight debounce to allow the model to settle
-        setTimeout(() => saveModelForSelected(), 100);
+    try {
+      const atype = String(action?.type || '');
+
+      // If an action has a type and doesn't look like a drag, persist after
+      // a short delay so flexlayout has a chance to mutate the model.
+      if (atype && !atype.toLowerCase().includes('drag')) {
+        setTimeout(() => saveModelForSelected(), 120);
       }
+
+      // If the action carries a node that is a tab/tabset and the action type
+      // indicates removal/close, persist immediately (no long debounce).
+      const node = action?.data?.node || action?.node || null;
+      const nodeType = node?.getType ? node.getType() : node?.type;
+      if (nodeType && /tab|tabset/i.test(String(nodeType)) && /remove|close/i.exec(atype)) {
+        try {
+          // give a tiny tick for the model to settle, then save
+          setTimeout(() => saveModelForSelected(), 40);
+        } catch (err) {
+          // fallback to immediate attempt
+          saveModelForSelected();
+        }
+      }
+    } catch (err) {
+      console.warn('onAction handler error', err);
     }
     return action;
   }, [saveModelForSelected]);
