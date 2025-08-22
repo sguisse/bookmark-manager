@@ -124,11 +124,27 @@ export default function MarkdownTabManager(props: Readonly<MarkdownTabProps>) {
   if (onConfigChange) onConfigChange({ ...(config || {} as any), content, id: (config as any)?.id || '' });
   };
   return (
-    <div style={{ padding: 16, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
+    <div style={{ padding: 0, color: theme.colors.text.primary, background: theme.colors.background, height: '100%' }}>
       {editing ? (
         <MarkdownEditorView content={content} onChange={setContent} onCancel={() => setEditing(false)} onSave={save} theme={theme} />
       ) : (
-        <MarkdownConsultView content={content} />
+        (content && content.trim().length > 0) ? (
+          <MarkdownConsultView content={content} />
+        ) : (
+          <div style={{ padding: 20 }}>
+            <div>No markdown content configured for this tab.</div>
+            <div style={{ marginTop: 8 }}>
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); setEditing(true); }}
+                style={{ color: theme.colors.primary, textDecoration: 'underline', cursor: 'pointer' }}
+                role="button"
+              >
+                Click here to open the markdown editor
+              </a>
+            </div>
+          </div>
+        )
       )}
     </div>
   );

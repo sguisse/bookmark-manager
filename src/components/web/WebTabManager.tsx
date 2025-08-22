@@ -57,7 +57,14 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
           <div style={{ padding: 20 }}>
             <div>No URL configured for this web tab.</div>
             <div style={{ marginTop: 8 }}>
-              <button onClick={() => setShowForm(true)}>Set URL</button>
+              <a
+                href="#"
+                onClick={(e) => { e.preventDefault(); setShowForm(true); }}
+                style={{ color: theme.colors.primary, textDecoration: 'underline', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
+                role="button"
+              >
+                Click here to set the URL to display
+              </a>
             </div>
           </div>
         )}
