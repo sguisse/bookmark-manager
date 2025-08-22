@@ -3,10 +3,12 @@ import { BorderNode, ITabSetRenderValues, TabNode, TabSetNode } from 'flexlayout
 import WelcomeTab from '../welcome/WelcomeTabManager';
 import BookmarksTabManager from '../bookmark/BookmarksTabManager';
 import MarkdownTabManager from '../markdown/MarkdownTabManager';
+import WebTabManager from '../web/WebTabManager';
 import { FlexTabConfig } from '../../types/flexTab';
 import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
-import { Plus, Settings, Bookmark as BookmarkIcon, BookmarkPlusIcon } from 'lucide-react';
+import { WebTabConfig } from '../../types/web';
+import { Plus, Settings, BookmarkPlusIcon } from 'lucide-react';
 
 // small helper to pick readable text color for a background
 const readableTextColor = (bg: string) => {
@@ -125,7 +127,7 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
             );
 
         }
-      if (comp === 'markdown') {
+  if (comp === 'markdown') {
         renderValues.buttons.push(
           <button
             key="markdown-editor-toggle"
@@ -142,6 +144,23 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
           </button>
         );
       }
+        if (comp === 'web') {
+          renderValues.buttons.push(
+            <button
+              key="web-edit-url"
+              className="flexlayout__tab_toolbar_button"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                const nodeId = selectedTabNode.getId();
+                try { console.log('[FlexLayoutTabFactory] web-edit-url clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
+                try { window.dispatchEvent(new CustomEvent('flexlayout:web:toolbar', { detail: { nodeId, action: 'open-url-form' } })); } catch (err) { console.warn('Event dispatch failed', err); }
+              }}
+              title="Edit web URL"
+            >
+              <Settings size={16} />
+            </button>
+          );
+        }
       // future: render markdown-specific controls if needed
 
     } catch (err) {
@@ -206,6 +225,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     if (compKey === 'welcome') return <WelcomeTab />;
     if (compKey === 'markdown') return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
     if (compKey === 'bookmarks') return <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+    if (compKey === 'web') return <WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
 
     return (
       <div style={{ padding: 12 }}>

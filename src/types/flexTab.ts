@@ -9,13 +9,12 @@ export interface FlexTabConfig extends BaseAuditing {
   component: FlexTabComponent;
 }
 
-// add enum for component types
-
 export enum FlexTabComponent {
   Bookmarks = "bookmarks",
   Markdown = "markdown",
   Html = "html",
   Welcome = "welcome",
+  Web = "web",
   // add more as needed
 }
 
