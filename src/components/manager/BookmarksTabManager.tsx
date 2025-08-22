@@ -79,11 +79,11 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   }, [nodeId]);
 
   return (
-    <div style={{ padding: 12 }}>
+    <div style={{ padding: 0 }}>
       {bookmarks.length === 0 ? (
         <div>No bookmarks</div>
       ) : (
-        <div style={{ display: 'grid', gap: 8 }}>
+        <div style={{ display: 'grid', gap: 5 }}>
           {bookmarks.map(b => (
             <BookmarkCard key={b.id} bookmark={b} onEdit={handleEdit} onDelete={handleDelete} />
           ))}

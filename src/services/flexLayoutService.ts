@@ -72,6 +72,7 @@ export class FlexLayoutService {
                     {
                       "id": "bm-2",
                       "title": "Google",
+                      "color": "#4285F4",
                       "icon": "https://www.google.com/favicon.ico",
                       "url": "https://www.google.com",
                       "description": "Search the world's information",

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bookmark } from '../../types/bookmark';
+import { formatDate } from '../../services/Utils';
 
 type ViewMode = 'card' | 'table';
 
@@ -11,36 +12,16 @@ interface BookmarkCardProps {
   view?: ViewMode; // 'card' (default) or 'table'
 }
 
-// Stateless favicon component moved out to satisfy lint rules
-function Favicon(props: Readonly<{ src?: string; size?: number; onError?: () => void }>) {
-  const { src, size = 24, onError } = props;
-  const [errored, setErrored] = useState(false);
-  const handleError = () => {
-    setErrored(true);
-    onError && onError();
-  };
-  return (
-    <div
-      style={{
-        width: `${Math.max(32, size + 16)}px`,
-        height: `${Math.max(32, size + 16)}px`,
-        borderRadius: '8px',
-        backgroundColor: 'transparent',
-        border: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden'
-      }}
-    >
-      {src && !errored ? (
-        <img src={src} alt="" style={{ width: size, height: size, objectFit: 'cover' }} onError={handleError} />
-      ) : (
-        <span style={{ fontSize: Math.max(16, size - 4), opacity: 0.55 }}>🔗</span>
-      )}
-    </div>
-  );
+// helper to render an icon element (emoji/text or image). Keeps JSX readable and avoids nested ternaries.
+function renderIconElement(src: string | undefined, size: number) {
+  if (!src) return <span style={{ fontSize: Math.max(16, size - 4), opacity: 0.55 }}>🔗</span>;
+  if (!(src.startsWith('http') || src.startsWith('data:'))) {
+    return <span style={{ fontSize: size }}>{src}</span>;
+  }
+  return <img src={src} alt="icon" style={{ width: size, height: size, objectFit: 'cover', borderRadius: Math.max(4, Math.floor(size / 6)) }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />;
 }
+
+// Note: using inline <img> elements instead of a Favicon helper to keep markup straightforward here.
 
 // Card view component moved out; accepts props rather than closing over parent scope
 function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
@@ -57,8 +38,8 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
       style={{
         backgroundColor: theme.colors.surface,
         border: `1px solid ${theme.colors.border}`,
-        borderRadius: '8px',
-        padding: '1rem',
+  borderRadius: '8px',
+  padding: '5px',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
@@ -72,22 +53,42 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', display: 'flex', gap: '0.25rem', opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s ease' }}>
-        {onCollapse && (
-          <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row" style={actionButtonStyle(theme.colors.surface)}>🔺</button>
-        )}
-        <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>✏️</button>
-        <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>🗑️</button>
-      </div>
 
-        <div style={{ width: '40px', height: '40px', marginBottom: '1rem' }}>
-          <Favicon src={bookmark.favicon} size={24} />
+      {/* header: icon + title on the left, actions on the right (vertically centered) */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {renderIconElement(bookmark.icon, 20)}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3
+              style={{
+                ...titleStyle(theme),
+                whiteSpace: 'normal',
+                margin: 0,
+                paddingLeft: '5px',
+                color: bookmark.color || theme.colors.text.primary
+              }}
+              title={bookmark.title}
+            >
+              {bookmark.title}
+            </h3>
+          </div>
         </div>
 
+        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', opacity: isHovered ? 1 : 0, transition: 'opacity 0.18s ease' }}>
+          {onCollapse && (
+            <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row" style={actionButtonStyle(theme.colors.surface)}>🔺</button>
+          )}
+          <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>✏️</button>
+          <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>🗑️</button>
+        </div>
+      </div>
+
       <div style={{ paddingRight: '2rem' }}>
-        <h3 style={titleStyle(theme)} title={bookmark.title}>{bookmark.title}</h3>
-        {bookmark.description && <p style={descriptionStyle(theme)} title={bookmark.description}>{bookmark.description}</p>}
+        {/* show URL first, then description */}
         <div style={{ ...urlStyle(theme) }} title={bookmark.url}>{bookmark.url}</div>
+        {bookmark.description && <p style={descriptionStyle(theme)} title={bookmark.description}>{bookmark.description}</p>}
 
         {bookmark.tags && bookmark.tags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginBottom: '0.5rem' }}>
@@ -98,9 +99,15 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', fontSize: theme.fonts.sizes.small, color: theme.colors.text.secondary }}>
-          <span>{new Date(bookmark.createdDate).toLocaleDateString()}</span>
-          {bookmark.category && <span style={categoryStyle(theme)}>{bookmark.category}</span>}
+        {/* creation and last modified aligned */}
+        <div style={{ marginTop: 'auto', fontSize: theme.fonts.sizes.small, color: theme.colors.text.secondary }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', columnGap: '0.5rem', rowGap: '0.25rem', alignItems: 'center' }}>
+            <div style={{ color: theme.colors.text.secondary }}>Creation date :</div>
+            <div style={{ color: theme.colors.text.primary }}>{formatDate(bookmark.createdDate)}</div>
+            <div style={{ color: theme.colors.text.secondary }}>Last modified :</div>
+            <div style={{ color: theme.colors.text.primary }}>{formatDate(bookmark.lastModifiedDate)}</div>
+          </div>
+          {/* category is not part of Bookmark type; skip showing it here */}
         </div>
       </div>
     </button>
@@ -112,16 +119,16 @@ function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark
   const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme } = props;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
         <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Favicon src={bookmark.favicon} size={18} />
+          {renderIconElement(bookmark.icon, 16)}
         </div>
         <div style={{ flex: 1 }}>
-          <div title={bookmark.description || ''} style={{ fontWeight: 600, color: theme.colors.text.primary }}>{bookmark.title}</div>
+          <div title={bookmark.description || ''} style={{ fontWeight: 600, color: bookmark.color || theme.colors.text.primary }}>{bookmark.title}</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
         <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme)}>
           {expanded ? '▴' : '▾'}
         </button>
@@ -224,12 +231,4 @@ const tagPillStyle = (theme: any) => ({
   color: '#ffffff',
   borderRadius: '12px',
   fontWeight: 500
-} as React.CSSProperties);
-
-const categoryStyle = (theme: any) => ({
-  padding: '0.125rem 0.5rem',
-  backgroundColor: theme.colors.surface,
-  border: `1px solid ${theme.colors.border}`,
-  borderRadius: '4px',
-  fontSize: '0.75rem'
 } as React.CSSProperties);
