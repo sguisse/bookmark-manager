@@ -84,34 +84,30 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
       style={{
         height: '100vh',
         display: 'grid',
+        // keep the sidebar area in the grid at all times and collapse the first column to 0 when hidden
         gridTemplateColumns: sidebarVisible ? '250px 1fr' : '0 1fr',
         gridTemplateRows: '60px 1fr 40px',
-        gridTemplateAreas: sidebarVisible ? `
+        gridTemplateAreas: `
           "sidebar header"
           "sidebar main"
           "sidebar bottom"
-        ` : `
-          "header"
-          "main"
-          "bottom"
         `,
         backgroundColor: theme.colors.background,
         color: theme.colors.foreground,
         fontFamily: theme.fonts.family
       }}
     >
-      {/* Sidebar */}
-      {sidebarVisible && (
-        <div
-          style={{
-            gridArea: 'sidebar',
-            borderRight: `1px solid ${theme.colors.border}`,
-            backgroundColor: theme.colors.sidebarBackground
-          }}
-        >
-          <SidebarPanel />
-        </div>
-      )}
+      {/* Sidebar - always mounted so the layout can collapse the column via gridTemplateColumns */}
+      <div
+        style={{
+          gridArea: 'sidebar',
+          borderRight: `1px solid ${theme.colors.border}`,
+          backgroundColor: theme.colors.sidebarBackground,
+          overflow: 'hidden'
+        }}
+      >
+        <SidebarPanel />
+      </div>
 
       {/* Header */}
       <div

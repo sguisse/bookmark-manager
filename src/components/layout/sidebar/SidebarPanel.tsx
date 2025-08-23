@@ -323,13 +323,13 @@ export const SidebarPanel: React.FC = () => {
   return (
       <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} style={{
         position: 'relative',
-        width: collapsed ? 0 : '100%',
+        width: '100%',
         minHeight: '100vh',
         background: theme.colors.surface,
         borderRight: `1px solid ${theme.colors.border}`,
         padding: 12,
         boxSizing: 'border-box',
-        display: visible ? 'flex' : 'none',
+        display: 'flex',
         flexDirection: 'column'
       }}>
         {/* Header: sandwich button + title/logo */}
@@ -348,6 +348,20 @@ export const SidebarPanel: React.FC = () => {
           </div>
 
         </div>
+
+        {/* Header separator aligned with the main header bottom (DashboardLayout header is 60px tall) */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: '60px',
+            height: 1,
+            background: theme.colors.border,
+            pointerEvents: 'none'
+          }}
+        />
 
   {/* Main nav */}
   <div
