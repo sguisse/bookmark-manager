@@ -36,22 +36,16 @@ export const SidebarPanel: React.FC = () => {
 
         // Migrate persisted UI flags from older saved config (if present) into local state
         const legacyCollapsed = (config as any).collapsed;
-        if (typeof legacyCollapsed !== 'undefined') {
-          setCollapsedLocal(!!legacyCollapsed);
-        }
+        if (typeof legacyCollapsed !== 'undefined') setCollapsedLocal(!!legacyCollapsed);
         const legacyVisible = (config as any).visible;
-        if (typeof legacyVisible !== 'undefined') {
-          setVisibleLocal(!!legacyVisible);
-        }
+        if (typeof legacyVisible !== 'undefined') setVisibleLocal(!!legacyVisible);
 
         // restore last selected
         if (config.lastSelectedItemId) {
           const find = (items?: MenuNode[]): SidebarMenuItem | undefined => {
             if (!items) return undefined;
             for (const it of items) {
-              if (it.id === config.lastSelectedItemId) {
-                if (!('children' in it)) return it;
-              }
+              if (it.id === config.lastSelectedItemId && !('children' in it)) return it;
               if ('children' in it && it.children) {
                 const f = find(it.children as any);
                 if (f) return f;
@@ -80,7 +74,7 @@ export const SidebarPanel: React.FC = () => {
             justifyContent: 'center',
             padding: '2px 8px',
             borderRadius: 999,
-            background: item.badge.color || '#1976d2',
+            background: item.badge.color || '#3399ff',
             color: '#fff',
             fontSize: 12,
             marginLeft: 8
@@ -195,7 +189,7 @@ export const SidebarPanel: React.FC = () => {
       return out;
     };
 
-  return <div>{renderNodes(items)}</div>;
+    return <div>{renderNodes(items)}</div>;
   };
 
   // Render a single row for a node. Indentation is absolute from panel start based on type rules.
@@ -210,17 +204,21 @@ export const SidebarPanel: React.FC = () => {
       // indent for category is always 10px
       const indent = 10;
       return (
-        <div key={item.id} style={{ margin: '5px 0 6px 0' }}>
-          <div style={{
-            padding: '5px 8px 0px 8px',
-            paddingLeft: indent,
-            fontSize: 12,
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.06em',
-            color: theme.colors.text.primary,
-            opacity: 0.75
-          }}>{item.title}</div>
+        <div key={item.id} style={{ margin: '10px 0 6px 0' }}>
+          <div
+            style={{
+              padding: '6px 8px',
+              paddingLeft: indent,
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: theme.colors.text.primary,
+              opacity: 0.75
+            }}
+          >
+            {item.title}
+          </div>
         </div>
       );
     }
@@ -246,8 +244,12 @@ export const SidebarPanel: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             type="button"
-            onClick={() => menuItemSelectionHandler(item.id)}
-            aria-current={isSelected ? 'true' : undefined}
+            onClick={item.type === SidebarItemType.MenuGroup ? () => toggleGroup(item.id) : () => menuItemSelectionHandler(item.id)}
+            aria-current={item.type === SidebarItemType.MenuItem && isSelected ? 'true' : undefined}
+            aria-expanded={(() => {
+              if (item.type !== SidebarItemType.MenuGroup) return undefined;
+              return isOpen ? 'true' : 'false';
+            })()}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -255,7 +257,7 @@ export const SidebarPanel: React.FC = () => {
               background: selectedBackground,
               border: 'none',
               cursor: 'pointer',
-              padding: '2px 8px',
+              padding: '6px 8px',
               borderRadius: 6,
               width: '100%',
               textAlign: 'left',

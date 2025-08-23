@@ -29,7 +29,7 @@ export class SidebarService {
               title: 'Bookmarks',
               icon: 'bookmark',
               flexLayoutId: 'app-fusion-flexlayout-bookmarks',
-              badge: { id: 'bookmarks-new', label: 'new', color: 'blue' }
+              badge: { id: 'bookmarks-new', label: 'new', color: '#3399ff' }
             },
             {
               id: 'groups',
