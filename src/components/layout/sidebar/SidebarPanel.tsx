@@ -9,6 +9,9 @@ export const SidebarPanel: React.FC = () => {
   type MenuNode = SidebarCategory | SidebarMenuGroup | SidebarMenuItem;
   const [sidebarConfig, setSidebarConfig] = useState<SidebarConfig | undefined>(undefined);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  // UI state kept locally (not persisted in the SidebarConfig type)
+  const [collapsedLocal, setCollapsedLocal] = useState<boolean>(false);
+  const [visibleLocal, setVisibleLocal] = useState<boolean>(true);
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
   const { theme } = useTheme();
 
@@ -17,7 +20,7 @@ export const SidebarPanel: React.FC = () => {
       const config: SidebarConfig | null = SidebarService.loadConfig();
       if (config) {
         setSidebarConfig(config);
-        // Initialize openGroups from any group.expanded flags present in the saved config
+  // Initialize openGroups from any group.expanded flags present in the saved config
         const initialOpen: Record<string, boolean> = {};
         const collectOpen = (items?: MenuNode[]) => {
           if (!items) return;
@@ -28,6 +31,17 @@ export const SidebarPanel: React.FC = () => {
         };
         collectOpen(config.sidebarItems as any);
         setOpenGroups(initialOpen);
+        // Migrate persisted UI flags from older saved config (if present) into local state
+        // but do not persist them back into SidebarConfig's structure (we removed them from the type).
+        // This ensures older saved configs still influence initially-visible/collapsed state.
+        const legacyCollapsed = (config as any).collapsed;
+        if (typeof legacyCollapsed !== 'undefined') {
+          setCollapsedLocal(!!legacyCollapsed);
+        }
+        const legacyVisible = (config as any).visible;
+        if (typeof legacyVisible !== 'undefined') {
+          setVisibleLocal(!!legacyVisible);
+        }
         if (config.lastSelectedItemId) {
           // find and set selected
           const find = (items?: MenuNode[]): SidebarMenuItem | undefined => {
@@ -53,12 +67,9 @@ export const SidebarPanel: React.FC = () => {
     }
   }, []);
 
-  // Collapsed state (icons-only) persisted in sidebar config
+  // Collapsed state kept locally
   const toggleCollapsed = () => {
-    if (!sidebarConfig) return;
-    const newCfg = { ...sidebarConfig, collapsed: !sidebarConfig.collapsed };
-    setSidebarConfig(newCfg);
-    SidebarService.saveConfig(newCfg);
+    setCollapsedLocal(c => !c);
   };
 
   // Handler for menu item selection (recursive)
@@ -112,107 +123,130 @@ export const SidebarPanel: React.FC = () => {
     });
   };
 
+  // Helper to build a badge node for a menu item (collapsed determines compact vs full)
+  const buildBadgeNode = (item: MenuNode, collapsed: boolean): React.ReactNode => {
+    if (!('badge' in item) || !item.badge) return null;
+    if (!collapsed) {
+      return (
+        <span style={{
+          marginLeft: 8,
+          background: item.badge.color || '#1976d2',
+          color: '#fff',
+          padding: '2px 6px',
+          borderRadius: 12,
+          fontSize: 11,
+          fontWeight: 700,
+          whiteSpace: 'nowrap'
+        }}>{item.badge.label}</span>
+      );
+    }
+
+    return (
+      <span style={{
+        width: 10,
+        height: 10,
+        borderRadius: 999,
+        background: item.badge.color || '#1976d2',
+        display: 'inline-block',
+        marginLeft: 4,
+        boxShadow: '0 0 0 2px rgba(0,0,0,0.06)'
+      }} />
+    );
+  };
+
+  // Small helper to convert hex color to rgba string with alpha
+  const hexToRgba = (hex: string, alpha = 0.12) => {
+    if (!hex) return `rgba(0,0,0,${alpha})`;
+    const clean = hex.replace('#', '');
+    const bigint = parseInt(clean.length === 3 ? clean.split('').map(c=>c+c).join('') : clean, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
   // Render the menu items
   const renderMenu = (items: Array<SidebarCategory | SidebarMenuGroup | SidebarMenuItem> | undefined, depth = 0) => {
     if (!items || items.length === 0) return null;
     return (
       <ul style={{ listStyle: 'none', paddingLeft: depth === 0 ? 8 : 16, margin: 0 }}>
-        {items.map((item) => {
-          // Treat an item without an icon but with children as a category (non-clickable header)
-          const hasChildren = 'children' in item && !!item.children && (item.children as any).length > 0;
-          const isCategory = hasChildren && !item.icon;
-          const isOpen = !!openGroups[item.id];
-          const isSelected = !!(selectedMenuItem && selectedMenuItem.id === item.id);
-          const collapsed = !!sidebarConfig?.collapsed;
-
-          if (isCategory) {
-            // Render non-clickable section header for category type
-            return (
-              <li key={item.id} style={{ margin: '10px 0 6px 0' }}>
-                <div style={{ padding: '6px 8px', fontSize: 12, fontWeight: 700, color: theme.colors.text.primary, opacity: 0.8 }}>{item.title}</div>
-                {hasChildren && <div style={{ marginLeft: 8 }}>{renderMenu(item.children as any, depth + 1)}</div>}
-              </li>
-            );
-          }
-
-          // Prepare badge node to avoid nested ternaries in JSX
-          // badgeNode — build conditionally with type narrowing
-          let badgeNode: React.ReactNode = null;
-          if ('badge' in item && item.badge) {
-            if (!collapsed) {
-              badgeNode = (
-                <span style={{
-                  marginLeft: 8,
-                  background: item.badge.color || '#1976d2',
-                  color: '#fff',
-                  padding: '2px 6px',
-                  borderRadius: 12,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  whiteSpace: 'nowrap'
-                }}>{item.badge.label}</span>
-              );
-            } else {
-              badgeNode = (
-                <span style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 999,
-                  background: item.badge.color || '#1976d2',
-                  display: 'inline-block',
-                  marginLeft: 4,
-                  boxShadow: '0 0 0 2px rgba(0,0,0,0.06)'
-                }} />
-              );
-            }
-          }
-
-          return (
-            <li key={item.id} id={item.id} style={{ margin: '6px 0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => menuItemSelectionHandler(item.id)}
-                  aria-current={isSelected ? 'true' : undefined}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: isSelected ? theme.colors.surface : 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '6px 8px',
-                    borderRadius: 6,
-                    width: '100%',
-                    textAlign: 'left'
-                  }}
-                >
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, width: '100%' }}>
-                    {renderIcon(item.icon)}
-                    {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{item.title}</span>}
-                    {badgeNode}
-                  </div>
-                </button>
-                {hasChildren && !collapsed && (
-                  <button
-                    type="button"
-                    onClick={() => toggleGroup(item.id)}
-                    style={{ marginLeft: 8, fontSize: '1em', background: 'none', border: 'none', cursor: 'pointer' }}
-                    aria-label={isOpen ? 'Collapse group' : 'Expand group'}
-                  >
-                    {isOpen ? '▾' : '▸'}
-                  </button>
-                )}
-              </div>
-              {hasChildren && isOpen && (
-                <div style={{ marginLeft: 16 }}>
-                  {renderMenu(item.children as any, depth + 1)}
-                </div>
-              )}
-            </li>
-          );
-        })}
+        {items.map((item) => renderMenuItem(item as MenuNode, depth))}
       </ul>
+    );
+  };
+
+  // Render a single menu node (category, group, or item)
+  const renderMenuItem = (item: MenuNode, depth: number): JSX.Element | null => {
+    const hasChildren = 'children' in item && !!item.children && (item.children as any).length > 0;
+    const isCategory = hasChildren && !item.icon;
+  const isOpen = !!openGroups[item.id];
+    const isSelected = !!(selectedMenuItem && selectedMenuItem.id === item.id);
+  const collapsed = !!collapsedLocal;
+
+    if (isCategory) {
+      return (
+        <li key={item.id} style={{ margin: '10px 0 6px 0' }}>
+          <div style={{ padding: '6px 8px', fontSize: 12, fontWeight: 700, color: theme.colors.text.primary, opacity: 0.8 }}>{item.title}</div>
+          {hasChildren && <div style={{ marginLeft: 8 }}>{renderMenu(item.children as any, depth + 1)}</div>}
+        </li>
+      );
+    }
+
+  // badge (extracted to helper)
+  const badgeNode = buildBadgeNode(item as any, collapsed);
+
+  // compute translucent selected background
+  const alpha = theme.name === 'dark' ? 0.18 : 0.12;
+  const selectedBackground = isSelected ? hexToRgba(theme.colors.primary, alpha) : 'transparent';
+
+    return (
+      <li key={item.id} id={item.id} style={{ margin: '6px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            type="button"
+            onClick={() => menuItemSelectionHandler(item.id)}
+            aria-current={isSelected ? 'true' : undefined}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              // translucent full-row background when selected (CoreUI-like)
+              background: selectedBackground,
+              border: 'none',
+              cursor: 'pointer',
+              padding: '6px 8px',
+              borderRadius: 6,
+              width: '100%',
+              textAlign: 'left',
+              // keep title color unchanged; only change background on selection
+              color: theme.colors.text.primary,
+              fontWeight: 500,
+              transition: 'background 120ms ease, color 120ms ease'
+            }}
+          >
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, width: '100%' }}>
+              {renderIcon(item.icon)}
+              {!collapsed && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{item.title}</span>}
+              {badgeNode}
+            </div>
+          </button>
+          {hasChildren && !collapsed && (
+            <button
+              type="button"
+              onClick={() => toggleGroup(item.id)}
+              style={{ marginLeft: 8, fontSize: '1em', background: 'none', border: 'none', cursor: 'pointer' }}
+              aria-label={isOpen ? 'Collapse group' : 'Expand group'}
+            >
+              {isOpen ? '▾' : '▸'}
+            </button>
+          )}
+        </div>
+        {hasChildren && isOpen && (
+          <div style={{ marginLeft: 16 }}>
+            {renderMenu(item.children as any, depth + 1)}
+          </div>
+        )}
+      </li>
     );
   };
 
@@ -225,14 +259,11 @@ export const SidebarPanel: React.FC = () => {
     return <DynamicIcon name={icon as any} color={theme.colors.text.primary} size={20} />;
   };
 
-  const collapsed = !!sidebarConfig?.collapsed;
-  const visible = sidebarConfig?.visible !== false;
+  const collapsed = !!collapsedLocal;
+  const visible = visibleLocal;
 
   const setVisible = (v: boolean) => {
-    if (!sidebarConfig) return;
-    const newCfg = { ...sidebarConfig, visible: v };
-    setSidebarConfig(newCfg);
-    SidebarService.saveConfig(newCfg);
+    setVisibleLocal(v);
   };
 
   return (

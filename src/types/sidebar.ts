@@ -7,9 +7,6 @@ export interface SidebarConfig {
   creationDate: Date | null;
   lastUpdateDate: Date | null;
   viewMode?: SidebarViewMode;
-  // allow UI state flags persisted (optional)
-  collapsed?: boolean;
-  visible?: boolean;
   // optional footer items rendered at the bottom of the sidebar
   footerItems?: BaseSidebarItem[];
 }
