@@ -1,12 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import HeaderPanel from './HeaderPanel';
-import SideBar from './sidebar/SidebarPanel';
+import SidebarManager from './sidebar/SidebarManager';
 import BottomPanel from './BottomPanel';
 import BodyContentPanel from './BodyContentPanel';
 import BookmarksTabManager from '../bookmark/BookmarksTabManager';
 import { FlexLayoutManager } from '../flexlayout/FlexLayoutManager';
-import { SidebarPanel } from './sidebar/SidebarPanel';
+// sidebar manager import handled above
 
 
 interface DashboardLayoutProps {
@@ -86,7 +86,7 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
         display: 'grid',
         // keep the sidebar area in the grid at all times and collapse the first column to 0 when hidden
         gridTemplateColumns: sidebarVisible ? '250px 1fr' : '0 1fr',
-        gridTemplateRows: '60px 1fr 40px',
+        gridTemplateRows: '45px 1fr 40px',
         gridTemplateAreas: `
           "sidebar header"
           "sidebar main"
@@ -106,7 +106,7 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
           overflow: 'hidden'
         }}
       >
-        <SidebarPanel />
+  <SidebarManager />
       </div>
 
       {/* Header */}
