@@ -229,7 +229,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 
       {/* Footer (icons-only area) */}
       {sidebarConfig?.footerItems && sidebarConfig.footerItems.length > 0 && (
-        <div id="sidebar-footer" style={{ marginTop: 12, borderTop: `1px solid ${theme.colors.border}`, paddingTop: 8, display: 'flex', gap: 8, justifyContent: 'right' }}>
+  <div id="sidebar-footer" style={{ marginTop: 12, borderTop: `0px solid ${theme.colors.border}`, paddingTop: 8, display: 'flex', gap: 8, justifyContent: 'right' }}>
           {sidebarConfig.footerItems.map(fi => (
             <button key={fi.id} title={fi.title} onClick={() => onSelectItem(fi.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>{renderIcon(fi.icon)}</button>
           ))}
