@@ -32,9 +32,11 @@ export class FlexLayoutService {
             children: [
               {
                 type: "tab",
+                id: "b17563f4-d8c3-4c88-9bbc-54302807c6e7",
                 name: "Bookmarks tab",
                 component: "Bookmarks",
                 config: {
+                  id: "b17563f4-d8c3-4c88-9bbc-54302807c6e7",
                   component: "Bookmarks",
                   "title": "Bookmarks tab",
                   "bgcolor": "#2d76eb",
@@ -86,9 +88,11 @@ export class FlexLayoutService {
               },
               {
                 type: "tab",
+                id: "b17563f4-d8c3-4c88-9bbc-54302807c6e9",
                 name: "Markdown tab",
                 component: "Markdown",
                 config: {
+                  id: "b17563f4-d8c3-4c88-9bbc-54302807c6e9",
                   component: "Markdown",
                   "title": "Markdown tab",
                   "color": "#ff0000",
@@ -102,9 +106,11 @@ export class FlexLayoutService {
               },
               {
                 type: "tab",
+                id: "b17563f4-d8c3-4c88-9bbc-54302807c1e7",
                 name: "Web tab",
                 component: "Web",
                 config: {
+                  id: "b17563f4-d8c3-4c88-9bbc-54302807c1e7",
                   "component": "Web",
                   "title": "Web tab",
                   "color": "#00ff00",

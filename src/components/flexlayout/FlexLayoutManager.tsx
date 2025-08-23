@@ -329,10 +329,10 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
                     const newTab: any = {
                       type: 'tab',
                       id: newId,
-                      name: update.title || 'New Tab',
-                      component: update.component || 'welcome',
+                      name: update.title,
+                      component: update.component,
                       // stamp auditing fields for a newly created tab
-                      config: { ...(update || {}), createdDate: new Date(), lastModifiedDate: new Date() }
+                      config: { ...(update || {}), id: newId, createdDate: new Date(), lastModifiedDate: new Date() }
                     };
 
                     if (parentTabset && Array.isArray(parentTabset.children)) {
