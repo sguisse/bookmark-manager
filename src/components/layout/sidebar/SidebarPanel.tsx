@@ -3,6 +3,7 @@ import { SidebarService } from '../../../services/sidebarService';
 import { SidebarConfig, SidebarMenuItem, SidebarCategory, SidebarMenuGroup, SidebarItemType } from '../../../types/sidebar';
 import { useApplication } from '../../../contexts/ApplicationContext';
 import { DynamicIcon } from 'lucide-react/dynamic';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 export const SidebarPanel: React.FC = () => {
@@ -62,6 +63,27 @@ export const SidebarPanel: React.FC = () => {
     }
   }, [setSelectedMenuItem]);
 
+  // Listen for global header toggle events to open/close the sidebar without prop drilling
+  useEffect(() => {
+    const onToggle = () => setVisibleLocal(v => !v);
+    if (typeof window !== 'undefined') {
+      // Support both kebab-case and camelCase event names for compatibility
+      window.addEventListener('toggle-sidebar', onToggle as EventListener);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('toggle-sidebar', onToggle as EventListener);
+      }
+    };
+  }, []);
+
+  // Broadcast visible state to layout so the grid column can collapse when sidebar hidden
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sidebar-visibility', { detail: { visible: visibleLocal } }));
+    }
+  }, [visibleLocal]);
+
   // Small helper to render badge UI
   const buildBadgeNode = (item: any, collapsed: boolean) => {
     if (!item?.badge) return null;
@@ -85,19 +107,8 @@ export const SidebarPanel: React.FC = () => {
       );
     }
 
-    return (
-      <span
-        style={{
-          width: 10,
-          height: 10,
-          borderRadius: 999,
-          background: item.badge.color || '#1976d2',
-          display: 'inline-block',
-          marginLeft: 4,
-          boxShadow: '0 0 0 2px rgba(0,0,0,0.06)'
-        }}
-      />
-    );
+    return (<span/>);
+
   };
 
   // Update the expanded flag for a group in the nested sidebar items (mutates a copy)
@@ -277,10 +288,15 @@ export const SidebarPanel: React.FC = () => {
             <button
               type="button"
               onClick={() => toggleGroup(item.id)}
-              style={{ marginLeft: 8, fontSize: '1em', background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ marginLeft: 8, fontSize: '1em', background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', padding: 4 }}
               aria-label={isOpen ? 'Collapse group' : 'Expand group'}
             >
-              {isOpen ? '▾' : '▸'}
+              {/* use lucide-react components for chevrons so they render without CSS */}
+              {isOpen ? (
+                <ChevronDown aria-hidden="true" size={18} color={theme.colors.text.primary} />
+              ) : (
+                <ChevronRight aria-hidden="true" size={18} color={theme.colors.text.primary} />
+              )}
             </button>
           )}
         </div>
@@ -305,7 +321,6 @@ export const SidebarPanel: React.FC = () => {
   };
 
   return (
-    <>
       <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} style={{
         position: 'relative',
         width: collapsed ? 0 : '100%',
@@ -314,18 +329,24 @@ export const SidebarPanel: React.FC = () => {
         borderRight: `1px solid ${theme.colors.border}`,
         padding: 12,
         boxSizing: 'border-box',
-        display: visible ? 'flex' : 'hidden',
+        display: visible ? 'flex' : 'none',
         flexDirection: 'column'
       }}>
         {/* Header: sandwich button + title/logo */}
         <div id="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button aria-label={visible ? 'Hide sidebar' : 'Show sidebar'} onClick={() => setVisible(!visible)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>☰</button>
-            {!collapsed && <div style={{ fontWeight: 700 }}>App</div>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* simple icon (app-icon.svg) used as sidebar toggle - use a real button for accessibility */}
+            <button
+              id="sidebar-icon-button"
+              aria-label={visible ? 'Hide sidebar' : 'Show sidebar'}
+              onClick={() => setVisible(!visible)}
+              style={{ background: 'none', border: 'none', padding: 0, display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}
+            >
+              <img src="/app-icon.svg" alt="App" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
+            </button>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>Web Fusion</div>
           </div>
-          <div>
-            <button onClick={toggleCollapsed} aria-pressed={collapsed} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>{collapsed ? '➤' : '◀'}</button>
-          </div>
+
         </div>
 
   {/* Main nav */}
@@ -356,11 +377,5 @@ export const SidebarPanel: React.FC = () => {
           </div>
         )}
       </aside>
-
-      {/* Floating opener when hidden */}
-      {!visible && (
-        <button aria-label="Open sidebar" onClick={() => setVisible(true)} style={{ position: 'fixed', left: 12, bottom: 12, width: 44, height: 44, borderRadius: 10, background: theme.colors.surface, border: `1px solid ${theme.colors.border}`, boxShadow: '0 6px 18px rgba(0,0,0,0.12)', cursor: 'pointer' }}>☰</button>
-      )}
-    </>
   );
 };
