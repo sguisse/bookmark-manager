@@ -63,7 +63,7 @@ export function MarkdownForm(props: Readonly<MarkdownFormProps>) {
   }, [onCancel]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '5px', height: '100%' }}>
       {/* show id after the popup title as a readonly field when available */}
       {id && (
         <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>

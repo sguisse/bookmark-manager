@@ -1,5 +1,6 @@
 import { useTheme } from '../../contexts/ThemeContext';
 import { AlignJustify } from 'lucide-react';
+import { useApplication } from '../../contexts/ApplicationContext';
 
 interface HeaderPanelProps {
   activeTab?: string;
@@ -7,6 +8,7 @@ interface HeaderPanelProps {
 
 export default function HeaderPanel(_: Readonly<HeaderPanelProps>) {
   const { theme } = useTheme();
+  const { selectedMenuItem } = useApplication();
 
   const toggleSidebarFromHeader = () => {
     if (typeof window !== 'undefined') {
@@ -14,6 +16,8 @@ export default function HeaderPanel(_: Readonly<HeaderPanelProps>) {
       window.dispatchEvent(new CustomEvent('toggle-sidebar'));
     }
   };
+
+  const headerTitle = selectedMenuItem?.title || 'The Header';
 
   return (
     <header
@@ -37,7 +41,7 @@ export default function HeaderPanel(_: Readonly<HeaderPanelProps>) {
           <AlignJustify size={25} color={theme.colors.text.primary} />
         </button>
 
-        <div style={{ fontWeight: 700 }}>The Header</div>
+        <div style={{ fontWeight: 700 }}>{headerTitle}</div>
       </div>
     </header>
   );

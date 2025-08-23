@@ -10,7 +10,7 @@ export function MarkdownConsultView(props: Readonly<{ content: string }>) {
   }, []);
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', display: 'flex', padding: '5px', flexDirection: 'column' }}>
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         {Markdown ? (
           // render parsed markdown; ensure renderer container can grow

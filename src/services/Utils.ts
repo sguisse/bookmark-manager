@@ -1,4 +1,5 @@
 // Shared utilities for the app
+
 // Small helper to format Date or ISO string to dd/MM/yyyy HH:mm:ss
 export function formatDate(d?: Date | string | null): string {
   if (!d) return '';
@@ -17,4 +18,17 @@ export function normalizeColorForInput(c?: string): string {
   return s;
 }
 
-export default { formatDate, normalizeColorForInput };
+// Convert hex color to rgba string. Accepts '#rgb', 'rgb', '#rrggbb' and returns rgba(r,g,b,a)
+export function hexToRgba(hex?: string, alpha = 0.12): string {
+  if (!hex) return `rgba(0,0,0,${alpha})`;
+  const clean = String(hex).replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+  const bigint = parseInt(full, 16);
+  if (Number.isNaN(bigint)) return `rgba(0,0,0,${alpha})`;
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export default { formatDate, normalizeColorForInput, hexToRgba };
