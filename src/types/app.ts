@@ -17,3 +17,11 @@ export interface BaseAuditing {
   lastModifiedBy?: string;
   lastModifiedDate?: Date;
 }
+
+export interface Badge {
+  id: string;
+  label: string;
+  color?: string;
+  // optional icon to display alongside the label
+  icon?: string;
+}

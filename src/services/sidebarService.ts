@@ -1,4 +1,4 @@
-import { SidebarMenuItem, SidebarConfig } from "../types/sidebar";
+import { SidebarConfig, SidebarViewMode, SidebarItemType } from "../types/sidebar";
 
 export class SidebarService {
 
@@ -9,35 +9,68 @@ export class SidebarService {
    */
   static getDefaultConfig(): SidebarConfig {
     return {
-      lastSelectedItemId: "bookmarks",
+      lastSelectedItemId: 'bookmarks',
+      creationDate: null,
       lastUpdateDate: null,
-      menuItems: [
+      viewMode: SidebarViewMode.Visible,
+      footerItems: [
+        { id: 'help', type: SidebarItemType.MenuItem, title: 'Help', icon: 'help-circle' },
+        { id: 'about', type: SidebarItemType.MenuItem, title: 'About', icon: 'info' }
+      ],
+      sidebarItems: [
         {
-          id: 'bookmarks',
-          title: 'Bookmarks',
-          icon: 'bookmark',
-          flexLayoutId: 'app-fusion-flexlayout-bookmarks'
-        },
-        {
-          id: 'groups',
-          title: 'Groups',
-          icon: 'group',
-          flexLayoutId: 'app-fusion-flexlayout-groups'
-        },
-        {
-          id: 'settings',
-          title: 'Settings sgu',
-          icon: 'settings',
+          id: 'main-cat',
+          type: SidebarItemType.Category,
+          title: 'Main',
           children: [
             {
-              id: 'child',
-              title: 'child',
-              icon: 'child',
-              flexLayoutId: 'app-fusion-flexlayout-child'
+              id: 'bookmarks',
+              type: SidebarItemType.MenuItem,
+              title: 'Bookmarks',
+              icon: 'bookmark',
+              flexLayoutId: 'app-fusion-flexlayout-bookmarks',
+              badge: { id: 'bookmarks-new', label: 'new', color: 'blue' }
+            },
+            {
+              id: 'groups',
+              type: SidebarItemType.MenuItem,
+              title: 'Groups',
+              icon: 'group',
+              flexLayoutId: 'app-fusion-flexlayout-groups'
+            }
+          ]
+        },
+        {
+          id: 'management-cat',
+          type: SidebarItemType.Category,
+          title: 'Management',
+          children: [
+            {
+              id: 'settings',
+              type: SidebarItemType.MenuGroup,
+              title: 'Settings',
+              icon: 'settings',
+              expanded: false,
+              children: [
+                {
+                  id: 'profile',
+                  type: SidebarItemType.MenuItem,
+                  title: 'Profile',
+                  icon: 'user',
+                  flexLayoutId: 'app-fusion-flexlayout-profile'
+                },
+                {
+                  id: 'preferences',
+                  type: SidebarItemType.MenuItem,
+                  title: 'Preferences',
+                  icon: 'sliders',
+                  flexLayoutId: 'app-fusion-flexlayout-preferences'
+                }
+              ]
             }
           ]
         }
-      ]
+      ],
     };
   }
 
