@@ -1,33 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { MarkdownTabFormData, MarkdownTabConfig } from '../../types/markdown';
 import { useTheme } from '../../contexts/ThemeContext';
 import { formatDate } from '../../services/Utils';
-import { WebTabConfig, WebTabFormData } from '../../types/web';
 import { FormDisplayMode } from '../../types/app';
+import MDEditor from '@uiw/react-md-editor';
 
-interface WebFormProps {
-  webTab?: WebTabConfig | null;
+// Presentational: edit view (extracted from MarkdownViewer)
+export interface MarkdownFormProps {
+  markdownTab: MarkdownTabConfig;
   mode?: FormDisplayMode;
-  onSave: (data: WebTabFormData) => void;
+  onSave: (data: MarkdownTabFormData) => void;
   onCancel: () => void;
 }
 
-export default function WebForm(props: Readonly<WebFormProps>) {
-  const { webTab, mode = FormDisplayMode.Edit, onSave, onCancel } = props;
-  const id = webTab?.id;
-  const createdDate = webTab?.createdDate;
-  const lastModifiedDate = webTab?.lastModifiedDate;
+export function MarkdownForm(props: Readonly<MarkdownFormProps>) {
+  const { markdownTab, mode = FormDisplayMode.Edit, onCancel, onSave } = props;
+  const id = markdownTab?.id;
+  const createdDate = markdownTab?.createdDate;
+  const lastModifiedDate = markdownTab?.lastModifiedDate;
   const { theme } = useTheme();
 
-  const [formData, setFormData] = useState<WebTabFormData>(() => ({
-    url: mode === FormDisplayMode.Create ? '' : (webTab?.url || '')
-  }));
+  const [formData, setFormData] = useState<MarkdownTabFormData>(() => ({
+      content: mode === FormDisplayMode.Create ? '' : (markdownTab?.content || '')
+    }));
 
-  // sync initial values only when the webTab id changes or the mode changes
   useEffect(() => {
     setFormData({
-      url: mode === FormDisplayMode.Create ? '' : (webTab?.url || '')
+      content: mode === FormDisplayMode.Create ? '' : (markdownTab?.content || '')
     });
-  }, [webTab?.id, mode]);
+  }, [markdownTab?.id, mode]);
 
   const inputStyle = {
     width: '100%',
@@ -50,13 +51,11 @@ export default function WebForm(props: Readonly<WebFormProps>) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ url: (formData.url || '').trim() });
+    onSave({ content: (formData.content || '').trim() });
   };
 
   return (
-    <div style={{ padding: 12, width: 420, background: theme.colors.surface, borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)' }}>
-  <h2 style={{ margin: '0 0 1.5rem 0', fontSize: theme.fonts.sizes.large, fontWeight: 600, color: theme.colors.text.primary }}>{mode === FormDisplayMode.Create ? 'Add Web URL' : 'Edit Web URL'}</h2>
-
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
       {/* show id after the popup title as a readonly field when available */}
       {id && (
         <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>
@@ -65,10 +64,16 @@ export default function WebForm(props: Readonly<WebFormProps>) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="web-url" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>URL</label>
-          <input id="web-url" type="url" value={formData.url ?? ''} onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" style={inputStyle} autoFocus />
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <MDEditor
+              value={formData.content}
+              onChange={(val: any) => setFormData((prev) => ({ ...prev, content: String(val || '') }))}
+              height="100%"
+              style={{ flex: 1 }}
+            />
+          </div>
         </div>
 
         {/* Dates (readonly) */}
@@ -85,8 +90,8 @@ export default function WebForm(props: Readonly<WebFormProps>) {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-          <button type="button" onClick={onCancel} style={{ padding: '0.75rem 1.5rem', border: `1px solid ${theme.colors.border}`, borderRadius: '6px', backgroundColor: 'transparent', color: theme.colors.text.primary }}>Cancel</button>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem' }}>Cancel</button>
           <button type="submit" style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: '6px', backgroundColor: theme.colors.primary, color: '#ffffff' }}>Save</button>
         </div>
       </form>

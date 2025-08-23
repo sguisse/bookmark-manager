@@ -4,4 +4,6 @@ export interface WebTabConfig extends FlexTabConfig {
   url?: string;
 }
 
-export default WebTabConfig;
+export interface WebTabFormData {
+  url?: string;
+}

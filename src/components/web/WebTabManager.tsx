@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { WebTabConfig } from '../../types/web';
+import { WebTabConfig, WebTabFormData } from '../../types/web';
 import WebForm from './WebForm';
+import { FormDisplayMode } from '../../types/app';
 
 interface WebTabProps {
   nodeId?: string;
@@ -37,7 +38,8 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
     return () => window.removeEventListener('flexlayout:web:toolbar', handler as EventListener);
   }, [props.nodeId]);
 
-  const saveUrl = (newUrl: string) => {
+  const saveUrl = (formData: WebTabFormData) => {
+    const newUrl = formData?.url || '';
     setShowForm(false);
     setUrl(newUrl);
     if (onConfigChange) onConfigChange({ ...(config || {} as any), url: newUrl, id: (config as any)?.id || '' });
@@ -45,11 +47,6 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
 
   return (
     <div style={{ height: '100%', width: '100%', position: 'relative', background: theme.colors.background }}>
-      {showForm && (
-        <div style={{ position: 'absolute', zIndex: 30, top: 12, right: 12 }}>
-          <WebForm initialUrl={url} onSave={saveUrl} onClose={() => setShowForm(false)} />
-        </div>
-      )}
       <div style={{ height: '100%', width: '100%' }}>
         {url ? (
           <iframe src={url} title={config?.title || 'web-view'} style={{ width: '100%', height: '100%', border: 'none' }} />
@@ -69,6 +66,11 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
           </div>
         )}
       </div>
+      {showForm && (
+        <div style={{ position: 'absolute', zIndex: 30, top: 12, right: 12 }}>
+          <WebForm webTab={config} mode={config?.id ? FormDisplayMode.Edit : FormDisplayMode.Create} onSave={saveUrl} onCancel={() => setShowForm(false)} />
+        </div>
+      )}
     </div>
   );
 }
