@@ -25,10 +25,11 @@ export function MarkdownForm(props: Readonly<MarkdownFormProps>) {
     }));
 
   useEffect(() => {
-    setFormData({
+    const newForm: MarkdownTabFormData = {
       content: mode === FormDisplayMode.Create ? '' : (markdownTab?.content || '')
-    });
-  }, [markdownTab?.id, mode]);
+    };
+    setFormData(newForm);
+  }, [markdownTab?.content, mode]);
 
   const inputStyle = {
     width: '100%',
@@ -54,6 +55,13 @@ export function MarkdownForm(props: Readonly<MarkdownFormProps>) {
     onSave({ content: (formData.content || '').trim() });
   };
 
+  // close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel && onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
       {/* show id after the popup title as a readonly field when available */}
@@ -66,14 +74,12 @@ export function MarkdownForm(props: Readonly<MarkdownFormProps>) {
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
             <MDEditor
               value={formData.content}
               onChange={(val: any) => setFormData((prev) => ({ ...prev, content: String(val || '') }))}
               height="100%"
               style={{ flex: 1 }}
             />
-          </div>
         </div>
 
         {/* Dates (readonly) */}

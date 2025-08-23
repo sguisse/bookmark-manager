@@ -1,6 +1,6 @@
-import { FlexTabConfig } from "./flexTab";
+import { FlexLayoutTabConfig } from "./flexTab";
 
-export interface MarkdownTabConfig extends FlexTabConfig {
+export interface MarkdownTabConfig extends FlexLayoutTabConfig {
   content: string;
 }
 

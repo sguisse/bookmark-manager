@@ -303,7 +303,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           />
           {(editingNodeId || createTargetNodeId) && (
             <FlexLayoutTabForm
-              flexTabConfig={{ id: editingNodeId || undefined, ...(editingConfig || {}) } as any}
+              flexLayoutTab={{ id: editingNodeId || undefined, ...(editingConfig || {}) } as any}
               mode={editingMode}
               onSave={(update) => {
                 if (editingMode === FormDisplayMode.Create) {

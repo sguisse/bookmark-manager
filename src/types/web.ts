@@ -1,6 +1,6 @@
-import { FlexTabConfig } from './flexTab';
+import { FlexLayoutTabConfig } from './flexTab';
 
-export interface WebTabConfig extends FlexTabConfig {
+export interface WebTabConfig extends FlexLayoutTabConfig {
   url?: string;
 }
 

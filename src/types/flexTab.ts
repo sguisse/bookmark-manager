@@ -1,15 +1,15 @@
 import { BaseAuditing } from "./app";
 
-export interface FlexTabConfig extends BaseAuditing {
+export interface FlexLayoutTabConfig extends BaseAuditing {
   id: string;
   title: string;
   color?: string;
   bgcolor?: string;
   icon?: string;
-  component: FlexTabComponent;
+  component: FlexLayoutTabComponent;
 }
 
-export enum FlexTabComponent {
+export enum FlexLayoutTabComponent {
   Bookmarks = "bookmarks",
   Markdown = "markdown",
   Web = "web",
@@ -17,11 +17,11 @@ export enum FlexTabComponent {
   // add more as needed
 }
 
-export interface FlexTabFormData extends BaseAuditing {
+export interface FlexLayoutTabFormData extends BaseAuditing {
   id: string;
   title?: string;
   color?: string;
   bgcolor?: string;
   icon?: string;
-  component?: FlexTabComponent;
+  component?: FlexLayoutTabComponent;
 }

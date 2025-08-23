@@ -1,5 +1,5 @@
 import { BaseAuditing } from "./app";
-import { FlexTabConfig } from "./flexTab";
+import { FlexLayoutTabConfig } from "./flexTab";
 
 export interface Bookmark extends BaseAuditing {
   id: string;
@@ -13,7 +13,7 @@ export interface Bookmark extends BaseAuditing {
 }
 
 
-export interface BookmarksTabConfig extends FlexTabConfig {
+export interface BookmarksTabConfig extends FlexLayoutTabConfig {
   bookmarks: Bookmark[];
 }
 

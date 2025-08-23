@@ -1,15 +1,33 @@
 import React from 'react';
 import { BorderNode, ITabSetRenderValues, TabNode, TabSetNode } from 'flexlayout-react';
-import WelcomeTab from '../welcome/WelcomeTabManager';
 import BookmarksTabManager from '../bookmark/BookmarksTabManager';
 import MarkdownTabManager from '../markdown/MarkdownTabManager';
 import WebTabManager from '../web/WebTabManager';
-import { FlexTabConfig } from '../../types/flexTab';
+import { FlexLayoutTabConfig } from '../../types/flexTab';
 import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon } from 'lucide-react';
 import { readableTextColor } from '../../services/tUtils';
+
+// helper: detect if an icon string looks like an image src (http, data:, or file path with image extension)
+const isImageSrc = (val?: string) => {
+  if (!val) return false;
+  const hasImageExt = /\.(png|jpe?g|gif|svg|ico)(\?.*)?$/i.test(val);
+  const isDataImage = /^data:image\//i.test(val);
+  const isUrlLike = /^(https?:)?\/\//i.test(val) || val.startsWith('/');
+  return isDataImage || hasImageExt || isUrlLike;
+};
+
+const renderIconElement = (val: string | undefined, key = 'icon', pill = false) => {
+  if (!val) return null;
+  if (isImageSrc(val)) {
+    // small image (favicon or thumbnail)
+    const size = pill ? 14 : 18;
+    return <img key={key} src={val} alt="" style={{ width: size, height: size, objectFit: 'cover', borderRadius: 4, marginRight: pill ? 6 : 8 }} />;
+  }
+  return <span key={key} style={{ marginRight: 8 }}>{val}</span>;
+};
 
 export const onRenderTab = (node: TabNode, renderValues: any) => {
   const cfg = node.getConfig();
@@ -19,6 +37,8 @@ export const onRenderTab = (node: TabNode, renderValues: any) => {
 
   const elements: any[] = [];
 
+
+
   if (bgcolor) {
     const text = icon || (String(node.getName ? node.getName() : node.getId()).charAt(0).toUpperCase());
     elements.push(
@@ -27,9 +47,7 @@ export const onRenderTab = (node: TabNode, renderValues: any) => {
       </span>
     );
   } else if (icon) {
-    elements.push(
-      <span key="icon" style={{ marginRight: 8 }}>{icon}</span>
-    );
+    elements.push(renderIconElement(icon, 'icon', !!bgcolor));
   }
 
   if (color) {
@@ -174,7 +192,9 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const trailingElements: any[] = [];
 
     if (icon) {
-      leadingElements.push(<span key="icon" style={{ marginRight: 0 }}>{icon}</span>);
+      // reuse module-scope helper to render emojis/text or image URLs/data URLs
+      const el = renderIconElement(icon, 'icon', !!bgcolor);
+      if (el) leadingElements.push(el);
     }
 
     if (title) {
@@ -214,10 +234,9 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
 
   const factory = (node: TabNode) => {
     const component = node.getComponent();
-    const config = node.getConfig() as FlexTabConfig;
+    const config = node.getConfig() as FlexLayoutTabConfig;
     const compKey = String(component || '').toLowerCase();
 
-    if (compKey === 'welcome') return <WelcomeTab />;
     if (compKey === 'markdown') return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
     if (compKey === 'bookmarks') return <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
     if (compKey === 'web') return <WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;

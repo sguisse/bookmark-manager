@@ -32,39 +32,12 @@ export class FlexLayoutService {
             children: [
               {
                 type: "tab",
-                name: "Welcome tab",
-                component: "Welcome",
-                config: {
-                  component: "Welcome",
-                  "color": "#ff0000",
-                  "fontSize": "16px",
-                  "createdDate": "2025-08-21T00:00:00.000Z",
-                  "createdBy": "user-1",
-                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
-                  "lastModifiedBy": "user-2"
-                }
-              },
-              {
-                type: "tab",
-                name: "Markdown tab",
-                component: "Markdown",
-                config: {
-                  component: "Markdown",
-                  "color": "#00ff00",
-                  "content": "# Markdown Content",
-                  "createdDate": "2025-08-21T00:00:00.000Z",
-                  "createdBy": "user-1",
-                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
-                  "lastModifiedBy": "user-2"
-                }
-              },
-              {
-                type: "tab",
                 name: "Bookmarks tab",
                 component: "Bookmarks",
                 config: {
                   component: "Bookmarks",
-                  "color": "#2d76eb",
+                  "title": "Bookmarks tab",
+                  "bgcolor": "#2d76eb",
                   "createdDate": "2025-08-21T00:00:00.000Z",
                   "createdBy": "user-1",
                   "lastModifiedDate": "2025-08-22T10:00:00.000Z",
@@ -110,7 +83,39 @@ export class FlexLayoutService {
                     }
                   ]
                 }
-              }
+              },
+              {
+                type: "tab",
+                name: "Markdown tab",
+                component: "Markdown",
+                config: {
+                  component: "Markdown",
+                  "title": "Markdown tab",
+                  "color": "#ff0000",
+                  "fontSize": "16px",
+                  "content": "### Welcome to this application",
+                  "createdDate": "2025-08-21T00:00:00.000Z",
+                  "createdBy": "user-1",
+                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
+                  "lastModifiedBy": "user-2"
+                }
+              },
+              {
+                type: "tab",
+                name: "Web tab",
+                component: "Web",
+                config: {
+                  "component": "Web",
+                  "title": "Web tab",
+                  "color": "#00ff00",
+                  "url": "https://www.google.com",
+                  "icon": "https://www.google.com/favicon.ico",
+                  "createdDate": "2025-08-21T00:00:00.000Z",
+                  "createdBy": "user-1",
+                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
+                  "lastModifiedBy": "user-2"
+                }
+              },
             ]
           }
         ]
