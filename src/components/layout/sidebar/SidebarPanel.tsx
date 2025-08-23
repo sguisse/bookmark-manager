@@ -308,17 +308,17 @@ export const SidebarPanel: React.FC = () => {
     <>
       <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} style={{
         position: 'relative',
-        width: collapsed ? 64 : 240,
+        width: collapsed ? 0 : '100%',
         minHeight: '100vh',
         background: theme.colors.surface,
         borderRight: `1px solid ${theme.colors.border}`,
         padding: 12,
         boxSizing: 'border-box',
-        display: visible ? 'flex' : 'none',
+        display: visible ? 'flex' : 'hidden',
         flexDirection: 'column'
       }}>
         {/* Header: sandwich button + title/logo */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div id="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button aria-label={visible ? 'Hide sidebar' : 'Show sidebar'} onClick={() => setVisible(!visible)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>☰</button>
             {!collapsed && <div style={{ fontWeight: 700 }}>App</div>}
@@ -329,7 +329,15 @@ export const SidebarPanel: React.FC = () => {
         </div>
 
   {/* Main nav */}
-  <div style={{ flex: 1, overflow: 'auto' }}>
+  <div
+    id="sidebar-nav"
+    style={{
+      flex: 1,
+      minHeight: 0, // allow flex child to shrink and enable scrolling
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch'
+    }}
+  >
           {sidebarConfig ? (
             <nav aria-label="Sidebar configuration">
               {renderMenu(sidebarConfig.sidebarItems)}
@@ -341,7 +349,7 @@ export const SidebarPanel: React.FC = () => {
 
         {/* Footer (icons-only area) */}
         {sidebarConfig?.footerItems && sidebarConfig.footerItems.length > 0 && (
-          <div style={{ marginTop: 12, borderTop: `1px solid ${theme.colors.border}`, paddingTop: 8, display: 'flex', gap: 8, justifyContent: 'center' }}>
+          <div id="sidebar-footer" style={{ marginTop: 12, borderTop: `1px solid ${theme.colors.border}`, paddingTop: 8, display: 'flex', gap: 8, justifyContent: 'right' }}>
             {sidebarConfig.footerItems.map(fi => (
               <button key={fi.id} title={fi.title} onClick={() => menuItemSelectionHandler(fi.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>{renderIcon(fi.icon)}</button>
             ))}
