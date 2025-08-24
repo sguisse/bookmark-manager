@@ -5,44 +5,35 @@ import SidebarManager from './sidebar/SidebarManager';
 import BottomPanel from './BottomPanel';
 import BodyContentPanel from './BodyContentPanel';
 import { FlexLayoutManager } from '../flexlayout/FlexLayoutManager';
+import { SidebarViewMode } from '../../types/sidebar';
 
 
 interface DashboardLayoutProps {
-  //onExport: () => void;
-  //onImport: () => void;
-  //onClearCache: () => void;
-  //lastSaved: Date | null;
 }
 
 export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
-  //const { onExport, onImport, onClearCache, lastSaved } = props;
-  const { theme, toggleTheme } = useTheme();
-  const [sidebarVisible, setSidebarVisible] = useState<boolean>(true);
+  const { theme } = useTheme();
+  const [sidebarVisibility, setSidebarVisibility] = useState<SidebarViewMode>(SidebarViewMode.Visible);
 
+  // Listen for toggle commands from HeaderPanel (Visible/Hidden)
   useEffect(() => {
-    const onSidebar = (e: Event) => {
-      try {
-        const detail = (e as CustomEvent).detail;
-        if (typeof detail?.visible === 'boolean') {
-          setSidebarVisible(detail.visible);
+    const onToggle = (e: Event) => {
+      // support both: a bare toggle event (no detail) and an event carrying detail.visibility
+      const detail = (e as CustomEvent).detail;
+      if (detail && typeof detail?.visibility === 'string') {
+        const visibility = detail.visibility as string;
+        if (visibility === SidebarViewMode.Visible) {
+          setSidebarVisibility(SidebarViewMode.Hidden);
+        } else {
+          setSidebarVisibility(SidebarViewMode.Visible);
         }
-      } catch (err) {
-        // ignore
+      }
+      else {
+        // no detail -> simple toggle
+        setSidebarVisibility(v => v === SidebarViewMode.Visible ? SidebarViewMode.Hidden : SidebarViewMode.Visible);
       }
     };
-    if (typeof window !== 'undefined') {
-      window.addEventListener('sidebar-visibility', onSidebar as EventListener);
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('sidebar-visibility', onSidebar as EventListener);
-      }
-    };
-  }, []);
 
-  // Listen for toggle commands from HeaderPanel and toggle sidebar visibility
-  useEffect(() => {
-    const onToggle = () => setSidebarVisible(v => !v);
     if (typeof window !== 'undefined') {
       window.addEventListener('toggle-sidebar', onToggle as EventListener);
     }
@@ -53,26 +44,12 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
     };
   }, []);
 
-  // Broadcast sidebarVisible so other parts can stay in sync
+  // Broadcast sidebarVisibility so other parts can stay in sync
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('sidebar-visibility', { detail: { visible: sidebarVisible } }));
+      window.dispatchEvent(new CustomEvent('sidebar-visibility', { detail: { visibility: sidebarVisibility } }));
     }
-  }, [sidebarVisible]);
-
-  // Memoize sidebar props for better performance
-  const sidebarProps = useMemo(() => ({
-
-  }), []);
-
-  // Memoize control panel props
-  const controlPanelProps = useMemo(() => ({
-//    onExport,
- //   onImport,
- //   onClearCache,
- //   lastSaved,
-    onThemeToggle: toggleTheme
-  }), [toggleTheme]);
+  }, [sidebarVisibility]);
 
   return (
     <div
@@ -82,7 +59,7 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
         height: '100vh',
         display: 'grid',
         // keep the sidebar area in the grid at all times and collapse the first column to 0 when hidden
-        gridTemplateColumns: sidebarVisible ? '250px 1fr' : '0 1fr',
+        gridTemplateColumns: sidebarVisibility === SidebarViewMode.Visible ? '250px 1fr' : '0 1fr',
         gridTemplateRows: '45px 1fr 40px',
         gridTemplateAreas: `
           "sidebar header"
@@ -132,7 +109,7 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
           backgroundColor: theme.colors.footerBackground
         }}
       >
-        <BottomPanel {...controlPanelProps} />
+        <BottomPanel />
       </div>
     </div>
   );
