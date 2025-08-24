@@ -23,7 +23,36 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     setIsBookmarkFormOpen(true);
   };
 
-  const handleDelete = (bookmarkId: string) => {
+  // Try to open all URLs with a best-effort strategy:
+  // 1) Attempt to open placeholder windows synchronously during the user gesture.
+  // 2) If none could be created, open a helper window that asks the user to click
+  //    to allow opening multiple tabs (usable when popups are blocked).
+  // 3) Fallback to direct window.open for any remaining URLs.
+  const openAllUrls = (urls: string[]) => {
+    if (!urls || urls.length === 0) return;
+
+    console.log('Opening all URLs as tabs in current window...');
+
+    try {
+      // Simple approach: Open all URLs as tabs in the current browser window
+      // No separate windows, no complex logic - just open each URL with small delays
+      urls.forEach((url, index) => {
+        setTimeout(() => {
+          try {
+            // Open each URL in a new tab (_blank) in the current window
+            window.open(url, '_blank', 'noopener,noreferrer');
+            console.log('Opened URL in new tab:', url);
+          } catch (err) {
+            console.warn('Failed to open URL:', url, err);
+          }
+        }, index * 100); // 100ms delay between each to avoid popup blocking
+      });
+
+      console.log(`Scheduled ${urls.length} URLs to open as tabs`);
+    } catch (err) {
+      console.warn('openAllUrls failed:', err);
+    }
+  };  const handleDelete = (bookmarkId: string) => {
     const newBookmarks = bookmarks.filter(b => b.id !== bookmarkId);
     if (onConfigChange) {
       onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
@@ -87,11 +116,25 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
     window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
     window.addEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
+    const openAllHandler = (e: Event) => {
+      try {
+        const ce = e as CustomEvent<{ nodeId: string }>;
+        if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
+          const urls = bookmarks.map(b => b.url).filter(Boolean);
+          if (urls.length === 0) return;
+          openAllUrls(urls);
+        }
+      } catch (err) {
+        console.warn('open-all handler error', err);
+      }
+    };
+    window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
     return () => {
       window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
     };
-  }, [nodeId]);
+  }, [nodeId, bookmarks]);
 
   return (
     <div style={{ padding: 0 }}>
@@ -108,7 +151,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <button onClick={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} aria-label="Close modal" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', border: 'none', padding: 0, cursor: 'pointer' }} />
           <div style={{ position: 'relative', width: 720, maxWidth: '95%', background: '#fff', padding: 20, borderRadius: 8 }}>
-            <BookmarkForm bookmark={editingBookmark} onSave={(d) => handleSubmit(d as BookmarkFormData)} onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} />
+            <BookmarkForm bookmark={editingBookmark} onSave={(d) => handleSubmit(d)} onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} />
           </div>
         </div>
       )}
