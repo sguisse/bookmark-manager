@@ -1,0 +1,50 @@
+/*
+	combined-override.css
+	Mapping of FlexLayout CSS variables to our app-level variables.
+	This file is imported after the flexlayout `combined.css` so it can override
+	theme variable values and keep FlexLayout visually consistent with the app.
+*/
+
+/* Dark theme: map flexlayout variables to app dark theme variables defined using [data-theme="dark"] in index.css */
+[data-theme="dark"] .flexlayout__layout {
+	--color-text: var(--color-text-primary);
+	--color-background: var(--color-background);
+	--color-base: var(--color-background);
+	--color-1: var(--color-surface);
+	--color-2: var(--color-surface);
+	--color-3: var(--color-card-bg);
+	--color-4: var(--color-border);
+	--color-5: var(--color-surface);
+	--color-6: var(--color-card-bg);
+	--color-tabset-header-background: var(--color-surface);
+	--color-tabset-header: var(--color-text-primary);
+	--color-tab-selected: var(--color-text-primary);
+	--color-tab-selected-background: rgba(96, 165, 250, 0.18);
+	--color-tab-unselected: var(--color-text-secondary);
+	--color-tab-unselected-background: transparent;
+	--color-underline: var(--color-primary);
+	--color-toolbar-button-hover: var(--color-border);
+	--font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Light theme: map flexlayout variables to app light theme variables (optional, provides parity) */
+[data-theme="light"] .flexlayout__layout {
+	--color-text: var(--color-text-primary);
+	--color-background: var(--color-background);
+	--color-base: var(--color-background);
+	--color-1: var(--color-surface);
+	--color-2: var(--color-surface);
+	--color-3: var(--color-card-bg);
+	--color-4: var(--color-border);
+	--color-5: var(--color-surface);
+	--color-6: var(--color-card-bg);
+	--color-tabset-header-background: var(--color-surface);
+	--color-tabset-header: rgba(17, 156, 52, 0.888);
+	--color-tab-selected: rgba(17, 156, 52, 0.888);
+	--color-tab-selected-background: rgba(59, 130, 246, 0.12);
+	--color-tab-unselected: var(--color-text-secondary);
+	--color-tab-unselected-background: transparent;
+	--color-underline: var(--color-primary);
+	--color-toolbar-button-hover: var(--color-border);
+	--font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}

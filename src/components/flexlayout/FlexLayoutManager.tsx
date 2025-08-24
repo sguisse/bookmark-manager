@@ -3,14 +3,12 @@ import { FlexLayoutConfig, FlexLayoutService } from '../../services/flexLayoutSe
 import { useApplication } from '../../contexts/ApplicationContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Layout, Model } from 'flexlayout-react';
-// Import base FlexLayout CSS - our theme overrides will handle the theming
-import 'flexlayout-react/style/dark.css';
-import 'flexlayout-react/style/underline.css';
 import createFlexLayoutFactory, { onRenderTab as defaultOnRenderTab } from './FlexLayoutTabFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { FormDisplayMode } from '../../types/app';
 import FlexLayoutTabForm from './FlexLayoutTabForm';
 import { SidebarMenuItem } from '../../types/sidebar';
+import { useTheme } from '../../contexts/ThemeContext';
 
 interface FlexLayoutManagerProps {
   onFlexLayoutTabUpdate?: (menuItem: SidebarMenuItem, nodeId: string, config: any) => void;
@@ -292,13 +290,19 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   }, [openTabEditor]);
 
   const { factory, onRenderTabSet, onRenderTab: boundOnRenderTab } = (createFlexLayoutFactory as any)(handleChildConfigChange, openTabEditor);
-  // factory created
 
+  // Theme flexlayout definition
+  const { isDarkMode } = useTheme();
+  const flexlayoutThemeClass = isDarkMode ? 'flexlayout__theme_dark' : 'flexlayout__theme_light';
+  const flexlayoutCombinedClass = ''; //'flexlayout__theme_rounded'; // + ' ' + 'flexlayout__theme_underline';
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className={flexlayoutCombinedClass + ' ' + flexlayoutThemeClass}
+         style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
       {model ? (
-        <div style={{ height: 400 }}>
+        // wrapper that provides a containing block for the absolutely positioned
+        // .flexlayout__layout element. Use flex:1 so it grows to fill available space.
+        <div style={{ flex: 1, position: 'relative' }}>
           <Layout
             model={model}
             factory={factory}

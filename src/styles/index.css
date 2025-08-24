@@ -511,3 +511,23 @@ select:focus-visible {
   height: 100%;
   overflow: auto;
 }
+
+/* FlexLayout variable mapping
+   Map core app variables into FlexLayout's custom properties so the
+   library follows the app theme. This file is imported after
+   src/styles/flexlayout/combined.css (see src/main.tsx) so these
+   mappings override defaults in combined.css.
+*/
+.flexlayout__layout {
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+[data-theme="dark"] .flexlayout__layout {
+  /*--color-text: var(--color-text-primary);
+  --color-background: var(--color-background);
+  --color-tab-selected: var(--color-text-primary);
+  --color-tab-selected-background: var(--color-border);
+  --color-tab-unselected: var(--color-text-secondary);
+  */
+  /*--color-tab-unselected-background: var(--color-background);*/
+}
