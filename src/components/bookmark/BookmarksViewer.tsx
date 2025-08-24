@@ -121,8 +121,8 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
 }
 
 // Table row view moved out
-function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; }>) {
-  const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme } = props;
+function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void }>) {
+  const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen } = props;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
@@ -130,7 +130,13 @@ function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark
           {renderIconElement(bookmark.icon, 16)}
         </div>
         <div style={{ flex: 1 }}>
-          <div title={bookmark.description || ''} style={{ fontWeight: 600, color: bookmark.color || theme.colors.text.primary }}>{bookmark.title}</div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onOpen(bookmark.url); }}
+            title={bookmark.description || ''}
+            style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: 'inherit', fontWeight: 600, color: bookmark.color || theme.colors.text.primary, cursor: 'pointer', textAlign: 'left' }}
+          >
+            {bookmark.title}
+          </button>
         </div>
       </div>
 
@@ -165,7 +171,7 @@ export default function BookmarkCard(props: Readonly<BookmarkCardProps>) {
           {expandedInRow ? (
             <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} onCollapse={() => setExpandedInRow(false)} theme={theme} />
           ) : (
-            <TableRowView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onToggleExpand={() => setExpandedInRow(v => !v)} expanded={expandedInRow} theme={theme} />
+            <TableRowView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onToggleExpand={() => setExpandedInRow(v => !v)} expanded={expandedInRow} theme={theme} onOpen={openUrl} />
           )}
         </>
       )}
