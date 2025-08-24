@@ -4,9 +4,7 @@ import HeaderPanel from './HeaderPanel';
 import SidebarManager from './sidebar/SidebarManager';
 import BottomPanel from './BottomPanel';
 import BodyContentPanel from './BodyContentPanel';
-import BookmarksTabManager from '../bookmark/BookmarksTabManager';
 import { FlexLayoutManager } from '../flexlayout/FlexLayoutManager';
-// sidebar manager import handled above
 
 
 interface DashboardLayoutProps {
@@ -19,14 +17,15 @@ interface DashboardLayoutProps {
 export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
   //const { onExport, onImport, onClearCache, lastSaved } = props;
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'groups' | 'settings'>('bookmarks');
   const [sidebarVisible, setSidebarVisible] = useState<boolean>(true);
 
   useEffect(() => {
     const onSidebar = (e: Event) => {
       try {
         const detail = (e as CustomEvent).detail;
-        if (typeof detail?.visible === 'boolean') setSidebarVisible(detail.visible);
+        if (typeof detail?.visible === 'boolean') {
+          setSidebarVisible(detail.visible);
+        }
       } catch (err) {
         // ignore
       }
@@ -46,12 +45,10 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
     const onToggle = () => setSidebarVisible(v => !v);
     if (typeof window !== 'undefined') {
       window.addEventListener('toggle-sidebar', onToggle as EventListener);
-      window.addEventListener('toggleSidebar', onToggle as EventListener);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('toggle-sidebar', onToggle as EventListener);
-        window.removeEventListener('toggleSidebar', onToggle as EventListener);
       }
     };
   }, []);
@@ -117,9 +114,7 @@ export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
           backgroundColor: theme.colors.headerBackground
         }}
       >
-        <HeaderPanel
-          activeTab={activeTab}
-        />
+        <HeaderPanel />
       </div>
 
       {/* Main Content Area */}

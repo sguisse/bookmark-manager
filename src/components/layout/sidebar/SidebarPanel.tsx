@@ -9,24 +9,22 @@ export type MenuNode = SidebarCategory | SidebarMenuGroup | SidebarMenuItem;
 
 export interface SidebarPanelProps {
   sidebarConfig?: SidebarConfig;
-  openGroups: Record<string, boolean>;
-  collapsedLocal: boolean;
+  openedGroups: Record<string, boolean>;
   selectedMenuItem?: SidebarMenuItem | null;
   onToggleGroup: (id: string) => void;
   onSelectItem: (id: string) => void;
-  onToggleVisible: (v: boolean) => void;
 }
 
 export const SidebarPanel: React.FC<SidebarPanelProps> = ({
   sidebarConfig,
-  openGroups,
-  collapsedLocal,
+  openedGroups,
   selectedMenuItem,
   onToggleGroup,
   onSelectItem,
-  onToggleVisible
+
 }) => {
   const { theme } = useTheme();
+  const collapsed = false;
 
   const renderIcon = (icon?: string) => {
     if (!icon) return <DynamicIcon name="camera" color={theme.colors.text.primary} size={20} />;
@@ -63,9 +61,8 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 
   const renderMenuRow = (item: MenuNode, parentType?: SidebarItemType): JSX.Element => {
     const hasChildren = 'children' in item && !!item.children && (item.children as any).length > 0;
-    const isOpen = !!openGroups[item.id];
+    const isOpen = !!openedGroups[item.id];
     const isSelected = !!(selectedMenuItem && selectedMenuItem.id === item.id);
-    const collapsed = !!collapsedLocal;
 
     if (item.type === SidebarItemType.Category) {
       const indent = 10;
@@ -162,7 +159,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           if (node.type === SidebarItemType.Category) {
             out.push(...renderNodes(node.children as any, node.type));
           } else {
-            const isOpen = !!openGroups[node.id];
+            const isOpen = !!openedGroups[node.id];
             if (isOpen) out.push(...renderNodes(node.children as any, node.type));
           }
         }
@@ -172,7 +169,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
     return <div>{renderNodes(items)}</div>;
   };
 
-  const collapsed = !!collapsedLocal;
+
 
   return (
     <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''}`} style={{

@@ -3,12 +3,12 @@ import { AlignJustify } from 'lucide-react';
 import { useApplication } from '../../contexts/ApplicationContext';
 
 interface HeaderPanelProps {
-  activeTab?: string;
 }
 
-export default function HeaderPanel(_: Readonly<HeaderPanelProps>) {
-  const { theme } = useTheme();
+export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
   const { selectedMenuItem } = useApplication();
+  const headerTitle = selectedMenuItem?.title || 'Welcome';
+  const { theme } = useTheme();
 
   const toggleSidebarFromHeader = () => {
     if (typeof window !== 'undefined') {
@@ -16,8 +16,6 @@ export default function HeaderPanel(_: Readonly<HeaderPanelProps>) {
       window.dispatchEvent(new CustomEvent('toggle-sidebar'));
     }
   };
-
-  const headerTitle = selectedMenuItem?.title || 'The Header';
 
   return (
     <header
