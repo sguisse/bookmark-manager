@@ -1,14 +1,13 @@
-import { useTheme } from '../../contexts/ThemeContext';
-import { AlignJustify } from 'lucide-react';
+import React from 'react';
+import { Menu, ChevronDown } from 'lucide-react';
 import { useApplication } from '../../contexts/ApplicationContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
-interface HeaderPanelProps {
-}
+interface HeaderPanelProps {}
 
 export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
   const { selectedMenuItem } = useApplication();
-  const headerTitle = selectedMenuItem?.title || 'Welcome';
-  const { theme } = useTheme();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const toggleSidebarFromHeader = () => {
     if (typeof window !== 'undefined') {
@@ -17,30 +16,45 @@ export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
     }
   };
 
-  return (
-    <header
-      style={{
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 5px',
-        backgroundColor: theme.colors.headerBackground,
-        borderBottom: `1px solid ${theme.colors.border}`,
-        color: theme.colors.text.primary
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
-        <button
-          id="toggle-sidebar-button"
-          aria-label="Toggle sidebar"
-          onClick={toggleSidebarFromHeader}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'inline-flex', alignItems: 'center' }}
-        >
-          <AlignJustify size={25} color={theme.colors.text.primary} />
-        </button>
+  const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedTheme = event.target.value as 'light' | 'dark';
+    if ((selectedTheme === 'light' && isDarkMode) || 
+        (selectedTheme === 'dark' && !isDarkMode)) {
+      toggleTheme();
+    }
+  };
 
-        <div style={{ fontWeight: 700 }}>{headerTitle}</div>
+  const headerTitle = selectedMenuItem?.title || 'Bookmark Manager';
+
+  return (
+    <div className="header-panel">
+      <div className="header-content">
+        <div className="header-left">
+          <button
+            onClick={toggleSidebarFromHeader}
+            className="sidebar-toggle-btn"
+            aria-label="Toggle sidebar"
+          >
+            <Menu size={20} />
+          </button>
+          <h1 className="header-title">{headerTitle}</h1>
+        </div>
+        
+        <div className="header-right">
+          <div className="theme-switcher">
+            <select
+              className="theme-select"
+              value={isDarkMode ? 'dark' : 'light'}
+              onChange={handleThemeChange}
+              aria-label="Select theme"
+            >
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+            <ChevronDown size={14} className="theme-select-arrow" />
+          </div>
+        </div>
       </div>
-    </header>
+    </div>
   );
 }

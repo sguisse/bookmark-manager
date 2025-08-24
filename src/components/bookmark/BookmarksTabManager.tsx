@@ -52,7 +52,9 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     } catch (err) {
       console.warn('openAllUrls failed:', err);
     }
-  };  const handleDelete = (bookmarkId: string) => {
+  };
+
+  const handleDelete = (bookmarkId: string) => {
     const newBookmarks = bookmarks.filter(b => b.id !== bookmarkId);
     if (onConfigChange) {
       onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
@@ -116,6 +118,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
     window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
     window.addEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
+    
     const openAllHandler = (e: Event) => {
       try {
         const ce = e as CustomEvent<{ nodeId: string }>;
@@ -128,7 +131,9 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         console.warn('open-all handler error', err);
       }
     };
+    
     window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
+    
     return () => {
       window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
@@ -137,21 +142,29 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   }, [nodeId, bookmarks]);
 
   return (
-    <div style={{ padding: 0 }}>
+    <div className="p-0">
       {bookmarks.length === 0 ? (
-        <div>No bookmarks</div>
+        <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
-        <div style={{ display: 'grid', gap: 5 }}>
+        <div className="grid" style={{ gap: '5px' }}>
           {bookmarks.map(b => (
             <BookmarkCard key={b.id} bookmark={b} onEdit={handleEdit} onDelete={handleDelete} view={viewMode} />
           ))}
         </div>
       )}
       {isBookmarkFormOpen && (
-        <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <button onClick={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} aria-label="Close modal" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', border: 'none', padding: 0, cursor: 'pointer' }} />
-          <div style={{ position: 'relative', width: 720, maxWidth: '95%', background: '#fff', padding: 20, borderRadius: 8 }}>
-            <BookmarkForm bookmark={editingBookmark} onSave={(d) => handleSubmit(d)} onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} />
+        <div className="modal-overlay">
+          <button 
+            onClick={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} 
+            aria-label="Close modal" 
+            className="modal-backdrop"
+          />
+          <div className="modal-content">
+            <BookmarkForm 
+              bookmark={editingBookmark} 
+              onSave={(d) => handleSubmit(d)} 
+              onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} 
+            />
           </div>
         </div>
       )}

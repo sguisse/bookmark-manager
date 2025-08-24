@@ -46,18 +46,29 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
   };
 
   return (
-    <div style={{ height: '100%', width: '100%', position: 'relative', background: theme.colors.background }}>
-      <div style={{ height: '100%', width: '100%' }}>
+    <div className="h-full w-full relative" style={{ background: 'var(--color-background)' }}>
+      <div className="h-full w-full">
         {url ? (
-          <iframe src={url} title={config?.title || 'web-view'} style={{ width: '100%', height: '100%', border: 'none' }} />
+          <iframe 
+            src={url} 
+            title={config?.title || 'web-view'} 
+            className="w-full h-full"
+            style={{ border: 'none' }} 
+          />
         ) : (
-          <div style={{ padding: 20 }}>
-            <div>No URL configured for this web tab.</div>
-            <div style={{ marginTop: 8 }}>
+          <div className="p-4">
+            <div className="text-primary mb-2">No URL configured for this web tab.</div>
+            <div>
               <a
                 href="#"
                 onClick={(e) => { e.preventDefault(); setShowForm(true); }}
-                style={{ color: theme.colors.primary, textDecoration: 'underline', cursor: 'pointer', background: 'transparent', border: 'none', padding: 0 }}
+                className="text-primary cursor-pointer btn-ghost p-0"
+                style={{ 
+                  color: 'var(--color-primary)', 
+                  textDecoration: 'underline',
+                  background: 'transparent',
+                  border: 'none'
+                }}
                 role="button"
               >
                 Click here to set the URL to display
@@ -67,8 +78,13 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
         )}
       </div>
       {showForm && (
-        <div style={{ position: 'absolute', zIndex: 30, top: 12, right: 12 }}>
-          <WebForm webTab={config} mode={config?.id ? FormDisplayMode.Edit : FormDisplayMode.Create} onSave={saveUrl} onCancel={() => setShowForm(false)} />
+        <div className="absolute" style={{ zIndex: 30, top: '12px', right: '12px' }}>
+          <WebForm 
+            webTab={config} 
+            mode={config?.id ? FormDisplayMode.Edit : FormDisplayMode.Create} 
+            onSave={saveUrl} 
+            onCancel={() => setShowForm(false)} 
+          />
         </div>
       )}
     </div>
