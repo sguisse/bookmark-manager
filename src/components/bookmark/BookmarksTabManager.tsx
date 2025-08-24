@@ -16,6 +16,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
 
   const bookmarks = config?.bookmarks || [];
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
 
   const handleEdit = (bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
@@ -73,8 +74,23 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       }
     };
 
+    const toggleHandler = (e: Event) => {
+      try {
+        const ce = e as CustomEvent<{ nodeId: string }>;
+        if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
+          setViewMode(v => v === 'card' ? 'table' : 'card');
+        }
+      } catch (err) {
+        console.warn('toggle view handler error', err);
+      }
+    };
+
     window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-    return () => window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
+    window.addEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
+    return () => {
+      window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
+    };
   }, [nodeId]);
 
   return (
@@ -84,7 +100,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       ) : (
         <div style={{ display: 'grid', gap: 5 }}>
           {bookmarks.map(b => (
-            <BookmarkCard key={b.id} bookmark={b} onEdit={handleEdit} onDelete={handleDelete} />
+            <BookmarkCard key={b.id} bookmark={b} onEdit={handleEdit} onDelete={handleDelete} view={viewMode} />
           ))}
         </div>
       )}

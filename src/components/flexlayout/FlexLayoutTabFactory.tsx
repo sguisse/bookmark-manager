@@ -7,7 +7,7 @@ import { FlexLayoutTabConfig } from '../../types/flexTab';
 import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
-import { Plus, Settings, BookmarkPlusIcon } from 'lucide-react';
+import { Plus, Settings, BookmarkPlusIcon, List } from 'lucide-react';
 import { readableTextColor } from '../../services/tUtils';
 
 // helper: detect if an icon string looks like an image src (http, data:, or file path with image extension)
@@ -132,6 +132,22 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
                 <BookmarkPlusIcon size={16} />
               </button>
             );
+
+            renderValues.buttons.push(
+              <button
+                key="bookmark-toggle-view"
+                className="flexlayout__tab_toolbar_button"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  const nodeId = selectedTabNode.getId();
+                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:toggle-view', { detail: { nodeId } })); } catch (err) { console.warn('Event dispatch failed', err); }
+                }}
+                title="Toggle Card/Table View"
+              >
+                <List size={16} />
+              </button>
+            );
+
 
         }
   if (comp === 'markdown') {
