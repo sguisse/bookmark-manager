@@ -8,7 +8,7 @@ import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink } from 'lucide-react';
-import { readableTextColor } from '../../services/tUtils';
+import { readableTextColor } from '../../services/Utils';
 
 // helper: detect if an icon string looks like an image src (http, data:, or file path with image extension)
 const isImageSrc = (val?: string) => {
