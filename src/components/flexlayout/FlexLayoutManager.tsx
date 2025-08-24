@@ -3,7 +3,9 @@ import { FlexLayoutConfig, FlexLayoutService } from '../../services/flexLayoutSe
 import { useApplication } from '../../contexts/ApplicationContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Layout, Model } from 'flexlayout-react';
-import 'flexlayout-react/style/light.css';
+// Import base FlexLayout CSS - our theme overrides will handle the theming
+import 'flexlayout-react/style/dark.css';
+import 'flexlayout-react/style/underline.css';
 import createFlexLayoutFactory, { onRenderTab as defaultOnRenderTab } from './FlexLayoutTabFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { FormDisplayMode } from '../../types/app';
@@ -102,7 +104,12 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           setTimeout(() => saveModelForSelected(), 40);
         } catch (err) {
           // fallback to immediate attempt
-          saveModelForSelected();
+          console.warn('Failed to schedule save, trying immediate save', err);
+          try {
+            saveModelForSelected();
+          } catch (fallbackErr) {
+            console.warn('Fallback save also failed', fallbackErr);
+          }
         }
       }
     } catch (err) {
@@ -290,8 +297,6 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
 
   return (
     <div style={{ padding: 16 }}>
-      <h3>Flex Layout Manager</h3>
-
       {model ? (
         <div style={{ height: 400 }}>
           <Layout

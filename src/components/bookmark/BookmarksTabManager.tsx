@@ -118,7 +118,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
     window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
     window.addEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
-    
+
     const openAllHandler = (e: Event) => {
       try {
         const ce = e as CustomEvent<{ nodeId: string }>;
@@ -131,9 +131,9 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         console.warn('open-all handler error', err);
       }
     };
-    
+
     window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
-    
+
     return () => {
       window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
@@ -154,16 +154,16 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       )}
       {isBookmarkFormOpen && (
         <div className="modal-overlay">
-          <button 
-            onClick={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} 
-            aria-label="Close modal" 
+          <button
+            onClick={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }}
+            aria-label="Close modal"
             className="modal-backdrop"
           />
           <div className="modal-content">
-            <BookmarkForm 
-              bookmark={editingBookmark} 
-              onSave={(d) => handleSubmit(d)} 
-              onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }} 
+            <BookmarkForm
+              bookmark={editingBookmark}
+              onSave={(d) => handleSubmit(d)}
+              onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }}
             />
           </div>
         </div>

@@ -49,11 +49,11 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
     <div className="h-full w-full relative" style={{ background: 'var(--color-background)' }}>
       <div className="h-full w-full">
         {url ? (
-          <iframe 
-            src={url} 
-            title={config?.title || 'web-view'} 
+          <iframe
+            src={url}
+            title={config?.title || 'web-view'}
             className="w-full h-full"
-            style={{ border: 'none' }} 
+            style={{ border: 'none' }}
           />
         ) : (
           <div className="p-4">
@@ -63,8 +63,8 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
                 href="#"
                 onClick={(e) => { e.preventDefault(); setShowForm(true); }}
                 className="text-primary cursor-pointer btn-ghost p-0"
-                style={{ 
-                  color: 'var(--color-primary)', 
+                style={{
+                  color: 'var(--color-primary)',
                   textDecoration: 'underline',
                   background: 'transparent',
                   border: 'none'
@@ -79,11 +79,11 @@ export default function WebTabManager(props: Readonly<WebTabProps>) {
       </div>
       {showForm && (
         <div className="absolute" style={{ zIndex: 30, top: '12px', right: '12px' }}>
-          <WebForm 
-            webTab={config} 
-            mode={config?.id ? FormDisplayMode.Edit : FormDisplayMode.Create} 
-            onSave={saveUrl} 
-            onCancel={() => setShowForm(false)} 
+          <WebForm
+            webTab={config}
+            mode={config?.id ? FormDisplayMode.Edit : FormDisplayMode.Create}
+            onSave={saveUrl}
+            onCancel={() => setShowForm(false)}
           />
         </div>
       )}

@@ -18,10 +18,33 @@ export class FlexLayoutService {
         tabSetEnableDrag: true,
         tabEnableClose: true,
         tabEnableRename: false,
-        tabSetMinWidth: 250,
-        tabSetMinHeight: 200,
+        borderEnableAutoHide: true,
+        splitterSize: 3,
+        tabSetMinWidth: 20,
+        tabSetMinHeight: 50,
       },
-      borders: [],
+      borders: [
+        {
+          "type": "border",
+          "location": "left",
+          "children": [	]
+        },
+        {
+          "type": "border",
+          "location": "right",
+          "children": [	]
+        },
+        {
+          "type": "border",
+          "location": "top",
+          "children": [	]
+        },
+        {
+          "type": "border",
+          "location": "bottom",
+          "children": [	]
+        },
+      ],
       layout: {
         type: "row",
         weight: 100,

@@ -18,7 +18,7 @@ export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
 
   const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedTheme = event.target.value as 'light' | 'dark';
-    if ((selectedTheme === 'light' && isDarkMode) || 
+    if ((selectedTheme === 'light' && isDarkMode) ||
         (selectedTheme === 'dark' && !isDarkMode)) {
       toggleTheme();
     }
@@ -39,7 +39,7 @@ export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
           </button>
           <h1 className="header-title">{headerTitle}</h1>
         </div>
-        
+
         <div className="header-right">
           <div className="theme-switcher">
             <select
