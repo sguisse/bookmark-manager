@@ -14,6 +14,7 @@ export enum FlexLayoutTabComponent {
   Markdown = "markdown",
   Web = "web",
   Html = "html",
+  BrowserFavorites = "browser_favorites",
   // add more as needed
 }
 
