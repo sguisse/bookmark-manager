@@ -221,7 +221,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   // Cross-tab drag state
   const [crossTabDragOverIndex, setCrossTabDragOverIndex] = useState<number | null>(null);
   const [crossTabDropPosition, setCrossTabDropPosition] = useState<'before' | 'after'>('after');
-  
+
   // State for tracking drag over empty container
   const [isDragOverEmptyContainer, setIsDragOverEmptyContainer] = useState(false);
 
@@ -308,7 +308,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     // Clear cross-tab drag state
     setCrossTabDragOverIndex(null);
     setCrossTabDropPosition('after');
-    
+
     // Clear empty container drag state
     setIsDragOverEmptyContainer(false);
 
@@ -552,7 +552,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         if (isExternalDrag(nodeId || '')) {
           e.preventDefault();
           e.dataTransfer.dropEffect = 'move';
-          
+
           // Show drop preview for empty container
           if (bookmarks.length === 0 || crossTabDragOverIndex === null) {
             setIsDragOverEmptyContainer(true);
@@ -583,7 +583,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
           // For drops on container (not specific bookmark), add to end
           // But check if we have stored cross-tab drag state for more accurate positioning
           let insertIndex = bookmarks.length;
-          
+
           if (crossTabDragOverIndex !== null) {
             // If we have stored drag over state, use it for more accurate positioning
             insertIndex = crossTabDropPosition === 'before' ? crossTabDragOverIndex : crossTabDragOverIndex + 1;
@@ -600,7 +600,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
           const newBookmarks = [...bookmarks];
           newBookmarks.splice(insertIndex, 0, newBookmark);
-          
+
           onConfigChange({
             ...(config || {} as BookmarksTabConfig),
             bookmarks: newBookmarks
@@ -653,9 +653,9 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
                 <span>{dragState.draggedBookmark.title}</span>
                 <span style={{ fontSize: '14px', opacity: 0.7 }}>(from other tab)</span>
               </div>
-              <div style={{ 
-                fontSize: '14px', 
-                color: '#6b7280', 
+              <div style={{
+                fontSize: '14px',
+                color: '#6b7280',
                 marginTop: '8px',
                 textAlign: 'center'
               }}>

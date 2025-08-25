@@ -279,24 +279,25 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
 
   return (
     <div>
-      {view === 'card' ? (
-        <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} theme={theme} />
+      {!isCollapsed ? (
+        <CardView 
+          bookmark={bookmark} 
+          onEdit={onEdit} 
+          onDelete={onDelete} 
+          onOpen={openUrl} 
+          onCollapse={() => onToggleCollapsed(bookmark.id)} 
+          theme={theme} 
+        />
       ) : (
-        <>
-          {!isCollapsed ? (
-            <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} onCollapse={() => onToggleCollapsed(bookmark.id)} theme={theme} />
-          ) : (
-            <RowView
-              bookmark={bookmark}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onToggleExpand={() => onToggleCollapsed(bookmark.id)}
-              expanded={!isCollapsed}
-              theme={theme}
-              onOpen={openUrl}
-            />
-          )}
-        </>
+        <RowView
+          bookmark={bookmark}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onToggleExpand={() => onToggleCollapsed(bookmark.id)}
+          expanded={!isCollapsed}
+          theme={theme}
+          onOpen={openUrl}
+        />
       )}
     </div>
   );
