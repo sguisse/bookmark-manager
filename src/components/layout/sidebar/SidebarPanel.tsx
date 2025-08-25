@@ -28,8 +28,9 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 }) => {
   const { theme } = useTheme();
   const collapsed = false;
-  const [draggedItem, setDraggedItem] = React.useState<{ id: string; type: SidebarItemType } | null>(null);
+  const [draggedItem, setDraggedItem] = React.useState<{ id: string; type: SidebarItemType; title: string; icon?: string } | null>(null);
   const [dragOverTarget, setDragOverTarget] = React.useState<string | null>(null);
+  const [dropPosition, setDropPosition] = React.useState<'before' | 'after' | 'inside'>('inside');
 
   const renderIcon = (icon?: string) => {
     if (!icon) return <DynamicIcon name="camera" color={theme.colors.text.primary} size={20} />;
@@ -81,32 +82,46 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
         <div key={item.id}
              style={{
                margin: '10px 0 6px 0',
-               border: isDragOver && isValidDropTarget ? `2px dashed ${theme.colors.primary}` : 'none',
-               borderRadius: 4,
-               padding: isDragOver && isValidDropTarget ? '2px' : '0'
+               position: 'relative'
              }}
              draggable
              onDragStart={(e) => {
-               setDraggedItem({ id: item.id, type: item.type });
+               setDraggedItem({ id: item.id, type: item.type, title: item.title, icon: item.icon });
                e.dataTransfer.setData('application/x-sidebar-item', JSON.stringify({ id: item.id, type: item.type }));
                e.dataTransfer.effectAllowed = 'move';
              }}
              onDragEnd={() => {
                setDraggedItem(null);
                setDragOverTarget(null);
+               setDropPosition('inside');
              }}
              onDragOver={(e) => {
                if (draggedItem && (draggedItem.type === SidebarItemType.MenuGroup || draggedItem.type === SidebarItemType.MenuItem)) {
                  e.preventDefault();
                  setDragOverTarget(item.id);
+
+                 // Determine drop position based on mouse position
+                 const rect = e.currentTarget.getBoundingClientRect();
+                 const mouseY = e.clientY - rect.top;
+                 const elementHeight = rect.height;
+
+                 if (mouseY < elementHeight * 0.25) {
+                   setDropPosition('before');
+                 } else if (mouseY > elementHeight * 0.75) {
+                   setDropPosition('after');
+                 } else {
+                   setDropPosition('inside');
+                 }
                }
              }}
              onDragLeave={() => {
                setDragOverTarget(null);
+               setDropPosition('inside');
              }}
              onDrop={(e) => {
                e.stopPropagation();
                setDragOverTarget(null);
+               setDropPosition('inside');
                const data = e.dataTransfer.getData('application/x-sidebar-item');
                if (!data) return;
                const payload = JSON.parse(data);
@@ -115,6 +130,72 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                }
              }}
         >
+          {/* Drop preview before */}
+          {isDragOver && isValidDropTarget && dropPosition === 'before' && draggedItem && (
+            <div
+              style={{
+                position: 'relative',
+                margin: '3px 0',
+                opacity: 0.5,
+                transform: 'scale(0.95)',
+                border: '2px dashed #3b82f6',
+                borderRadius: '4px',
+                background: 'rgba(59, 130, 246, 0.1)'
+              }}
+            >
+              <div style={{
+                padding: '6px 8px',
+                paddingLeft: indent,
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: '#3b82f6',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                {renderIcon(draggedItem.icon)}
+                {draggedItem.title}
+              </div>
+            </div>
+          )}
+
+          {/* Drop preview after */}
+          {isDragOver && isValidDropTarget && dropPosition === 'after' && draggedItem && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-40px',
+                left: 0,
+                right: 0,
+                margin: '3px 0',
+                opacity: 0.5,
+                transform: 'scale(0.95)',
+                border: '2px dashed #3b82f6',
+                borderRadius: '4px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                zIndex: 1000
+              }}
+            >
+              <div style={{
+                padding: '6px 8px',
+                paddingLeft: indent,
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: '#3b82f6',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                {renderIcon(draggedItem.icon)}
+                {draggedItem.title}
+              </div>
+            </div>
+          )}
+
           <div
             style={{
               padding: '6px 8px',
@@ -124,7 +205,10 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
               textTransform: 'uppercase',
               letterSpacing: '0.06em',
               color: theme.colors.text.primary,
-              opacity: 0.75
+              opacity: 0.75,
+              backgroundColor: isDragOver && isValidDropTarget && dropPosition === 'inside' ? hexToRgba(theme.colors.primary, 0.1) : 'transparent',
+              borderRadius: 4,
+              border: isDragOver && isValidDropTarget && dropPosition === 'inside' ? `1px dashed ${theme.colors.primary}` : 'none'
             }}
           >
             {item.title}
@@ -144,43 +228,60 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 
     // Determine if this item is a valid drop target
     const isValidDropTarget = draggedItem && (
-      draggedItem.type === SidebarItemType.MenuItem // MenuItem can go anywhere
+      draggedItem.type === SidebarItemType.MenuItem || // MenuItem can go anywhere except inside another MenuItem
+      draggedItem.type === SidebarItemType.MenuGroup // MenuGroup can go anywhere
     );
+
+    // Menu items cannot be dropped inside other menu items
+    const canDropInside = draggedItem && item.type !== SidebarItemType.MenuItem;
     const isDragOver = dragOverTarget === item.id;
 
     return (
       <div key={item.id}
            style={{
              margin: '6px 0',
-             border: isDragOver && isValidDropTarget ? `2px dashed ${theme.colors.primary}` : 'none',
-             borderRadius: 4,
-             padding: isDragOver && isValidDropTarget ? '2px' : '0'
+             position: 'relative'
            }}
            draggable
            onDragStart={(e) => {
-             setDraggedItem({ id: item.id, type: item.type });
+             setDraggedItem({ id: item.id, type: item.type, title: item.title, icon: item.icon });
              e.dataTransfer.setData('application/x-sidebar-item', JSON.stringify({ id: item.id, type: item.type }));
              e.dataTransfer.effectAllowed = 'move';
            }}
            onDragEnd={() => {
              setDraggedItem(null);
              setDragOverTarget(null);
+             setDropPosition('inside');
            }}
            onDragOver={(e) => {
-             if (draggedItem && draggedItem.id !== item.id) {
-               // Only MenuItems can be dropped on MenuGroup/MenuItem items
-               if (draggedItem.type === SidebarItemType.MenuItem) {
-                 e.preventDefault();
-                 setDragOverTarget(item.id);
+             if (draggedItem && draggedItem.id !== item.id && isValidDropTarget) {
+               e.preventDefault();
+               setDragOverTarget(item.id);
+
+               // Determine drop position based on mouse position
+               const rect = e.currentTarget.getBoundingClientRect();
+               const mouseY = e.clientY - rect.top;
+               const elementHeight = rect.height;
+
+               if (mouseY < elementHeight * 0.3) {
+                 setDropPosition('before');
+               } else if (mouseY > elementHeight * 0.7) {
+                 setDropPosition('after');
+               } else if (canDropInside) {
+                 setDropPosition('inside');
+               } else {
+                 setDropPosition('after'); // Default to after if can't drop inside
                }
              }
            }}
            onDragLeave={() => {
              setDragOverTarget(null);
+             setDropPosition('inside');
            }}
            onDrop={(e) => {
              e.stopPropagation();
              setDragOverTarget(null);
+             setDropPosition('inside');
              const data = e.dataTransfer.getData('application/x-sidebar-item');
              if (!data) return;
              const payload = JSON.parse(data);
@@ -190,7 +291,77 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
              }
            }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Drop preview before */}
+        {isDragOver && isValidDropTarget && dropPosition === 'before' && draggedItem && (
+          <div
+            style={{
+              position: 'relative',
+              margin: '3px 0',
+              opacity: 0.5,
+              transform: 'scale(0.95)',
+              border: '2px dashed #3b82f6',
+              borderRadius: '4px',
+              background: 'rgba(59, 130, 246, 0.1)'
+            }}
+          >
+            <div style={{
+              padding: '6px 8px',
+              paddingLeft: item.type === SidebarItemType.MenuItem && parentType === SidebarItemType.MenuGroup ? 20 : 10,
+              color: '#3b82f6',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 14,
+              fontWeight: 500
+            }}>
+              {renderIcon(draggedItem.icon)}
+              {draggedItem.title}
+            </div>
+          </div>
+        )}
+
+        {/* Drop preview after */}
+        {isDragOver && isValidDropTarget && dropPosition === 'after' && draggedItem && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: '-40px',
+              left: 0,
+              right: 0,
+              margin: '3px 0',
+              opacity: 0.5,
+              transform: 'scale(0.95)',
+              border: '2px dashed #3b82f6',
+              borderRadius: '4px',
+              background: 'rgba(59, 130, 246, 0.1)',
+              zIndex: 1000
+            }}
+          >
+            <div style={{
+              padding: '6px 8px',
+              paddingLeft: item.type === SidebarItemType.MenuItem && parentType === SidebarItemType.MenuGroup ? 20 : 10,
+              color: '#3b82f6',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 14,
+              fontWeight: 500
+            }}>
+              {renderIcon(draggedItem.icon)}
+              {draggedItem.title}
+            </div>
+          </div>
+        )}
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          backgroundColor: isDragOver && isValidDropTarget && dropPosition === 'inside' && canDropInside ? hexToRgba(theme.colors.primary, 0.1) : 'transparent',
+          borderRadius: 4,
+          border: isDragOver && isValidDropTarget && dropPosition === 'inside' && canDropInside ? `1px dashed ${theme.colors.primary}` : 'none',
+          padding: isDragOver && isValidDropTarget && dropPosition === 'inside' && canDropInside ? '2px' : '0'
+        }}>
           <button
             type="button"
             onClick={item.type === SidebarItemType.MenuGroup ? () => onToggleGroup(item.id) : () => onSelectItem(item.id)}
@@ -318,9 +489,11 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           minHeight: 0,
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
-          border: dragOverTarget === 'root' ? `2px dashed ${theme.colors.primary}` : 'none',
+          padding: 4,
           borderRadius: 4,
-          padding: 4
+          border: dragOverTarget === 'root' ? `2px dashed ${theme.colors.primary}` : '2px solid transparent',
+          backgroundColor: dragOverTarget === 'root' ? hexToRgba(theme.colors.primary, 0.05) : 'transparent',
+          transition: 'border-color 200ms ease, background-color 200ms ease'
         }}
         onDragOver={(e) => {
           if (draggedItem && (draggedItem.type === SidebarItemType.Category || draggedItem.type === SidebarItemType.MenuGroup)) {
@@ -337,6 +510,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
         onDrop={(e) => {
           e.preventDefault();
           setDragOverTarget(null);
+          setDropPosition('inside');
           const data = e.dataTransfer.getData('application/x-sidebar-item');
           if (!data) return;
           const payload = JSON.parse(data);
@@ -346,6 +520,28 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           }
         }}
       >
+        {dragOverTarget === 'root' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '60px',
+              left: '16px',
+              right: '16px',
+              textAlign: 'center',
+              color: theme.colors.primary,
+              fontSize: '14px',
+              fontWeight: 500,
+              padding: '8px',
+              backgroundColor: hexToRgba(theme.colors.primary, 0.1),
+              borderRadius: 4,
+              border: `1px solid ${theme.colors.primary}`,
+              zIndex: 5
+            }}
+          >
+            Drop here to move to root level
+          </div>
+        )}
+
         {sidebarConfig ? (
           <nav aria-label="Sidebar configuration">
             {renderMenu(sidebarConfig.sidebarItems)}

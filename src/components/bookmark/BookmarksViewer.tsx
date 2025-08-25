@@ -4,13 +4,24 @@ import { Bookmark } from '../../types/bookmark';
 import { formatDate } from '../../services/Utils';
 import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
-type ViewMode = 'card' | 'table';
+/*
+ * BookmarksViewer Structure:
+ *
+ * Each line in the bookmark list is a BookmarkTableRow, which can display:
+ * - RowView: Compact view showing icon, title, and action buttons
+ * - CardView: Expanded view showing full details, description, tags, dates
+ *
+ * The user can toggle between these views within each table row.
+ */
 
-interface BookmarkCardProps {
+type TableRowViewMode = 'row' | 'card';
+
+interface BookmarkTableRowProps {
   bookmark: Bookmark;
-  view?: ViewMode; // 'card' (default) or 'table'
+  view?: TableRowViewMode; // 'row' (default) or 'card'
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
+  onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
 }
 
 // helper to render an icon element (emoji/text or image). Keeps JSX readable and avoids nested ternaries.
@@ -23,7 +34,7 @@ function renderIconElement(src: string | undefined, size: number) {
 }
 
 
-// Card view component moved out; accepts props rather than closing over parent scope
+// Card view component (expanded view within a table row)
 function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
   const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme } = props;
   const [isHovered, setIsHovered] = useState(false);
@@ -120,8 +131,8 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
   );
 }
 
-// Table row view moved out
-function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void }>) {
+// Row view component (compact view within a table row)
+function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void }>) {
   const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen } = props;
   const [isHovered, setIsHovered] = useState(false);
   return (
@@ -160,12 +171,15 @@ function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark
   );
 }
 
-export default function BookmarkCard(props: Readonly<BookmarkCardProps>) {
-  const { bookmark, onEdit, onDelete, view = 'table' } = props;
+// Each BookmarkTableRow can display either a RowView (compact) or CardView (expanded)
+export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>) {
+  const { bookmark, onEdit, onDelete, onToggleCollapsed, view = 'row' } = props;
   const { theme } = useTheme();
-  const [expandedInRow, setExpandedInRow] = useState(false);
 
   const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
+  
+  // Use bookmark.collapsed to determine if expanded (collapsed=false means expanded in card view)
+  const isCollapsed = bookmark.collapsed ?? true; // Default to collapsed (row view)
 
   return (
     <div>
@@ -173,10 +187,18 @@ export default function BookmarkCard(props: Readonly<BookmarkCardProps>) {
         <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} theme={theme} />
       ) : (
         <>
-          {expandedInRow ? (
-            <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} onCollapse={() => setExpandedInRow(false)} theme={theme} />
+          {!isCollapsed ? (
+            <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} onCollapse={() => onToggleCollapsed(bookmark.id)} theme={theme} />
           ) : (
-            <TableRowView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onToggleExpand={() => setExpandedInRow(v => !v)} expanded={expandedInRow} theme={theme} onOpen={openUrl} />
+            <RowView 
+              bookmark={bookmark} 
+              onEdit={onEdit} 
+              onDelete={onDelete} 
+              onToggleExpand={() => onToggleCollapsed(bookmark.id)} 
+              expanded={!isCollapsed} 
+              theme={theme} 
+              onOpen={openUrl} 
+            />
           )}
         </>
       )}

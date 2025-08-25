@@ -17,6 +17,18 @@ html, body {
   height: 100%;
 }
 
+/* Drag and Drop Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleY(0.8);
+  }
+}
+
 /* CSS Custom Properties for Theming */
 :root {
   /* Light Theme Colors */
