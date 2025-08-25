@@ -8,13 +8,11 @@ import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
  * BookmarksViewer Structure:
  *
  * Each line in the bookmark list is a BookmarkTableRow, which can display:
- * - RowView: Compact view showing icon, title, and action buttons
- * - CardView: Expanded view showing full details, description, tags, dates
+ * - Row View: Compact view showing icon, title, and action buttons
+ * - Card View: Expanded view showing full details, description, tags, dates
  *
  * The user can toggle between these views within each table row.
  */
-
-//type TableRowViewMode = 'row' | 'card';
 
 interface BookmarkTableRowProps {
   bookmark: Bookmark;

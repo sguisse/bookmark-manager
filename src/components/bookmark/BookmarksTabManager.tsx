@@ -404,21 +404,6 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
         <div>
-          {/* Debug info to show current view mode */}
-          <div style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            background: tableRowViewMode === 'card' ? 'green' : 'blue',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            zIndex: 1000
-          }}>
-            View: {tableRowViewMode.toUpperCase()}
-          </div>
 
           <div className={`grid bookmark-grid-container ${tableRowViewMode === 'card' ? 'card-view' : ''}`} style={{ gap: tableRowViewMode === 'row' ? '2px' : '5px' }}>
             {bookmarks.map((b, index) => (
