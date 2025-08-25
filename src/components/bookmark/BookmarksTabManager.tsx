@@ -221,6 +221,9 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   // Cross-tab drag state
   const [crossTabDragOverIndex, setCrossTabDragOverIndex] = useState<number | null>(null);
   const [crossTabDropPosition, setCrossTabDropPosition] = useState<'before' | 'after'>('after');
+  
+  // State for tracking drag over empty container
+  const [isDragOverEmptyContainer, setIsDragOverEmptyContainer] = useState(false);
 
   const handleEdit = (bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
@@ -305,6 +308,9 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     // Clear cross-tab drag state
     setCrossTabDragOverIndex(null);
     setCrossTabDropPosition('after');
+    
+    // Clear empty container drag state
+    setIsDragOverEmptyContainer(false);
 
     // Clear global drag state
     endDrag();
@@ -318,6 +324,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       console.log('[BookmarksTabManager] Cross-tab drag over at index:', index, 'position:', position);
       setCrossTabDragOverIndex(index);
       setCrossTabDropPosition(position);
+      // Clear empty container state when dragging over specific items
+      setIsDragOverEmptyContainer(false);
     } else if (draggedBookmark) {
       // Internal drag within same tab
       setDragOverIndex(index);
@@ -544,6 +552,26 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         if (isExternalDrag(nodeId || '')) {
           e.preventDefault();
           e.dataTransfer.dropEffect = 'move';
+          
+          // Show drop preview for empty container
+          if (bookmarks.length === 0 || crossTabDragOverIndex === null) {
+            setIsDragOverEmptyContainer(true);
+          }
+        }
+      }}
+      onDragLeave={(e) => {
+        // Clear empty container drag state when leaving the container
+        if (isExternalDrag(nodeId || '')) {
+          // Only clear if we're actually leaving the container, not just moving to child elements
+          const rect = e.currentTarget.getBoundingClientRect();
+          if (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+          ) {
+            setIsDragOverEmptyContainer(false);
+          }
         }
       }}
       onDrop={(e) => {
@@ -592,12 +620,52 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
           // Clear states
           setCrossTabDragOverIndex(null);
           setCrossTabDropPosition('after');
+          setIsDragOverEmptyContainer(false);
           endDrag();
         }
       }}
     >
       {bookmarks.length === 0 ? (
-        <div className="text-secondary p-4 text-center">No bookmarks</div>
+        <div className="text-secondary p-4 text-center">
+          {isDragOverEmptyContainer && dragState.draggedBookmark ? (
+            <div
+              style={{
+                margin: '10px',
+                padding: '16px',
+                border: '2px dashed #3b82f6',
+                borderRadius: '8px',
+                background: 'rgba(59, 130, 246, 0.05)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                color: '#3b82f6',
+                fontSize: '16px',
+                fontWeight: 500
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '18px', opacity: 0.8 }}>🔄</span>
+                </div>
+                <span>{dragState.draggedBookmark.title}</span>
+                <span style={{ fontSize: '14px', opacity: 0.7 }}>(from other tab)</span>
+              </div>
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#6b7280', 
+                marginTop: '8px',
+                textAlign: 'center'
+              }}>
+                Drop here to add to this tab
+              </div>
+            </div>
+          ) : (
+            'No bookmarks'
+          )}
+        </div>
       ) : (
         <div>
 
