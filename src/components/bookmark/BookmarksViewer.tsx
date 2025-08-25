@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bookmark } from '../../types/bookmark';
 import { formatDate } from '../../services/Utils';
@@ -22,6 +22,95 @@ interface BookmarkTableRowProps {
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
   onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
+}
+
+// Helper function to truncate title if longer than 50 characters
+function truncateTitle(title: string, maxLength: number = 50): string {
+  if (title.length <= maxLength) {
+    return title;
+  }
+  return title.substring(0, maxLength) + '...';
+}
+
+// Tooltip component with 1-second delay
+function DelayedTooltip({
+  children,
+  title,
+  url,
+  delay = 1000
+}: {
+  children: React.ReactNode;
+  title: string;
+  url: string;
+  delay?: number;
+}) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
+
+    timeoutRef.current = window.setTimeout(() => {
+      setShowTooltip(true);
+    }, delay);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setShowTooltip(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <div
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{ cursor: 'inherit' }}
+      >
+        {children}
+      </div>
+      {showTooltip && (
+        <div
+          style={{
+            position: 'fixed',
+            left: position.x,
+            top: position.y,
+            transform: 'translateX(-50%) translateY(-100%)',
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            lineHeight: '1.4',
+            maxWidth: '300px',
+            wordWrap: 'break-word',
+            zIndex: 1000,
+            pointerEvents: 'none',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+          }}
+        >
+          <div style={{ fontWeight: '600', marginBottom: '4px' }}>{title}</div>
+          <div style={{ opacity: 0.8, fontSize: '11px' }}>{url}</div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // helper to render an icon element (emoji/text or image). Keeps JSX readable and avoids nested ternaries.
@@ -72,18 +161,22 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
             {renderIconElement(bookmark.icon, 20)}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h3
-              style={{
-                ...titleStyle(theme),
-                whiteSpace: 'normal',
-                margin: 0,
-                paddingLeft: '5px',
-                color: bookmark.color || theme.colors.text.primary
-              }}
+            <DelayedTooltip
               title={bookmark.title}
+              url={bookmark.url}
             >
-              {bookmark.title}
-            </h3>
+              <h3
+                style={{
+                  ...titleStyle(theme),
+                  whiteSpace: 'normal',
+                  margin: 0,
+                  paddingLeft: '5px',
+                  color: bookmark.color || theme.colors.text.primary
+                }}
+              >
+                {truncateTitle(bookmark.title)}
+              </h3>
+            </DelayedTooltip>
           </div>
         </div>
 
@@ -137,7 +230,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
   const [isHovered, setIsHovered] = useState(false);
   return (
     <div
-      style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+      className="bookmark-row-view"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -146,13 +239,18 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
           {renderIconElement(bookmark.icon, 16)}
         </div>
         <div style={{ flex: 1 }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onOpen(bookmark.url); }}
-            title={bookmark.description || ''}
-            style={{ background: 'none', border: 'none', padding: 0, margin: 0, fontSize: 'inherit', fontWeight: 600, color: bookmark.color || theme.colors.text.primary, cursor: 'pointer', textAlign: 'left' }}
+          <DelayedTooltip
+            title={bookmark.title}
+            url={bookmark.url}
           >
-            {bookmark.title}
-          </button>
+            <button
+              className="bookmark-title"
+              onClick={(e) => { e.stopPropagation(); onOpen(bookmark.url); }}
+              style={{ color: bookmark.color || theme.colors.text.primary }}
+            >
+              {truncateTitle(bookmark.title)}
+            </button>
+          </DelayedTooltip>
         </div>
       </div>
 
@@ -177,7 +275,7 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
   const { theme } = useTheme();
 
   const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
-  
+
   // Use bookmark.collapsed to determine if expanded (collapsed=false means expanded in card view)
   const isCollapsed = bookmark.collapsed ?? true; // Default to collapsed (row view)
 
@@ -190,14 +288,14 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
           {!isCollapsed ? (
             <CardView bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onOpen={openUrl} onCollapse={() => onToggleCollapsed(bookmark.id)} theme={theme} />
           ) : (
-            <RowView 
-              bookmark={bookmark} 
-              onEdit={onEdit} 
-              onDelete={onDelete} 
-              onToggleExpand={() => onToggleCollapsed(bookmark.id)} 
-              expanded={!isCollapsed} 
-              theme={theme} 
-              onOpen={openUrl} 
+            <RowView
+              bookmark={bookmark}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onToggleExpand={() => onToggleCollapsed(bookmark.id)}
+              expanded={!isCollapsed}
+              theme={theme}
+              onOpen={openUrl}
             />
           )}
         </>

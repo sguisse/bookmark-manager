@@ -194,13 +194,13 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   // Handle individual bookmark collapsed toggle
   const handleToggleCollapsed = (bookmarkId: string) => {
     if (!onConfigChange) return;
-    
-    const updatedBookmarks = bookmarks.map(b => 
-      b.id === bookmarkId 
+
+    const updatedBookmarks = bookmarks.map(b =>
+      b.id === bookmarkId
         ? { ...b, collapsed: !(b.collapsed ?? true) }
         : b
     );
-    
+
     onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updatedBookmarks });
   };
 
@@ -340,7 +340,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
           const newViewMode = viewMode === 'card' ? 'table' : 'card';
           setViewMode(newViewMode);
-          
+
           // When toggling to table view (row), set all bookmarks to collapsed (true)
           // When toggling to card view, set all bookmarks to not collapsed (false)
           if (onConfigChange) {
@@ -386,7 +386,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       {bookmarks.length === 0 ? (
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
-        <div className="grid" style={{ gap: '5px' }}>
+        <div className={`grid bookmark-grid-container ${viewMode === 'card' ? 'card-view' : ''}`} style={{ gap: viewMode === 'table' ? '2px' : '5px' }}>
           {bookmarks.map((b, index) => (
             <DraggableBookmarkRow
               key={b.id}
