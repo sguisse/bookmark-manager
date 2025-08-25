@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 import { WebTabConfig, WebTabFormData } from '../../types/web';
 import WebForm from './WebForm';
 import { FormDisplayMode } from '../../types/app';
@@ -12,7 +11,6 @@ interface WebTabProps {
 
 export default function WebTabManager(props: Readonly<WebTabProps>) {
   const { config, onConfigChange } = props;
-  const { theme } = useTheme();
   const [url, setUrl] = useState<string>(config?.url || '');
   const [showForm, setShowForm] = useState(false);
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import HeaderPanel from './HeaderPanel';
 import SidebarManager from './sidebar/SidebarManager';
@@ -11,7 +11,7 @@ import { SidebarViewMode } from '../../types/sidebar';
 interface DashboardLayoutProps {
 }
 
-export default function DashboardLayout(props: Readonly<DashboardLayoutProps>) {
+export default function DashboardLayout(_props: Readonly<DashboardLayoutProps>) {
   const { theme } = useTheme();
   const [sidebarVisibility, setSidebarVisibility] = useState<SidebarViewMode>(SidebarViewMode.Visible);
 

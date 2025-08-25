@@ -3,31 +3,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 interface BottomPanelProps {
 }
 
-export default function BottomPanel(props: BottomPanelProps) {
+export default function BottomPanel(_props: BottomPanelProps) {
   const { theme } = useTheme();
-
-  const formatLastSaved = (date: Date | null) => {
-    if (!date) return 'Never';
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return date.toLocaleDateString();
-  };
-
-  const buttonStyle = {
-    padding: '0.5rem 0.75rem',
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: '4px',
-    backgroundColor: theme.colors.surface,
-    color: theme.colors.text.primary,
-    fontSize: theme.fonts.sizes.small,
-    fontFamily: theme.fonts.family,
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  };
 
   return (
     <div

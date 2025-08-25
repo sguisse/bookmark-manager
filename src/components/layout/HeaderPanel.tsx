@@ -5,7 +5,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 
 interface HeaderPanelProps {}
 
-export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
+export default function HeaderPanel(_props: Readonly<HeaderPanelProps>) {
   const { selectedMenuItem } = useApplication();
   const { isDarkMode, toggleTheme } = useTheme();
 
