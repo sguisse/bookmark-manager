@@ -22,12 +22,79 @@ interface BookmarkTableRowProps {
   onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
 }
 
-// Helper function to truncate title if longer than 40 characters
-function truncateTitle(title: string, maxLength: number = 40): string {
-  if (title.length <= maxLength) {
-    return title;
+// Measure how many characters fit into `width` (px) with given CSS font string.
+function calculateVisibleCharacters(text: string, width: number, font: string, ellipsis = '...'): number {
+  if (!text || width <= 0) return 0;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return Math.max(0, Math.min(text.length, 40));
+  ctx.font = font;
+
+  let low = 0;
+  let high = text.length;
+  let best = 0;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const substr = text.slice(0, mid);
+    const measured = ctx.measureText(substr + ellipsis).width;
+    if (measured <= width) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
   }
-  return title.substring(0, maxLength) + '...';
+
+  return best;
+}
+
+function useTruncatedText(text: string, containerRef: React.RefObject<HTMLElement | null>, ellipsis = '...') {
+  const [truncated, setTruncated] = useState(text);
+
+  useEffect(() => {
+    const el = containerRef?.current;
+    if (!el) {
+      setTruncated(text);
+      return;
+    }
+
+    const compute = () => {
+      const style = window.getComputedStyle(el);
+      const fontWeight = style.fontWeight || '400';
+      const fontSize = style.fontSize || '14px';
+      const fontFamily = style.fontFamily || 'Arial, sans-serif';
+      const font = `${fontWeight} ${fontSize} ${fontFamily}`;
+
+      // Find the closest ancestor with class `flexlayout__tab` and use its clientWidth if available.
+      const nearest = el.closest('.flexlayout__tab');
+      const measuringEl = nearest instanceof HTMLElement ? nearest : null;
+
+      const width = Math.max(0, (measuringEl ? measuringEl.clientWidth - 8 : el.clientWidth - 4));
+      if (width <= 0) {
+        setTruncated(text);
+        return;
+      }
+
+      const visible = calculateVisibleCharacters(text, width, font, ellipsis);
+      if (visible >= text.length) setTruncated(text);
+      else if (visible <= 0) setTruncated(ellipsis);
+      else setTruncated(text.slice(0, visible) + ellipsis);
+    };
+
+    compute();
+
+    if ((window as any).ResizeObserver) {
+      const _ro = new (window as any).ResizeObserver(() => compute());
+      _ro.observe(el);
+      return () => _ro.disconnect();
+    }
+
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, [text, containerRef, ellipsis]);
+
+  return truncated;
 }
 
 // Tooltip component with 1-second delay
@@ -36,12 +103,12 @@ function DelayedTooltip({
   title,
   url,
   delay = 1000
-}: {
+}: Readonly<{
   children: React.ReactNode;
   title: string;
   url: string;
   delay?: number;
-}) {
+}>) {
   const [showTooltip, setShowTooltip] = useState(false);
   const timeoutRef = useRef<number | null>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -79,6 +146,9 @@ function DelayedTooltip({
       <div
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={() => setShowTooltip(true)}
+        onBlur={() => setShowTooltip(false)}
+        tabIndex={0}
         style={{ cursor: 'inherit' }}
       >
         {children}
@@ -125,6 +195,8 @@ function renderIconElement(src: string | undefined, size: number) {
 function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
   const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme } = props;
   const [isHovered, setIsHovered] = useState(false);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const truncatedTitle = useTruncatedText(bookmark.title, titleRef, '...');
 
   const handleEditClick = (e: React.MouseEvent) => { e.stopPropagation(); onEdit(bookmark); };
   const handleDeleteClick = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(bookmark.id); };
@@ -164,15 +236,17 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
               url={bookmark.url}
             >
               <h3
+                ref={titleRef}
                 style={{
                   ...titleStyle(theme),
                   whiteSpace: 'normal',
                   margin: 0,
                   paddingLeft: '5px',
-                  color: bookmark.color || theme.colors.text.primary
+                  color: bookmark.color || theme.colors.text.primary,
+                  overflow: 'hidden'
                 }}
               >
-                {truncateTitle(bookmark.title)}
+                {truncatedTitle}
               </h3>
             </DelayedTooltip>
           </div>
@@ -226,6 +300,8 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
 function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void }>) {
   const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen } = props;
   const [isHovered, setIsHovered] = useState(false);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const truncatedTitleRow = useTruncatedText(bookmark.title, btnRef, '...');
   return (
     <div
       className="bookmark-row-view"
@@ -244,9 +320,12 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
             <button
               className="bookmark-title"
               onClick={(e) => { e.stopPropagation(); onOpen(bookmark.url); }}
-              style={{ color: bookmark.color || theme.colors.text.primary }}
+              ref={btnRef}
+              style={{
+                color: bookmark.color || theme.colors.text.primary,
+              }}
             >
-              {truncateTitle(bookmark.title)}
+              {truncatedTitleRow}
             </button>
           </DelayedTooltip>
         </div>
@@ -269,7 +348,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
 
 // Each BookmarkTableRow can display either a RowView (compact) or CardView (expanded)
 export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>) {
-  const { bookmark, onEdit, onDelete, onToggleCollapsed, view = 'row' } = props;
+  const { bookmark, onEdit, onDelete, onToggleCollapsed } = props;
   const { theme } = useTheme();
 
   const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
@@ -280,13 +359,13 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
   return (
     <div>
       {!isCollapsed ? (
-        <CardView 
-          bookmark={bookmark} 
-          onEdit={onEdit} 
-          onDelete={onDelete} 
-          onOpen={openUrl} 
-          onCollapse={() => onToggleCollapsed(bookmark.id)} 
-          theme={theme} 
+        <CardView
+          bookmark={bookmark}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onOpen={openUrl}
+          onCollapse={() => onToggleCollapsed(bookmark.id)}
+          theme={theme}
         />
       ) : (
         <RowView
@@ -319,17 +398,21 @@ const actionButtonStyle = (bg: string) => ({
   transition: 'all 0.2s ease'
 } as React.CSSProperties);
 
-const smallIconButtonStyle = (bg: any) => ({
-  width: 36,
-  height: 20,
+// smaller icon button style used in row view
+const smallIconButtonStyle = (bg: string) => ({
+  width: '32px',
+  height: '32px',
+  padding: '4px',
   border: 'none',
-  borderRadius: 6,
+  borderRadius: '6px',
   backgroundColor: bg,
   color: '#ffffff',
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center'
+  justifyContent: 'center',
+  fontSize: '13px',
+  transition: 'all 0.15s ease'
 } as React.CSSProperties);
 
 const titleStyle = (theme: any) => ({
