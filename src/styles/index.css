@@ -512,6 +512,118 @@ select:focus-visible {
   overflow: auto;
 }
 
+/* BrowserFavorites tree styles */
+.browser-favorites {
+  padding: var(--spacing-md);
+  /* make the favorites panel stretch and allow the tree to take remaining space */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0; /* allow flex children to shrink properly */
+}
+.bf-controls {
+  margin-bottom: var(--spacing-sm);
+  flex: 0 0 auto;
+}
+.bf-tree {
+  /* take all remaining vertical space inside .browser-favorites */
+  flex: 1 1 auto;
+  min-height: 0; /* important for children with overflow */
+  overflow: auto;
+  padding-left: var(--spacing-sm);
+}
+.bf-node {
+  margin: 0.125rem 0;
+  position: relative; /* ensure absolute tooltip positions are relative to node */
+}
+.bf-node-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+}
+.bf-node-label:hover {
+  background: var(--color-surface);
+}
+.bf-node-icon {
+  width: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.bf-children {
+  padding-left: 1rem;
+}
+.bf-empty {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.bf-folder-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* BrowserFavorites tooltip and favicon styles */
+.bf-node-favicon {
+  width: 16px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 3px;
+  margin-right: 8px;
+}
+.bf-node-emoji {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+.bf-node-left { display: inline-flex; align-items: center; gap: 0.5rem; }
+.bf-node-text { max-width: 24rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bf-node-tooltip {
+  /* hide by default using visibility/opacity (safer against other stylesheet overrides)
+     and enable smooth fade-in on hover */
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 220px;
+  max-width: 40vw;
+  white-space: normal;
+  background: var(--color-card-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 12px;
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease, visibility 0.12s ease;
+}
+/* show tooltip only when the user hovers or focuses the node/label */
+.browser-favorites .bf-node:hover > .bf-node-tooltip,
+.browser-favorites .bf-node .bf-node-label:hover + .bf-node-tooltip,
+.browser-favorites .bf-node .bf-node-label:focus + .bf-node-tooltip,
+/* tooltip nested inside the label (bookmark nodes) */
+.browser-favorites .bf-node .bf-node-label:hover .bf-node-tooltip,
+.browser-favorites .bf-node .bf-node-label:focus .bf-node-tooltip,
+/* folder toggle focus/hover (button) */
+.browser-favorites .bf-node .bf-folder-toggle:focus + .bf-node-tooltip,
+.browser-favorites .bf-node .bf-folder-toggle:hover + .bf-node-tooltip {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+.bf-tooltip-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+
 /* FlexLayout variable mapping
    Map core app variables into FlexLayout's custom properties so the
    library follows the app theme. This file is imported after
@@ -520,14 +632,4 @@ select:focus-visible {
 */
 .flexlayout__layout {
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-[data-theme="dark"] .flexlayout__layout {
-  /*--color-text: var(--color-text-primary);
-  --color-background: var(--color-background);
-  --color-tab-selected: var(--color-text-primary);
-  --color-tab-selected-background: var(--color-border);
-  --color-tab-unselected: var(--color-text-secondary);
-  */
-  /*--color-tab-unselected-background: var(--color-background);*/
 }

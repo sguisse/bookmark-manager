@@ -3,6 +3,7 @@ import { BorderNode, ITabSetRenderValues, TabNode, TabSetNode } from 'flexlayout
 import BookmarksTabManager from '../bookmark/BookmarksTabManager';
 import MarkdownTabManager from '../markdown/MarkdownTabManager';
 import WebTabManager from '../web/WebTabManager';
+import BrowserFavorites from '../browserfavorites/BrowserFavorites';
 import { FlexLayoutTabConfig } from '../../types/flexTab';
 import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
@@ -268,9 +269,10 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const config = node.getConfig() as FlexLayoutTabConfig;
     const compKey = String(component || '').toLowerCase();
 
-    if (compKey === 'markdown') return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-    if (compKey === 'bookmarks') return <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-    if (compKey === 'web') return <WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+  if (compKey === 'markdown') return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+  if (compKey === 'bookmarks') return <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+  if (compKey === 'web') return <WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+  if (compKey === 'browserfavorites' || compKey === 'browser_favorites') return <BrowserFavorites />;
 
     return (
       <div style={{ padding: 12 }}>
