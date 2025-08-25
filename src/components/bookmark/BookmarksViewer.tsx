@@ -312,7 +312,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
         <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {renderIconElement(bookmark.icon, 16)}
         </div>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, position: 'relative' }}>
           <DelayedTooltip
             title={bookmark.title}
             url={bookmark.url}
@@ -328,19 +328,34 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
               {truncatedTitleRow}
             </button>
           </DelayedTooltip>
-        </div>
-      </div>
 
-      <div style={{ display: 'flex', gap: 1, alignItems: 'center', opacity: isHovered ? 1 : 0, transition: 'opacity 120ms ease', pointerEvents: isHovered ? 'auto' : 'none' }}>
-        <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme.colors.info)}>
-          {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-        <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit" style={smallIconButtonStyle(theme.colors.info)}>
-          <Edit size={16} />
-        </button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete" style={smallIconButtonStyle(theme.colors.error)}>
-          <Trash2 size={16} />
-        </button>
+          {/* Action buttons positioned over the title on hover */}
+          <div style={{
+            position: 'absolute',
+            right: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            gap: 1,
+            alignItems: 'center',
+            opacity: isHovered ? 1 : 0,
+            transition: 'opacity 120ms ease',
+            pointerEvents: isHovered ? 'auto' : 'none',
+            backgroundColor: theme.colors.surface,
+            borderRadius: '4px',
+            padding: '2px'
+          }}>
+            <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme.colors.info)}>
+              {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit" style={smallIconButtonStyle(theme.colors.info)}>
+              <Edit size={16} />
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete" style={smallIconButtonStyle(theme.colors.error)}>
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -60,19 +60,19 @@
 .flexlayout__tab[data-component="bookmarks"] *,
 .flexlayout__tab_content[data-component="bookmarks"],
 .flexlayout__tab_content[data-component="bookmarks"] * {
-	overflow-x: hidden !important;
+	overflow: hidden !important;
 }
 
 /* Also target tabs that contain bookmark content by class */
 .flexlayout__tab:has(.bookmark-grid-container),
 .flexlayout__tab:has(.bookmark-grid-container) * {
-	overflow-x: hidden !important;
+	overflow: hidden !important;
 }
 
 /* Ensure bookmark grid containers within flexlayout tabs don't overflow */
 .flexlayout__tab .bookmark-grid-container,
 .flexlayout__tab_content .bookmark-grid-container {
-	overflow-x: hidden !important;
+	overflow: hidden !important;
 	width: 100% !important;
 	min-width: 0 !important;
 	box-sizing: border-box !important;
