@@ -22,8 +22,8 @@ interface BookmarkTableRowProps {
   onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
 }
 
-// Helper function to truncate title if longer than 50 characters
-function truncateTitle(title: string, maxLength: number = 50): string {
+// Helper function to truncate title if longer than 40 characters
+function truncateTitle(title: string, maxLength: number = 40): string {
   if (title.length <= maxLength) {
     return title;
   }
