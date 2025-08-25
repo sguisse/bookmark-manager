@@ -138,8 +138,8 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
       style={{
         backgroundColor: theme.colors.surface,
         border: `1px solid ${theme.colors.border}`,
-  borderRadius: '8px',
-  padding: '5px',
+        borderRadius: '8px',
+        padding: '5px',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
@@ -255,13 +255,13 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
       </div>
 
       <div style={{ display: 'flex', gap: 1, alignItems: 'center', opacity: isHovered ? 1 : 0, transition: 'opacity 120ms ease', pointerEvents: isHovered ? 'auto' : 'none' }}>
-        <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme)}>
+        <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme.colors.info)}>
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit" style={smallIconButtonStyle(theme)}>
+        <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit" style={smallIconButtonStyle(theme.colors.info)}>
           <Edit size={16} />
         </button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete" style={smallIconButtonStyle(theme)}>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete" style={smallIconButtonStyle(theme.colors.error)}>
           <Trash2 size={16} />
         </button>
       </div>
@@ -320,12 +320,13 @@ const actionButtonStyle = (bg: string) => ({
   transition: 'all 0.2s ease'
 } as React.CSSProperties);
 
-const smallIconButtonStyle = (theme: any) => ({
+const smallIconButtonStyle = (bg: any) => ({
   width: 36,
-  height: 28,
+  height: 20,
   border: 'none',
   borderRadius: 6,
-  backgroundColor: theme.colors.surface,
+  backgroundColor: bg,
+  color: '#ffffff',
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
@@ -358,7 +359,7 @@ const urlStyle = (theme: any) => ({
   fontSize: theme.fonts.sizes.small,
   color: theme.colors.primary,
   textDecoration: 'none',
-  overflow: 'hidden',
+  overflow: 'none',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
   marginBottom: '0.75rem'
