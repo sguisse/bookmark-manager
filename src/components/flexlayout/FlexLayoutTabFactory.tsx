@@ -141,9 +141,9 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   const nodeId = selectedTabNode.getId();
-                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:toggle-view', { detail: { nodeId } })); } catch (err) { console.warn('Event dispatch failed', err); }
+                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:toggle-table-row-view', { detail: { nodeId } })); } catch (err) { console.warn('Event dispatch failed', err); }
                 }}
-                title="Toggle Card/Table View"
+                title="Toggle Table Cards/Rows View"
               >
                 <List size={16} />
               </button>

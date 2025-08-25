@@ -357,7 +357,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     };
 
     window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-    window.addEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
+    window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleHandler as EventListener);
 
     const openAllHandler = (e: Event) => {
       try {
@@ -376,7 +376,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
     return () => {
       window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-      window.removeEventListener('flexlayout:bookmarks:toggle-view', toggleHandler as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleHandler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
     };
   }, [nodeId, bookmarks]);
