@@ -123,8 +123,13 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
 // Table row view moved out
 function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void }>) {
   const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen } = props;
+  const [isHovered, setIsHovered] = useState(false);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div
+      style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
         <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {renderIconElement(bookmark.icon, 16)}
@@ -140,7 +145,7 @@ function TableRowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 1, alignItems: 'center', opacity: isHovered ? 1 : 0, transition: 'opacity 120ms ease', pointerEvents: isHovered ? 'auto' : 'none' }}>
         <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme)}>
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
