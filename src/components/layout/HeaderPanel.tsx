@@ -27,7 +27,27 @@ export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
   const headerTitle = selectedMenuItem?.title || 'Bookmark Manager';
 
   return (
-    <div className="header-panel">
+    <header
+      className="header-panel"
+      onDragOver={(e) => {
+        // allow drop when dragging bookmarks folder
+        if (e.dataTransfer && (Array.from(e.dataTransfer.types || []).includes('application/x-bookmarks-folder') || Array.from(e.dataTransfer.types || []).includes('text/plain'))) {
+          e.preventDefault();
+          if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        }
+      }}
+      onDrop={(e) => {
+        const raw = (e.dataTransfer?.getData('application/x-bookmarks-folder') || e.dataTransfer?.getData('text/plain') || '').trim();
+        if (!raw) return;
+        let payload: { title?: string; urls?: string[] } = { title: raw, urls: [] };
+        // only attempt to parse if the payload looks like JSON
+        if (raw.startsWith('{') || raw.startsWith('[')) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') payload = parsed;
+        }
+        window.dispatchEvent(new CustomEvent('app:header:dropped-bookmarks', { detail: payload }));
+      }}
+    >
       <div className="header-content">
         <div className="header-left">
           <button
@@ -55,6 +75,6 @@ export default function HeaderPanel(props: Readonly<HeaderPanelProps>) {
           </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 }

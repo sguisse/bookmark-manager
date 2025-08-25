@@ -1,9 +1,9 @@
-export interface BookmarkNode {
+export interface BrowserBookmarkNode {
   id: string;
   title: string;
   url?: string;
   isFolder: boolean;
-  children?: BookmarkNode[];
+  children?: BrowserBookmarkNode[];
   addDate?: number | null;
   lastModified?: number | null;
   icon?: string | null;
@@ -28,10 +28,10 @@ function nextId() {
 }
 
 /**
- * Parse a Chrome exported bookmarks HTML file into a tree of BookmarkNode
+ * Parse a Chrome exported bookmarks HTML file into a tree of BrowserBookmarkNode
  * Chrome format uses <DL><DT><H3 ADD_DATE=...> for folders and <A HREF=... ADD_DATE=... ICON=...> for bookmarks.
  */
-export function parseChromeBookmarksHtml(htmlText: string): BookmarkNode[] {
+export function parseChromeBookmarksHtml(htmlText: string): BrowserBookmarkNode[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlText, 'text/html');
   const body = doc.body;
@@ -43,8 +43,8 @@ export function parseChromeBookmarksHtml(htmlText: string): BookmarkNode[] {
 
   let orderCounter = 0;
 
-  function parseDL(dl: Element, parentPath: string[] = []): BookmarkNode[] {
-    const nodes: BookmarkNode[] = [];
+  function parseDL(dl: Element, parentPath: string[] = []): BrowserBookmarkNode[] {
+    const nodes: BrowserBookmarkNode[] = [];
 
     // Collect DT elements but be tolerant of wrappers like <p> which some exporters insert.
     const dtElements: Element[] = [];
@@ -115,7 +115,7 @@ export function parseChromeBookmarksHtml(htmlText: string): BookmarkNode[] {
       const attributes: Record<string,string> = {};
       for (const a of Array.from(h3.attributes)) attributes[a.name] = a.value;
 
-      let children: BookmarkNode[] = [];
+    let children: BrowserBookmarkNode[] = [];
       const possibleDL = findFollowingElementOfTag(dt, ['dl']);
       if (possibleDL && possibleDL.tagName.toLowerCase() === 'dl') {
         children = parseDL(possibleDL, parentPath.concat(title));

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import type { BookmarkNode } from '../../services/BrowserFavoritesParser';
+import type { BrowserBookmarkNode } from '../../services/BrowserFavoritesParser';
 import { parseChromeBookmarksHtml } from '../../services/BrowserFavoritesParser';
 
 import '../../styles/index.css';
@@ -31,7 +31,7 @@ const Icon: React.FC<{ icon?: string | null; isFolder?: boolean }> = ({ icon, is
 };
 
 // helper to count total links recursively inside a node (bookmarks only)
-const countLinks = (node: BookmarkNode | undefined | null): number => {
+const countLinks = (node: BrowserBookmarkNode | undefined | null): number => {
   if (!node) return 0;
   if (!node.isFolder) return 1;
   let total = 0;
@@ -43,7 +43,20 @@ const countLinks = (node: BookmarkNode | undefined | null): number => {
   return total;
 };
 
-const TreeNode: React.FC<{ node: BookmarkNode; open: boolean; onToggle: (id: string) => void; expanded: Record<string, boolean> }> = ({ node, open, onToggle, expanded }) => {
+// helper to collect all urls recursively from a folder node
+const collectUrls = (node: BrowserBookmarkNode | undefined | null): string[] => {
+  if (!node) return [];
+  if (!node.isFolder) return node.url ? [node.url] : [];
+  const out: string[] = [];
+  if (node.children) {
+    for (const c of node.children) {
+      out.push(...collectUrls(c));
+    }
+  }
+  return out;
+};
+
+const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (id: string) => void; expanded: Record<string, boolean> }> = ({ node, open, onToggle, expanded }) => {
   const tooltipLines: string[] = [];
   const dateStr = formatAddDate(node.addDate);
   if (dateStr) tooltipLines.push(dateStr);
@@ -93,6 +106,21 @@ const TreeNode: React.FC<{ node: BookmarkNode; open: boolean; onToggle: (id: str
           onMouseMove={moveTooltip}
           onMouseLeave={hideTooltip}
           onBlur={hideTooltip}
+          draggable={true}
+          onDragStart={(e) => {
+            try {
+              // send the full BrowserBookmarkNode for richer handling on drop
+              const urls = collectUrls(node);
+              const payload = JSON.stringify({ title: node.title || 'Bookmarks', node, urls });
+              e.dataTransfer?.setData('application/x-bookmarks-folder', payload);
+              // set a plain text fallback
+              e.dataTransfer?.setData('text/plain', `${node.title || 'Bookmarks'} (${urls.length} links)`);
+              // allow move/copy
+              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
+            } catch (err) {
+              console.warn('Failed to set drag data for bookmarks folder', err);
+            }
+          }}
         >
           <span className="bf-node-left">
             <Icon icon={node.icon || null} isFolder />
@@ -174,7 +202,7 @@ const TreeNode: React.FC<{ node: BookmarkNode; open: boolean; onToggle: (id: str
 };
 
 export const BrowserFavorites: React.FC<Props> = () => {
-  const [tree, setTree] = useState<BookmarkNode[]>([]);
+  const [tree, setTree] = useState<BrowserBookmarkNode[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement | null>(null);
 
