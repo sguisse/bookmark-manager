@@ -529,12 +529,17 @@ select:focus-visible {
   /* take all remaining vertical space inside .browser-favorites */
   flex: 1 1 auto;
   min-height: 0; /* important for children with overflow */
-  overflow: auto;
+  /* show scrollbars only when needed */
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding-left: var(--spacing-sm);
 }
 .bf-node {
   margin: 0.125rem 0;
   position: relative; /* ensure absolute tooltip positions are relative to node */
+  /* allow the node to shrink so long content doesn't force horizontal scroll */
+  min-width: 0;
 }
 .bf-node-label {
   display: inline-flex;
@@ -554,6 +559,8 @@ select:focus-visible {
 }
 .bf-children {
   padding-left: 1rem;
+  /* allow children column to shrink within flex container */
+  min-width: 0;
 }
 .bf-empty {
   color: var(--color-text-secondary);
@@ -583,7 +590,16 @@ select:focus-visible {
   margin-right: 8px;
 }
 .bf-node-left { display: inline-flex; align-items: center; gap: 0.5rem; }
-.bf-node-text { max-width: 24rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bf-node-text {
+  /* do not truncate tree labels; allow wrapping and full visibility */
+  max-width: none;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  /* ensure very long tokens (URLs) wrap instead of forcing horizontal scroll */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .bf-node-tooltip {
   /* hide by default using visibility/opacity (safer against other stylesheet overrides)
      and enable smooth fade-in on hover */
@@ -606,6 +622,11 @@ select:focus-visible {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.12s ease, visibility 0.12s ease;
+  /* layout and alignment */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 /* show tooltip only when the user hovers or focuses the node/label */
 .browser-favorites .bf-node:hover > .bf-node-tooltip,
@@ -621,7 +642,7 @@ select:focus-visible {
   opacity: 1;
   pointer-events: auto;
 }
-.bf-tooltip-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bf-tooltip-line { white-space: normal; overflow: visible; text-overflow: unset; text-align: left; overflow-wrap: anywhere; }
 
 
 /* FlexLayout variable mapping
