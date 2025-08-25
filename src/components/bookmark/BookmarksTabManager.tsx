@@ -14,7 +14,7 @@ interface BookmarksTabProps {
 interface DraggableBookmarkRowProps {
   bookmark: Bookmark;
   index: number;
-  viewMode: 'card' | 'table';
+  tableRowViewMode: 'card' | 'row';
   draggedBookmark: Bookmark | null;
   dragOverIndex: number | null;
   dropPosition: 'before' | 'after';
@@ -31,7 +31,7 @@ interface DraggableBookmarkRowProps {
 function DraggableBookmarkRow({
   bookmark,
   index,
-  viewMode,
+  tableRowViewMode,
   draggedBookmark,
   dragOverIndex,
   dropPosition,
@@ -136,7 +136,7 @@ function DraggableBookmarkRow({
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleCollapsed={onToggleCollapsed}
-          view={viewMode === 'table' ? 'row' : 'card'}
+          view={tableRowViewMode}
         />
       </div>
 
@@ -179,7 +179,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
 
   const bookmarks = config?.bookmarks || [];
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
+  const [tableRowViewMode, setTableRowViewMode] = useState<'card' | 'row'>(config?.viewMode || 'row');
 
   // Drag and drop state
   const [draggedBookmark, setDraggedBookmark] = useState<Bookmark | null>(null);
@@ -308,7 +308,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       url: data.url || '',
       description: data.description,
       tags: data.tags || [],
-      collapsed: viewMode === 'table', // Set collapsed based on current view mode
+      collapsed: true, // Set collapsed by default
       createdDate: new Date(),
       lastModifiedDate: new Date()
     };
@@ -320,6 +320,13 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   };
 
   // Listen for toolbar events dispatched from FlexLayoutManager for this node
+  useEffect(() => {
+    // Sync local state with config when it changes
+    if (config?.viewMode && config.viewMode !== tableRowViewMode) {
+      setTableRowViewMode(config.viewMode);
+    }
+  }, [config?.viewMode, tableRowViewMode]);
+
   useEffect(() => {
     const handler = (e: Event) => {
       try {
@@ -334,21 +341,31 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       }
     };
 
-    const toggleHandler = (e: Event) => {
+    const toggleAllTableRowsViewHandler = (e: Event) => {
       try {
         const ce = e as CustomEvent<{ nodeId: string }>;
         if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
-          const newViewMode = viewMode === 'card' ? 'table' : 'card';
-          setViewMode(newViewMode);
+          console.log('[BookmarksTabManager] Toggle handler triggered, current view:', tableRowViewMode);
+
+          const newViewMode = tableRowViewMode === 'card' ? 'row' : 'card';
+          console.log('[BookmarksTabManager] Switching to view:', newViewMode);
+
+          setTableRowViewMode(newViewMode);
 
           // When toggling to table view (row), set all bookmarks to collapsed (true)
           // When toggling to card view, set all bookmarks to not collapsed (false)
           if (onConfigChange) {
             const updatedBookmarks = bookmarks.map(b => ({
               ...b,
-              collapsed: newViewMode === 'table'
+              collapsed: newViewMode === 'row'
             }));
-            onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updatedBookmarks });
+
+            // Save both the view mode and updated bookmarks to config
+            onConfigChange({
+              ...(config || {} as BookmarksTabConfig),
+              viewMode: newViewMode,
+              bookmarks: updatedBookmarks
+            });
           }
         }
       } catch (err) {
@@ -357,7 +374,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     };
 
     window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-    window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleHandler as EventListener);
+    window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleAllTableRowsViewHandler as EventListener);
 
     const openAllHandler = (e: Event) => {
       try {
@@ -376,36 +393,54 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
     return () => {
       window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-      window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleHandler as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleAllTableRowsViewHandler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
     };
-  }, [nodeId, bookmarks]);
+  }, [nodeId, bookmarks, tableRowViewMode, config, onConfigChange]);
 
   return (
     <div className="p-0">
       {bookmarks.length === 0 ? (
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
-        <div className={`grid bookmark-grid-container ${viewMode === 'card' ? 'card-view' : ''}`} style={{ gap: viewMode === 'table' ? '2px' : '5px' }}>
-          {bookmarks.map((b, index) => (
-            <DraggableBookmarkRow
-              key={b.id}
-              bookmark={b}
-              index={index}
-              viewMode={viewMode}
-              draggedBookmark={draggedBookmark}
-              dragOverIndex={dragOverIndex}
-              dropPosition={dropPosition}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onToggleCollapsed={handleToggleCollapsed}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onDragOverIndexChange={setDragOverIndex}
-            />
-          ))}
+        <div>
+          {/* Debug info to show current view mode */}
+          <div style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            background: tableRowViewMode === 'card' ? 'green' : 'blue',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            zIndex: 1000
+          }}>
+            View: {tableRowViewMode.toUpperCase()}
+          </div>
+
+          <div className={`grid bookmark-grid-container ${tableRowViewMode === 'card' ? 'card-view' : ''}`} style={{ gap: tableRowViewMode === 'row' ? '2px' : '5px' }}>
+            {bookmarks.map((b, index) => (
+              <DraggableBookmarkRow
+                key={b.id}
+                bookmark={b}
+                index={index}
+                tableRowViewMode={tableRowViewMode}
+                draggedBookmark={draggedBookmark}
+                dragOverIndex={dragOverIndex}
+                dropPosition={dropPosition}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onToggleCollapsed={handleToggleCollapsed}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                onDragOverIndexChange={setDragOverIndex}
+              />
+            ))}
+          </div>
         </div>
       )}
       {isBookmarkFormOpen && (

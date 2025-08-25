@@ -14,11 +14,11 @@ import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
  * The user can toggle between these views within each table row.
  */
 
-type TableRowViewMode = 'row' | 'card';
+//type TableRowViewMode = 'row' | 'card';
 
 interface BookmarkTableRowProps {
   bookmark: Bookmark;
-  view?: TableRowViewMode; // 'row' (default) or 'card'
+  view?: 'row' | 'card'; // 'row' (default) or 'card'
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
   onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
