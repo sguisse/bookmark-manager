@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import BookmarkForm from './BookmarkForm';
 import { Bookmark, BookmarkFormData, BookmarksTabConfig } from '../../types/bookmark';
 import BookmarkTableRow from './BookmarksViewer';
+import { useBookmarkDragDrop } from '../../contexts/BookmarkDragDropContext';
+import { crossTabBookmarkService } from '../../services/CrossTabBookmarkService';
 
 interface BookmarksTabProps {
   config?: BookmarksTabConfig;
@@ -14,13 +16,17 @@ interface BookmarksTabProps {
 interface DraggableBookmarkRowProps {
   bookmark: Bookmark;
   index: number;
+  nodeId: string; // Add nodeId for cross-tab drag support
   tableRowViewMode: 'card' | 'row';
   draggedBookmark: Bookmark | null;
   dragOverIndex: number | null;
   dropPosition: 'before' | 'after';
+  crossTabDragOverIndex: number | null; // Cross-tab drag state
+  crossTabDropPosition: 'before' | 'after';
+  globalDraggedBookmark: Bookmark | null; // Global drag state
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
-  onToggleCollapsed: (bookmarkId: string) => void; // Add toggle callback
+  onToggleCollapsed: (bookmarkId: string) => void;
   onDragStart: (bookmark: Bookmark) => void;
   onDragEnd: () => void;
   onDragOver: (index: number, position: 'before' | 'after') => void;
@@ -31,10 +37,14 @@ interface DraggableBookmarkRowProps {
 function DraggableBookmarkRow({
   bookmark,
   index,
+  nodeId,
   tableRowViewMode,
   draggedBookmark,
   dragOverIndex,
   dropPosition,
+  crossTabDragOverIndex,
+  crossTabDropPosition,
+  globalDraggedBookmark,
   onEdit,
   onDelete,
   onToggleCollapsed,
@@ -44,20 +54,32 @@ function DraggableBookmarkRow({
   onDrop,
   onDragOverIndexChange
 }: Readonly<DraggableBookmarkRowProps>) {
-  const isDraggedOver = dragOverIndex === index;
+  // Check if this row is being dragged over (either local or cross-tab)
+  const isDraggedOver = dragOverIndex === index || crossTabDragOverIndex === index;
+  const currentDropPosition = crossTabDragOverIndex === index ? crossTabDropPosition : dropPosition;
+
+  // Check if this is the dragged item (either local or cross-tab)
   const isDragged = draggedBookmark?.id === bookmark.id;
+
+  // Get the current dragged bookmark (prioritize local, then global)
+  const currentDraggedBookmark = draggedBookmark || globalDraggedBookmark;
 
   return (
     <div
-      role="button"
+      role="listitem"
       tabIndex={0}
       aria-label={`Drag to reorder bookmark: ${bookmark.title}`}
       style={{ position: 'relative' }}
       draggable
       onDragStart={(e) => {
         onDragStart(bookmark);
+        // Set both simple and cross-tab drag data
         e.dataTransfer.setData('text/plain', bookmark.id);
+        e.dataTransfer.setData('application/x-bookmark-cross-tab',
+          crossTabBookmarkService.createDragData(bookmark, nodeId, index)
+        );
         e.dataTransfer.effectAllowed = 'move';
+        console.log('[DraggableBookmarkRow] Drag started for:', bookmark.title, 'from node:', nodeId);
       }}
       onDragEnd={onDragEnd}
       onDragOver={(e) => {
@@ -71,7 +93,8 @@ function DraggableBookmarkRow({
       }}
       onDrop={(e) => {
         e.preventDefault();
-        onDrop(index, dropPosition);
+        console.log('[DraggableBookmarkRow] Drop event received at index:', index);
+        onDrop(index, currentDropPosition);
       }}
       onDragLeave={(e) => {
         // Only clear if leaving the element boundary, not child elements
@@ -94,7 +117,7 @@ function DraggableBookmarkRow({
       }}
     >
       {/* Drop preview before */}
-      {isDraggedOver && dropPosition === 'before' && draggedBookmark && (
+      {isDraggedOver && currentDropPosition === 'before' && currentDraggedBookmark && (
         <div
           style={{
             position: 'relative',
@@ -116,9 +139,12 @@ function DraggableBookmarkRow({
             fontWeight: 500
           }}>
             <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '16px', opacity: 0.7 }}>📄</span>
+              <span style={{ fontSize: '16px', opacity: 0.7 }}>
+                {globalDraggedBookmark ? '�' : '�📄'}
+              </span>
             </div>
-            <span>{draggedBookmark.title}</span>
+            <span>{currentDraggedBookmark.title}</span>
+            {globalDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from other tab)</span>}
           </div>
         </div>
       )}
@@ -141,7 +167,7 @@ function DraggableBookmarkRow({
       </div>
 
       {/* Drop preview after */}
-      {isDraggedOver && dropPosition === 'after' && draggedBookmark && (
+      {isDraggedOver && currentDropPosition === 'after' && currentDraggedBookmark && (
         <div
           style={{
             position: 'relative',
@@ -163,9 +189,12 @@ function DraggableBookmarkRow({
             fontWeight: 500
           }}>
             <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '16px', opacity: 0.7 }}>📄</span>
+              <span style={{ fontSize: '16px', opacity: 0.7 }}>
+                {globalDraggedBookmark ? '🔄' : '📄'}
+              </span>
             </div>
-            <span>{draggedBookmark.title}</span>
+            <span>{currentDraggedBookmark.title}</span>
+            {globalDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from other tab)</span>}
           </div>
         </div>
       )}
@@ -178,13 +207,20 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const [isBookmarkFormOpen, setIsBookmarkFormOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
 
+  // Get global drag-drop context
+  const { dragState, startDrag, endDrag, isExternalDrag } = useBookmarkDragDrop();
+
   const bookmarks = config?.bookmarks || [];
   const [tableRowViewMode, setTableRowViewMode] = useState<'card' | 'row'>(config?.viewMode || 'row');
 
-  // Drag and drop state
+  // Local drag and drop state for internal reordering
   const [draggedBookmark, setDraggedBookmark] = useState<Bookmark | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [dropPosition, setDropPosition] = useState<'before' | 'after'>('after');
+
+  // Cross-tab drag state
+  const [crossTabDragOverIndex, setCrossTabDragOverIndex] = useState<number | null>(null);
+  const [crossTabDropPosition, setCrossTabDropPosition] = useState<'before' | 'after'>('after');
 
   const handleEdit = (bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
@@ -244,26 +280,105 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     }
   };
 
-  // Drag and drop functions
+  // Enhanced drag and drop functions for cross-tab support
   const handleDragStart = (bookmark: Bookmark) => {
+    console.log('[BookmarksTabManager] Starting drag for bookmark:', bookmark.title, 'in node:', nodeId);
+
+    // Set local drag state
     setDraggedBookmark(bookmark);
+
+    // Set global drag state for cross-tab support
+    const bookmarkIndex = bookmarks.findIndex(b => b.id === bookmark.id);
+    if (nodeId) {
+      startDrag(bookmark, nodeId, bookmarkIndex);
+    }
   };
 
   const handleDragEnd = () => {
+    console.log('[BookmarksTabManager] Ending drag in node:', nodeId);
+
+    // Clear local drag state
     setDraggedBookmark(null);
     setDragOverIndex(null);
     setDropPosition('after');
+
+    // Clear cross-tab drag state
+    setCrossTabDragOverIndex(null);
+    setCrossTabDropPosition('after');
+
+    // Clear global drag state
+    endDrag();
   };
 
   const handleDragOver = (index: number, position: 'before' | 'after') => {
-    if (draggedBookmark) {
+    if (!nodeId) return;
+
+    // Check if this is a cross-tab drag
+    if (isExternalDrag(nodeId)) {
+      console.log('[BookmarksTabManager] Cross-tab drag over at index:', index, 'position:', position);
+      setCrossTabDragOverIndex(index);
+      setCrossTabDropPosition(position);
+    } else if (draggedBookmark) {
+      // Internal drag within same tab
       setDragOverIndex(index);
       setDropPosition(position);
     }
   };
 
   const handleDrop = (targetIndex: number, position: 'before' | 'after') => {
-    if (!draggedBookmark || !onConfigChange) return;
+    if (!nodeId || !onConfigChange) return;
+
+    console.log('[BookmarksTabManager] Drop event at index:', targetIndex, 'position:', position, 'in node:', nodeId);
+
+    // Check if this is a cross-tab drop
+    if (isExternalDrag(nodeId) && dragState.draggedBookmark && dragState.sourceNodeId) {
+      console.log('[BookmarksTabManager] Handling cross-tab drop');
+
+      // Use the stored cross-tab drag state for accurate positioning
+      const finalIndex = crossTabDragOverIndex ?? targetIndex;
+      const finalPosition = crossTabDragOverIndex !== null ? crossTabDropPosition : position;
+
+      console.log('[BookmarksTabManager] Cross-tab drop - using stored state - index:', finalIndex, 'position:', finalPosition);
+
+      // Calculate insertion index
+      let insertIndex = finalPosition === 'before' ? finalIndex : finalIndex + 1;
+
+      // Create a copy of the bookmark for the new tab
+      const newBookmark = {
+        ...dragState.draggedBookmark,
+        id: uuidv4(), // Generate new ID to avoid conflicts
+        createdDate: new Date(),
+        lastModifiedDate: new Date()
+      };
+
+      // Insert the bookmark at the target position
+      const newBookmarks = [...bookmarks];
+      newBookmarks.splice(insertIndex, 0, newBookmark);
+
+      // Update the config with the new bookmark
+      onConfigChange({
+        ...(config || {} as BookmarksTabConfig),
+        bookmarks: newBookmarks
+      });
+
+      // Request removal from source tab using the service
+      crossTabBookmarkService.requestMove(
+        dragState.draggedBookmark,
+        dragState.sourceNodeId,
+        nodeId,
+        finalIndex,
+        finalPosition
+      );
+
+      // Clear states
+      setCrossTabDragOverIndex(null);
+      setCrossTabDropPosition('after');
+      endDrag();
+      return;
+    }
+
+    // Handle internal drop (same tab reordering)
+    if (!draggedBookmark) return;
 
     const draggedIndex = bookmarks.findIndex(b => b.id === draggedBookmark.id);
     if (draggedIndex === -1) return;
@@ -391,15 +506,96 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
     window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
 
+    // Cross-tab bookmark transfer event listeners
+    const crossTabRemoveHandler = (e: Event) => {
+      try {
+        const ce = e as CustomEvent<{ bookmarkId: string; sourceNodeId: string }>;
+        if (ce?.detail?.sourceNodeId === nodeId && onConfigChange) {
+          console.log('[BookmarksTabManager] Removing bookmark for cross-tab transfer:', ce.detail.bookmarkId);
+
+          // Remove the bookmark from this tab
+          const updatedBookmarks = bookmarks.filter(b => b.id !== ce.detail.bookmarkId);
+          onConfigChange({
+            ...(config || {} as BookmarksTabConfig),
+            bookmarks: updatedBookmarks
+          });
+        }
+      } catch (err) {
+        console.warn('cross-tab remove handler error', err);
+      }
+    };
+
+    window.addEventListener('bookmark:cross-tab:remove', crossTabRemoveHandler as EventListener);
+
     return () => {
       window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleAllTableRowsViewHandler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
+      window.removeEventListener('bookmark:cross-tab:remove', crossTabRemoveHandler as EventListener);
     };
   }, [nodeId, bookmarks, tableRowViewMode, config, onConfigChange]);
 
   return (
-    <div className="p-0">
+    <section
+      className="p-0"
+      aria-label="Bookmark drop zone"
+      onDragOver={(e) => {
+        // Allow drops on the entire tab area for cross-tab support
+        if (isExternalDrag(nodeId || '')) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+        }
+      }}
+      onDrop={(e) => {
+        // Handle drops on empty areas (append to end)
+        if (isExternalDrag(nodeId || '') && dragState.draggedBookmark && onConfigChange) {
+          e.preventDefault();
+          console.log('[BookmarksTabManager] Handling drop on tab container');
+
+          // For drops on container (not specific bookmark), add to end
+          // But check if we have stored cross-tab drag state for more accurate positioning
+          let insertIndex = bookmarks.length;
+          
+          if (crossTabDragOverIndex !== null) {
+            // If we have stored drag over state, use it for more accurate positioning
+            insertIndex = crossTabDropPosition === 'before' ? crossTabDragOverIndex : crossTabDragOverIndex + 1;
+            console.log('[BookmarksTabManager] Using stored drag state for container drop - index:', insertIndex);
+          }
+
+          // Add to the calculated position
+          const newBookmark = {
+            ...dragState.draggedBookmark,
+            id: uuidv4(),
+            createdDate: new Date(),
+            lastModifiedDate: new Date()
+          };
+
+          const newBookmarks = [...bookmarks];
+          newBookmarks.splice(insertIndex, 0, newBookmark);
+          
+          onConfigChange({
+            ...(config || {} as BookmarksTabConfig),
+            bookmarks: newBookmarks
+          });
+
+          // Request removal from source tab
+          if (dragState.sourceNodeId) {
+            crossTabBookmarkService.requestMove(
+              dragState.draggedBookmark,
+              dragState.sourceNodeId,
+              nodeId || '',
+              crossTabDragOverIndex ?? bookmarks.length,
+              crossTabDropPosition
+            );
+          }
+
+          // Clear states
+          setCrossTabDragOverIndex(null);
+          setCrossTabDropPosition('after');
+          endDrag();
+        }
+      }}
+    >
       {bookmarks.length === 0 ? (
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
@@ -411,10 +607,14 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
                 key={b.id}
                 bookmark={b}
                 index={index}
+                nodeId={nodeId || ''}
                 tableRowViewMode={tableRowViewMode}
                 draggedBookmark={draggedBookmark}
                 dragOverIndex={dragOverIndex}
                 dropPosition={dropPosition}
+                crossTabDragOverIndex={crossTabDragOverIndex}
+                crossTabDropPosition={crossTabDropPosition}
+                globalDraggedBookmark={dragState.draggedBookmark}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onToggleCollapsed={handleToggleCollapsed}
@@ -444,6 +644,6 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

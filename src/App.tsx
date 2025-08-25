@@ -1,6 +1,7 @@
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ApplicationProvider } from './contexts/ApplicationContext';
+import { BookmarkDragDropProvider } from './contexts/BookmarkDragDropContext';
 import DashboardLayout from './components/layout/DashboardLayout';
 
 function AppContent() {
@@ -16,7 +17,9 @@ export default function App() {
     <ThemeProvider>
       <NotificationProvider>
         <ApplicationProvider>
-          <AppContent />
+          <BookmarkDragDropProvider>
+            <AppContent />
+          </BookmarkDragDropProvider>
         </ApplicationProvider>
       </NotificationProvider>
     </ThemeProvider>
