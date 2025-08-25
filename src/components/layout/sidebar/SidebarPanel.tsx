@@ -1,6 +1,6 @@
 import React from 'react';
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import { SidebarConfig, SidebarMenuItem, SidebarCategory, SidebarMenuGroup, SidebarItemType } from '../../../types/sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { hexToRgba } from '../../../services/Utils';
@@ -13,6 +13,7 @@ export interface SidebarPanelProps {
   selectedMenuItem?: SidebarMenuItem | null;
   onToggleGroup: (id: string) => void;
   onSelectItem: (id: string) => void;
+  onCreateItem?: () => void;
 }
 
 export const SidebarPanel: React.FC<SidebarPanelProps> = ({
@@ -21,6 +22,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
   selectedMenuItem,
   onToggleGroup,
   onSelectItem,
+  onCreateItem,
 
 }) => {
   const { theme } = useTheme();
@@ -191,7 +193,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
         </div>
       </div>
 
-      {/* Header separator aligned with the main header bottom (DashboardLayout header is 60px tall) */}
+      {/* Header separator aligned with the main header bottom (cf DashboardLayout header tall) */}
       <div
         aria-hidden="true"
         style={{
@@ -204,6 +206,18 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           pointerEvents: 'none'
         }}
       />
+
+      {/* Toolbar: add button on the right */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginBottom: 0, maxHeight: 20 }}>
+        <button
+          type="button"
+          onClick={() => onCreateItem && onCreateItem()}
+          title="Add item"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, borderRadius: 6 }}
+        >
+          <Plus size={18} color={theme.colors.text.primary} />
+        </button>
+      </div>
 
       {/* Main nav */}
       <div

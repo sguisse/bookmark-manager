@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import SidebarPanel, { MenuNode } from './SidebarPanel';
+import SidebarForm from './SidebarForm';
 import { SidebarService } from '../../../services/sidebarService';
-import { SidebarConfig, SidebarMenuItem, SidebarViewMode } from '../../../types/sidebar';
+import { SidebarConfig, SidebarMenuItem } from '../../../types/sidebar';
 import { useApplication } from '../../../contexts/ApplicationContext';
 
 export const SidebarManager: React.FC = () => {
   const [sidebarConfig, setSidebarConfig] = useState<SidebarConfig | undefined>(undefined);
   const [openedGroups, setOpenedGroups] = useState<Record<string, boolean>>({});
-  const [visibility, setVisibility] = useState<SidebarViewMode>(SidebarViewMode.Visible);
+  // visibility state is not needed here; SidebarPanel uses config.viewMode
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
 
   useEffect(() => {
@@ -93,15 +95,64 @@ export const SidebarManager: React.FC = () => {
     });
   };
 
+  const handleCreateClick = () => {
+    setShowCreateForm(true);
+  };
+
+  const handleCreate = (parentId: string | null, item: any) => {
+    if (!sidebarConfig) return;
+    // Insert under parentId if provided; otherwise append at top-level
+  const updated = { ...sidebarConfig } as SidebarConfig;
+
+    const insertInto = (children: any[] | undefined, pid: string | null): boolean => {
+      if (!Array.isArray(children)) return false;
+      if (!pid) return false;
+      for (const ch of children) {
+        if (ch.id === pid) {
+          if (!('children' in ch)) ch.children = [];
+          ch.children = ch.children || [];
+          ch.children.push(item);
+          return true;
+        }
+        if (ch.children && insertInto(ch.children, pid)) return true;
+      }
+      return false;
+    };
+
+    if (parentId) {
+      insertInto(updated.sidebarItems as any[], parentId);
+    } else {
+      // append to top-level (as a category or group or item)
+      updated.sidebarItems = updated.sidebarItems || [];
+      updated.sidebarItems.push(item);
+    }
+
+    updated.lastUpdateDate = new Date();
+    SidebarService.saveConfig(updated);
+    setSidebarConfig(updated);
+    setShowCreateForm(false);
+  };
+
 
   return (
-    <SidebarPanel
-      sidebarConfig={sidebarConfig}
-      openedGroups={openedGroups}
-      selectedMenuItem={selectedMenuItem}
-      onToggleGroup={toggleGroup}
-      onSelectItem={menuItemSelectionHandler}
-    />
+    <>
+      <SidebarPanel
+        sidebarConfig={sidebarConfig}
+        openedGroups={openedGroups}
+        selectedMenuItem={selectedMenuItem}
+        onToggleGroup={toggleGroup}
+        onSelectItem={menuItemSelectionHandler}
+        onCreateItem={handleCreateClick}
+      />
+      {showCreateForm && (
+        <SidebarForm
+          visible={showCreateForm}
+          config={sidebarConfig || null}
+          onCancel={() => setShowCreateForm(false)}
+          onCreate={handleCreate}
+        />
+      )}
+    </>
   );
 };
 
