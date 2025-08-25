@@ -14,6 +14,7 @@ export interface SidebarPanelProps {
   onToggleGroup: (id: string) => void;
   onSelectItem: (id: string) => void;
   onCreateItem?: () => void;
+  onMoveItem?: (sourceId: string, targetId: string | null) => void;
 }
 
 export const SidebarPanel: React.FC<SidebarPanelProps> = ({
@@ -23,10 +24,12 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
   onToggleGroup,
   onSelectItem,
   onCreateItem,
-
+  onMoveItem,
 }) => {
   const { theme } = useTheme();
   const collapsed = false;
+  const [draggedItem, setDraggedItem] = React.useState<{ id: string; type: SidebarItemType } | null>(null);
+  const [dragOverTarget, setDragOverTarget] = React.useState<string | null>(null);
 
   const renderIcon = (icon?: string) => {
     if (!icon) return <DynamicIcon name="camera" color={theme.colors.text.primary} size={20} />;
@@ -68,8 +71,50 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 
     if (item.type === SidebarItemType.Category) {
       const indent = 10;
+      const isValidDropTarget = draggedItem && (
+        draggedItem.type === SidebarItemType.MenuGroup ||
+        draggedItem.type === SidebarItemType.MenuItem
+      );
+      const isDragOver = dragOverTarget === item.id;
+
       return (
-        <div key={item.id} style={{ margin: '10px 0 6px 0' }}>
+        <div key={item.id}
+             style={{
+               margin: '10px 0 6px 0',
+               border: isDragOver && isValidDropTarget ? `2px dashed ${theme.colors.primary}` : 'none',
+               borderRadius: 4,
+               padding: isDragOver && isValidDropTarget ? '2px' : '0'
+             }}
+             draggable
+             onDragStart={(e) => {
+               setDraggedItem({ id: item.id, type: item.type });
+               e.dataTransfer.setData('application/x-sidebar-item', JSON.stringify({ id: item.id, type: item.type }));
+               e.dataTransfer.effectAllowed = 'move';
+             }}
+             onDragEnd={() => {
+               setDraggedItem(null);
+               setDragOverTarget(null);
+             }}
+             onDragOver={(e) => {
+               if (draggedItem && (draggedItem.type === SidebarItemType.MenuGroup || draggedItem.type === SidebarItemType.MenuItem)) {
+                 e.preventDefault();
+                 setDragOverTarget(item.id);
+               }
+             }}
+             onDragLeave={() => {
+               setDragOverTarget(null);
+             }}
+             onDrop={(e) => {
+               e.stopPropagation();
+               setDragOverTarget(null);
+               const data = e.dataTransfer.getData('application/x-sidebar-item');
+               if (!data) return;
+               const payload = JSON.parse(data);
+               if (onMoveItem && (payload.type === SidebarItemType.MenuGroup || payload.type === SidebarItemType.MenuItem)) {
+                 onMoveItem(payload.id, item.id);
+               }
+             }}
+        >
           <div
             style={{
               padding: '6px 8px',
@@ -97,8 +142,54 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
     const alpha = theme.name === 'dark' ? 0.18 : 0.12;
     const selectedBackground = isSelected ? hexToRgba(theme.colors.primary, alpha) : 'transparent';
 
+    // Determine if this item is a valid drop target
+    const isValidDropTarget = draggedItem && (
+      draggedItem.type === SidebarItemType.MenuItem // MenuItem can go anywhere
+    );
+    const isDragOver = dragOverTarget === item.id;
+
     return (
-      <div key={item.id} style={{ margin: '6px 0' }}>
+      <div key={item.id}
+           style={{
+             margin: '6px 0',
+             border: isDragOver && isValidDropTarget ? `2px dashed ${theme.colors.primary}` : 'none',
+             borderRadius: 4,
+             padding: isDragOver && isValidDropTarget ? '2px' : '0'
+           }}
+           draggable
+           onDragStart={(e) => {
+             setDraggedItem({ id: item.id, type: item.type });
+             e.dataTransfer.setData('application/x-sidebar-item', JSON.stringify({ id: item.id, type: item.type }));
+             e.dataTransfer.effectAllowed = 'move';
+           }}
+           onDragEnd={() => {
+             setDraggedItem(null);
+             setDragOverTarget(null);
+           }}
+           onDragOver={(e) => {
+             if (draggedItem && draggedItem.id !== item.id) {
+               // Only MenuItems can be dropped on MenuGroup/MenuItem items
+               if (draggedItem.type === SidebarItemType.MenuItem) {
+                 e.preventDefault();
+                 setDragOverTarget(item.id);
+               }
+             }
+           }}
+           onDragLeave={() => {
+             setDragOverTarget(null);
+           }}
+           onDrop={(e) => {
+             e.stopPropagation();
+             setDragOverTarget(null);
+             const data = e.dataTransfer.getData('application/x-sidebar-item');
+             if (!data) return;
+             const payload = JSON.parse(data);
+
+             if (onMoveItem && payload.id !== item.id) {
+               onMoveItem(payload.id, item.id);
+             }
+           }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             type="button"
@@ -226,7 +317,33 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           flex: 1,
           minHeight: 0,
           overflowY: 'auto',
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          border: dragOverTarget === 'root' ? `2px dashed ${theme.colors.primary}` : 'none',
+          borderRadius: 4,
+          padding: 4
+        }}
+        onDragOver={(e) => {
+          if (draggedItem && (draggedItem.type === SidebarItemType.Category || draggedItem.type === SidebarItemType.MenuGroup)) {
+            e.preventDefault();
+            setDragOverTarget('root');
+          }
+        }}
+        onDragLeave={(e) => {
+          // Only clear if we're leaving the nav area entirely
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setDragOverTarget(null);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOverTarget(null);
+          const data = e.dataTransfer.getData('application/x-sidebar-item');
+          if (!data) return;
+          const payload = JSON.parse(data);
+
+          if (onMoveItem && (payload.type === SidebarItemType.Category || payload.type === SidebarItemType.MenuGroup)) {
+            onMoveItem(payload.id, null); // Move to root
+          }
         }}
       >
         {sidebarConfig ? (

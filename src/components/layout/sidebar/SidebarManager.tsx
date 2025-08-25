@@ -133,6 +133,63 @@ export const SidebarManager: React.FC = () => {
     setShowCreateForm(false);
   };
 
+  const moveItem = (sourceId: string, targetId: string | null) => {
+    if (!sidebarConfig) return;
+
+    // Find and remove the source item
+    let sourceItem: MenuNode | null = null;
+
+    const removeFromArray = (items: MenuNode[]): MenuNode[] => {
+      return items.filter(item => {
+        if (item.id === sourceId) {
+          sourceItem = item;
+          return false;
+        }
+        if ('children' in item && item.children) {
+          const filteredChildren = removeFromArray(item.children as MenuNode[]);
+          (item as any).children = filteredChildren;
+        }
+        return true;
+      });
+    };
+
+    const updated = { ...sidebarConfig } as SidebarConfig;
+    updated.sidebarItems = removeFromArray(updated.sidebarItems as MenuNode[]);
+
+    if (!sourceItem) return; // Item not found
+
+    // Insert the item in the new location
+    if (targetId === null) {
+      // Move to root
+      updated.sidebarItems = updated.sidebarItems || [];
+      updated.sidebarItems.push(sourceItem);
+    } else {
+      // Find target and insert as child
+      const insertIntoTarget = (items: MenuNode[]): boolean => {
+        for (const item of items) {
+          if (item.id === targetId) {
+            if (!('children' in item)) {
+              (item as any).children = [];
+            }
+            (item as any).children = (item as any).children || [];
+            (item as any).children.push(sourceItem);
+            return true;
+          }
+          if ('children' in item && item.children) {
+            if (insertIntoTarget(item.children as MenuNode[])) return true;
+          }
+        }
+        return false;
+      };
+
+      insertIntoTarget(updated.sidebarItems as MenuNode[]);
+    }
+
+    updated.lastUpdateDate = new Date();
+    SidebarService.saveConfig(updated);
+    setSidebarConfig(updated);
+  };
+
 
   return (
     <>
@@ -143,6 +200,7 @@ export const SidebarManager: React.FC = () => {
         onToggleGroup={toggleGroup}
         onSelectItem={menuItemSelectionHandler}
         onCreateItem={handleCreateClick}
+        onMoveItem={moveItem}
       />
       {showCreateForm && (
         <SidebarForm
