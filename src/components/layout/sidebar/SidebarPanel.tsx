@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import Image from '../../common/image/Image';
 import { SidebarConfig, SidebarItem } from '../../../types/sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { SimpleSidebarTree } from '../../common/treeview';
@@ -66,22 +66,9 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 
         <button
           onClick={onAddBookmark}
-          style={{
-            padding: 6,
-            backgroundColor: theme.colors.primary,
-            color: theme.colors.background,
-            border: 'none',
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: 500,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 4
-          }}
+          className="sidebar-toggle-btn"
         >
-          <Plus size={14} />
+          <Image value="Plus" size={14} rounded={false} />
 
         </button>
       </div>
