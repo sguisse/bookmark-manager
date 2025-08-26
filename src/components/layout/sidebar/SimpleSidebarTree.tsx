@@ -177,8 +177,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           textTransform: nodeType === SidebarItemType.Category ? 'uppercase' : 'none',
           letterSpacing: nodeType === SidebarItemType.Category ? '0.05em' : 'normal',
           position: 'relative',
-          padding: '4px 2px',
-          margin: '1px 0',
+          padding: '2px 2px',
+          margin: '0px 0',
           borderRadius: '4px'
         }}
         onMouseEnter={() => setHoveredNodeId(node.id)}

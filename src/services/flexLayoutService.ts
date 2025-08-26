@@ -55,6 +55,77 @@ export class FlexLayoutService {
             children: [
               {
                 type: "tab",
+                id: "b17563f4-d8c3-4c88-9bbc-54302807c6e9",
+                name: "Markdown tab",
+                component: "Markdown",
+                config: {
+                  id: "b17563f4-d8c3-4c88-9bbc-54302807c6e9",
+                  component: "Markdown",
+                  "title": "Welcome",
+                  "fontSize": "16px",
+                  "content": "### Welcome to this application \n\n * You are in a Markdown tab view, you can define many more views type click on the '+' in tab header",
+                  "createdDate": "2025-08-21T00:00:00.000Z",
+                  "createdBy": "user-1",
+                  "lastModifiedDate": "2025-08-22T10:00:00.000Z",
+                  "lastModifiedBy": "user-2"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  /**
+   * Get debug sample FlexLayout configuration
+   */
+  static getDebugConfig(): FlexLayoutConfig {
+    return {
+      global: {
+        tabSetEnableClose: true,
+        tabSetEnableMaximize: true,
+        tabSetEnableDrop: true,
+        tabSetEnableDrag: true,
+        tabEnableClose: true,
+        tabEnableRename: false,
+        borderEnableAutoHide: true,
+        splitterSize: 3,
+        tabSetMinWidth: 20,
+        tabSetMinHeight: 50,
+      },
+      borders: [
+        {
+          "type": "border",
+          "location": "left",
+          "children": [	]
+        },
+        {
+          "type": "border",
+          "location": "right",
+          "children": [	]
+        },
+        {
+          "type": "border",
+          "location": "top",
+          "children": [	]
+        },
+        {
+          "type": "border",
+          "location": "bottom",
+          "children": [	]
+        },
+      ],
+      layout: {
+        type: "row",
+        weight: 100,
+        children: [
+          {
+            type: "tabset",
+            weight: 100,
+            children: [
+              {
+                type: "tab",
                 id: "b17563f4-d8c3-4c88-9bbc-54302807c6e7",
                 name: "Bookmarks tab",
                 component: "Bookmarks",

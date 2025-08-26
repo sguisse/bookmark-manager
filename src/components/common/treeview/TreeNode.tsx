@@ -176,8 +176,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           style={{
             height: '2px',
             backgroundColor: '#3b82f6',
-            marginLeft: `${depth * 20}px`,
-            marginBottom: '2px'
+            marginLeft: `${depth * 16}px`,
+            marginBottom: '1px'
           }}
         />
       )}
@@ -197,8 +197,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         aria-selected={isSelected}
         aria-expanded={hasChildren ? isOpen : undefined}
         style={{
-          paddingLeft: `${depth * 20}px`,
-          padding: '4px 0px',
+          paddingLeft: `${depth * 16}px`,
+          padding: '2px 0px',
           cursor: 'pointer',
           opacity: isDragging ? 0.5 : 1,
           backgroundColor,
@@ -239,9 +239,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           style={{
             height: '2px',
             backgroundColor: '#3b82f6',
-            marginLeft: `${depth * 20}px`,
-            marginTop: '2px',
-            marginBottom: '2px'
+            marginLeft: `${depth * 16}px`,
+            marginTop: '1px',
+            marginBottom: '1px'
           }}
         />
       )}
