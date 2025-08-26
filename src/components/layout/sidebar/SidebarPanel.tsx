@@ -59,6 +59,27 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
             <img src="/app-icon.svg" alt="App" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
           <div style={{ fontSize: 20, fontWeight: 700 }}>Web Fusion</div>
         </div>
+
+        <button
+          onClick={onAddBookmark}
+          style={{
+            padding: 6,
+            backgroundColor: theme.colors.primary,
+            color: theme.colors.background,
+            border: 'none',
+            borderRadius: 4,
+            cursor: 'pointer',
+            fontSize: 12,
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4
+          }}
+        >
+          <Plus size={14} />
+
+        </button>
       </div>
 
       {/* Header separator aligned with the main header bottom (cf DashboardLayout header tall) */}
@@ -99,29 +120,12 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
         position: 'absolute',
         bottom: 16,
         left: 16,
-        right: 16
+        right: 16,
+        textAlign: 'center',
+        fontSize: 12,
+        color: theme.colors.text.secondary
       }}>
-        <button
-          onClick={onAddBookmark}
-          style={{
-            width: '100%',
-            padding: 8,
-            backgroundColor: theme.colors.primary,
-            color: theme.colors.background,
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 500,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8
-          }}
-        >
-          <Plus size={16} />
-          Add Bookmark
-        </button>
+        Todo: Define the footer
       </div>
     </aside>
   );
