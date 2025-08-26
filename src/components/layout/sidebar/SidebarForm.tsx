@@ -3,6 +3,7 @@ import { SidebarConfig, SidebarItemType, SidebarItem } from '../../../types/side
 import { useTheme } from '../../../contexts/ThemeContext';
 import { FormDisplayMode } from '../../../types/app';
 import { v4 as uuidv4 } from 'uuid';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface SidebarFormProps {
   mode?: FormDisplayMode;
@@ -139,53 +140,68 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       <dialog open style={{ background: theme.colors.surface, padding: 16, borderRadius: 8, minWidth: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', position: 'relative', zIndex: 1, border: `1px solid ${theme.colors.border}` }}>
   <h3 style={{ marginBottom: '10px' }}>{effectiveMode === FormDisplayMode.Create ? 'Create Sidebar Item' : 'Edit Sidebar Item'}</h3>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 8 }}>
-            <label htmlFor="sf-type" style={{ display: 'block', marginBottom: 4 }}>Type</label>
-            <select id="sf-type" value={type} onChange={(e) => setType(e.target.value as SidebarItemType)} style={inputStyle}>
-              <option value={SidebarItemType.MenuItem}>Menu Item</option>
-              <option value={SidebarItemType.MenuGroup}>Menu Group</option>
-              <option value={SidebarItemType.Category}>Category</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: 8 }}>
-            <label htmlFor="sf-parent" style={{ display: 'block', marginBottom: 4 }}>Parent</label>
-            <select id="sf-parent" value={parentId || ''} onChange={(e) => setParentId(e.target.value || null)} style={inputStyle}>
-              <option value="">(root)</option>
-              {allNodes.filter(n => n.type === SidebarItemType.Category || n.type === SidebarItemType.MenuGroup).map(n => (
-                <option key={n.id} value={n.id}>{n.title} ({n.type})</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: 8 }}>
-            <label htmlFor="sf-title" style={{ display: 'block', marginBottom: 4 }}>Title</label>
-            <input id="sf-title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} autoFocus />
-          </div>
-
-
-          {/* fields conditional by type */}
-          {type !== SidebarItemType.Category && (
-            <>
+          {/* Menu configuration block (CoreUI-like card) */}
+          <div className="card mb-4" style={{ borderColor: theme.colors.border }}>
+            <div className="card-header">
+              <strong>Menu configuration</strong>
+            </div>
+            <div className="card-body">
               <div style={{ marginBottom: 8 }}>
-                <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
-                <input id="sf-icon" value={icon} onChange={(e) => setIcon(e.target.value)} style={inputStyle} placeholder="camera or https://..." />
+                <label htmlFor="sf-type" style={{ display: 'block', marginBottom: 4 }}>Type</label>
+                <select id="sf-type" value={type} onChange={(e) => setType(e.target.value as SidebarItemType)} style={inputStyle}>
+                  <option value={SidebarItemType.MenuItem}>Menu Item</option>
+                  <option value={SidebarItemType.MenuGroup}>Menu Group</option>
+                  <option value={SidebarItemType.Category}>Category</option>
+                </select>
               </div>
-              <div style={{ marginBottom: 8 }}>
-                <label htmlFor="sf-flex" style={{ display: 'block', marginBottom: 4 }}>Flex layout id (optional)</label>
-                <input id="sf-flex" value={flexLayoutId} onChange={(e) => setFlexLayoutId(e.target.value)} style={inputStyle} placeholder="layout id or leave empty to generate" />
-              </div>
-            </>
-          )}
 
-          {/* Badge options toggle */}
-          {type === SidebarItemType.MenuItem && (
-            <div style={{ marginBottom: 8 }}>
-              <button type="button" onClick={() => setShowBadgeOptions(s => !s)} style={{ background: 'none', border: '1px solid ' + theme.colors.border, padding: '6px 8px', borderRadius: 6, cursor: 'pointer' }}>
-                {showBadgeOptions ? 'Hide badge options' : 'Show badge options'}
-              </button>
+              <div style={{ marginBottom: 8 }}>
+                <label htmlFor="sf-parent" style={{ display: 'block', marginBottom: 4 }}>Parent</label>
+                <select id="sf-parent" value={parentId || ''} onChange={(e) => setParentId(e.target.value || null)} style={inputStyle}>
+                  <option value="">(root)</option>
+                  {allNodes.filter(n => n.type === SidebarItemType.Category || n.type === SidebarItemType.MenuGroup).map(n => (
+                    <option key={n.id} value={n.id}>{n.title} ({n.type})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 8 }}>
+                <label htmlFor="sf-title" style={{ display: 'block', marginBottom: 4 }}>Title</label>
+                <input id="sf-title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} autoFocus />
+              </div>
+
+              {/* fields conditional by type */}
+              {type !== SidebarItemType.Category && (
+                <>
+                  <div style={{ marginBottom: 8 }}>
+                    <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
+                    <input id="sf-icon" value={icon} onChange={(e) => setIcon(e.target.value)} style={inputStyle} placeholder="camera or https://..." />
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <label htmlFor="sf-flex" style={{ display: 'block', marginBottom: 4 }}>Flex layout id (optional)</label>
+                    <input id="sf-flex" value={flexLayoutId} onChange={(e) => setFlexLayoutId(e.target.value)} style={inputStyle} placeholder="layout id or leave empty to generate" />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Badge block with chevron */}
+          <div>
+            <div className="card mb-4" style={{ borderColor: theme.colors.border, marginTop: '10px' }}>
+              <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <strong>Badge</strong>
+                <button
+                  type="button"
+                  onClick={() => setShowBadgeOptions(s => !s)}
+                  aria-expanded={showBadgeOptions}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  {showBadgeOptions ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </button>
+              </div>
               {showBadgeOptions && (
-                <div style={{ marginTop: 8 }}>
+                <div className="card-body">
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="badge-label" style={{ display: 'block', marginBottom: 4 }}>Badge label</label>
                     <input id="badge-label" value={badgeLabel} onChange={(e) => setBadgeLabel(e.target.value)} style={inputStyle} placeholder="e.g. 12" />
@@ -207,7 +223,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                 </div>
               )}
             </div>
-          )}
+          </div>
 
 
 
