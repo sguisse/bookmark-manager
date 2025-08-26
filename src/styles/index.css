@@ -77,7 +77,20 @@ html, body {
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* CoreUI-compatible CSS variables (mapping into app variables)
+     These provide the variables used by CoreUI-style card headers so
+     the app's .card and .card-header rules can follow the same design. */
+  --cui-card-border-width: 1px; /* default border width */
+  --cui-card-border-color: var(--color-border);
+  --cui-card-border-radius: var(--radius-lg);
+  --cui-card-inner-border-radius: calc(var(--radius-lg) - (var(--cui-card-border-width)));
+  --cui-card-cap-padding-y: 0.5rem;
+  --cui-card-cap-padding-x: 1rem;
+  --cui-card-cap-bg: rgba(0,0,0,0.03); /* subtle cap background using neutral */
+  --cui-card-cap-color: var(--color-text-secondary);
 }
+
 
 /* Dark Theme Colors */
 [data-theme="dark"] {
@@ -210,12 +223,27 @@ html, body {
   background: var(--color-card-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  padding: 0; /* keep header flush with card edges; body receives padding */
   box-shadow: var(--shadow-sm);
+  overflow: hidden; /* ensure header background and rounded corners are clipped correctly */
 }
 
+.card-body {
+  padding: var(--spacing-lg);
+}
+
+.card-header:first-child {
+  border-radius: var(--cui-card-inner-border-radius) var(--cui-card-inner-border-radius) 0 0;
+}
 .card-header {
-  margin-bottom: var(--spacing-md);
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--cui-card-cap-padding-y) var(--cui-card-cap-padding-x);
+  margin: 0; /* ensure no space around header */
+  color: var(--cui-card-cap-color);
+  background-color: var(--cui-card-cap-bg);
+  border-bottom: var(--cui-card-border-width) solid var(--cui-card-border-color);
 }
 
 .card-title {
