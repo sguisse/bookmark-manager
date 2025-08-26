@@ -68,7 +68,7 @@ export const SidebarManager: React.FC = () => {
     const findItem = (items?: MenuNode[]): SidebarItem | undefined => {
       if (!items) return undefined;
       for (const it of items) {
-        if (it.id === id && !('children' in it)) return it as any;
+        if (it.id === id) return it as any; // Return any item type, not just leaf nodes
         if ('children' in it && it.children) {
           const f = findItem(it.children as any);
           if (f) return f;
@@ -77,7 +77,14 @@ export const SidebarManager: React.FC = () => {
       return undefined;
     };
     const found = sidebarConfig ? findItem(sidebarConfig.sidebarItems as any) : undefined;
-    if (found && setSelectedMenuItem) setSelectedMenuItem(found);
+    if (found && setSelectedMenuItem) {
+      // Ensure the item has a flexLayoutId for FlexLayout integration
+      const itemWithFlexLayout = {
+        ...found,
+        flexLayoutId: found.flexLayoutId || found.id // Use existing flexLayoutId or fallback to id
+      };
+      setSelectedMenuItem(itemWithFlexLayout);
+    }
     if (sidebarConfig) {
       const updated = { ...sidebarConfig, lastSelectedItemId: id, lastUpdateDate: new Date() } as unknown as SidebarConfig;
       SidebarService.saveConfig(updated);

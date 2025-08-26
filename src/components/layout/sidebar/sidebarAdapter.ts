@@ -67,20 +67,17 @@ export const convertTreeNodesToSidebar = (nodes: TreeNode[]): SidebarConfig => {
     if (node.data?.type === SidebarItemType.Category && node.data?.expanded !== undefined) {
       item.expanded = node.data.expanded;
     }
-
+    
     if (node.data?.type === SidebarItemType.MenuGroup) {
       item.expanded = node.data?.expanded ?? false;
     }
 
-    if (node.data?.type === SidebarItemType.MenuItem) {
-      item.flexLayoutId = node.data?.flexLayoutId ?? '';
-    }
+    // All node types should have a flexLayoutId for FlexLayout integration
+    item.flexLayoutId = node.data?.flexLayoutId ?? node.id;
 
     if (node.data?.badge) {
       item.badge = node.data.badge;
-    }
-
-    return item;
+    }    return item;
   };
 
   return {
