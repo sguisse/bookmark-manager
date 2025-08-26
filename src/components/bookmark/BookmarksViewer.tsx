@@ -473,16 +473,7 @@ const smallIconButtonStyle = (bg: string) => ({
   transition: 'all 0.15s ease'
 } as React.CSSProperties);
 
-const titleStyle = (theme: any) => ({
-  margin: '0 0 0.5rem 0',
-  fontSize: theme.fonts.sizes.medium,
-  fontWeight: 600,
-  color: theme.colors.text.primary,
-  lineHeight: '1.4',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap'
-} as React.CSSProperties);
+
 
 // CardView title style - consistent with RowView for better UX
 const titleStyleCardView = (theme: any) => ({

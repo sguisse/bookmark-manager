@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import SidebarPanel, { MenuNode } from './SidebarPanel';
+import SidebarPanel from './SidebarPanel';
 import SidebarForm from './SidebarForm';
 import { SidebarService } from '../../../services/sidebarService';
 import { SidebarConfig, SidebarMenuItem } from '../../../types/sidebar';
@@ -11,6 +11,9 @@ export const SidebarManager: React.FC = () => {
   // visibility state is not needed here; SidebarPanel uses config.viewMode
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
+
+  // Local type alias used across this manager for sidebar tree nodes
+  type MenuNode = import('../../../types/sidebar').SidebarCategory | import('../../../types/sidebar').SidebarMenuGroup | import('../../../types/sidebar').SidebarMenuItem;
 
   useEffect(() => {
     try {
@@ -93,6 +96,11 @@ export const SidebarManager: React.FC = () => {
       }
       return next;
     });
+  };
+
+  const handleSidebarChange = (newConfig: SidebarConfig) => {
+    SidebarService.saveConfig(newConfig);
+    setSidebarConfig(newConfig);
   };
 
   const handleCreateClick = () => {
@@ -276,7 +284,9 @@ export const SidebarManager: React.FC = () => {
         selectedMenuItem={selectedMenuItem}
         onToggleGroup={toggleGroup}
         onSelectItem={menuItemSelectionHandler}
-        onCreateItem={handleCreateClick}
+        onAddBookmark={handleCreateClick}
+        onAddGroup={handleCreateClick}
+        onSidebarChange={handleSidebarChange}
         onMoveItem={moveItem}
       />
       {showCreateForm && (
