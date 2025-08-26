@@ -37,6 +37,206 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
     destinationPath: string;
   } | null>(null);
 
+  // Helper function to determine drop context based on mouse position and element hierarchy
+  const determineDropContext = (
+    mouseEvent: React.DragEvent,
+    targetElement: HTMLElement,
+    targetId: string,
+    draggedType: SidebarItemType
+  ): {
+    targetId: string | null;
+    parentId: string | null;
+    position: 'before' | 'after' | 'inside';
+    isDirectHover: boolean;
+    destinationPath: string;
+    targetIndex: number;
+  } => {
+    if (!sidebarConfig?.sidebarItems) {
+      return {
+        targetId: null,
+        parentId: null,
+        position: 'inside',
+        isDirectHover: false,
+        destinationPath: 'root(index: 0)',
+        targetIndex: 0
+      };
+    }
+
+    const rect = targetElement.getBoundingClientRect();
+    const mouseY = mouseEvent.clientY - rect.top;
+    const elementHeight = rect.height;
+
+    // Find the target item in the hierarchy
+    const findItemInHierarchy = (nodes: MenuNode[], searchId: string, parentId: string | null = null): {
+      item: MenuNode;
+      parentId: string | null;
+      parentItem: MenuNode | null;
+      depth: number;
+    } | null => {
+      for (const node of nodes) {
+        if (node.id === searchId) {
+          const parentItem = parentId ? findItemById(nodes, parentId) : null;
+          return { item: node, parentId, parentItem, depth: parentId ? 1 : 0 };
+        }
+        if ('children' in node && node.children) {
+          const result = findItemInHierarchy(node.children as MenuNode[], searchId, node.id);
+          if (result) return { ...result, depth: result.depth + 1 };
+        }
+      }
+      return null;
+    };
+
+    const findItemById = (nodes: MenuNode[], id: string): MenuNode | null => {
+      for (const node of nodes) {
+        if (node.id === id) return node;
+        if ('children' in node && node.children) {
+          const found = findItemById(node.children as MenuNode[], id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const targetInfo = findItemInHierarchy(sidebarConfig.sidebarItems, targetId);
+    if (!targetInfo) {
+      return {
+        targetId: null,
+        parentId: null,
+        position: 'inside',
+        isDirectHover: false,
+        destinationPath: 'root(index: 0)',
+        targetIndex: 0
+      };
+    }
+
+    const { item: targetItem, parentId: targetParentId, parentItem } = targetInfo;
+
+    // Determine position based on mouse position
+    let position: 'before' | 'after' | 'inside';
+    const threshold = targetItem.type === SidebarItemType.Category ? 0.25 : 0.3;
+
+    if (mouseY < elementHeight * threshold) {
+      position = 'before';
+    } else if (mouseY > elementHeight * (1 - threshold)) {
+      position = 'after';
+    } else {
+      position = 'inside';
+    }
+
+    // Check if we can drop inside the target
+    const canDropInside = (
+      (targetItem.type === SidebarItemType.Category &&
+       (draggedType === SidebarItemType.MenuGroup || draggedType === SidebarItemType.MenuItem)) ||
+      (targetItem.type === SidebarItemType.MenuGroup &&
+       draggedType === SidebarItemType.MenuItem)
+    );
+
+    // Note: Categories cannot be dropped inside other Categories - they can only be positioned before/after
+
+    // If trying to drop inside but can't, fall back to after
+    if (position === 'inside' && !canDropInside) {
+      position = 'after';
+    }
+
+    // Calculate the actual drop location
+    let finalParentId: string | null = null;
+    let finalTargetId: string = targetId;
+    let isDirectHover = true;
+
+    if (position === 'inside' && canDropInside) {
+      // Dropping inside the target item
+      finalParentId = targetId;
+      finalTargetId = targetId;
+    } else {
+      // Dropping before/after - find appropriate parent
+      if (targetParentId) {
+        // Check if parent can accept the dragged item
+        if (parentItem) {
+          const canParentAccept = (
+            (parentItem.type === SidebarItemType.Category &&
+             (draggedType === SidebarItemType.MenuGroup || draggedType === SidebarItemType.MenuItem)) ||
+            (parentItem.type === SidebarItemType.MenuGroup &&
+             draggedType === SidebarItemType.MenuItem)
+          );
+
+          if (canParentAccept) {
+            finalParentId = targetParentId;
+            isDirectHover = true;
+          } else {
+            // Find nearest appropriate parent up the hierarchy
+            // For Categories being dragged, they should go to root if current parent can't accept them
+            finalParentId = null; // Fall back to root
+            isDirectHover = false;
+          }
+        }
+      } else {
+        // Target is at root level
+        finalParentId = null;
+      }
+    }
+
+    // Calculate target index
+    const calculateIndex = (): number => {
+      let parentContainer: MenuNode[] = sidebarConfig.sidebarItems;
+
+      if (finalParentId) {
+        const parent = findItemById(sidebarConfig.sidebarItems, finalParentId);
+        if (parent && 'children' in parent && parent.children) {
+          parentContainer = parent.children as MenuNode[];
+        }
+      }
+
+      if (position === 'inside') {
+        return 0; // First position in container
+      }
+
+      const targetItemIndex = parentContainer.findIndex(item => item.id === finalTargetId);
+      if (targetItemIndex === -1) {
+        return parentContainer.length;
+      }
+
+      return position === 'before' ? targetItemIndex : targetItemIndex + 1;
+    };
+
+    const targetIndex = calculateIndex();
+
+    // Build destination path
+    const buildPath = (): string => {
+      if (!finalParentId) {
+        return `root(index: ${targetIndex})`;
+      }
+
+      const buildPathToItem = (nodes: MenuNode[], targetId: string, currentPath: string[] = []): string[] | null => {
+        for (const node of nodes) {
+          const newPath = [...currentPath, node.title];
+          if (node.id === targetId) {
+            return newPath;
+          }
+          if ('children' in node && node.children) {
+            const found = buildPathToItem(node.children as MenuNode[], targetId, newPath);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const pathToParent = buildPathToItem(sidebarConfig.sidebarItems, finalParentId);
+      if (!pathToParent) return `root(index: ${targetIndex})`;
+
+      const pathString = ['root', ...pathToParent].join('/');
+      return `${pathString}(index: ${targetIndex})`;
+    };
+
+    return {
+      targetId: finalTargetId,
+      parentId: finalParentId,
+      position,
+      isDirectHover,
+      destinationPath: buildPath(),
+      targetIndex
+    };
+  };
+
   // Helper function to find the nearest appropriate parent for the dropped item
   const findNearestAppropriateParent = (
     targetId: string,
@@ -301,7 +501,8 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
       const indent = 10;
       const isValidDropTarget = draggedItem && (
         draggedItem.type === SidebarItemType.MenuGroup ||
-        draggedItem.type === SidebarItemType.MenuItem
+        draggedItem.type === SidebarItemType.MenuItem ||
+        (draggedItem.type === SidebarItemType.Category && draggedItem.id !== item.id)
       );
       const isDragOver = dragOverTarget === item.id;
 
@@ -324,52 +525,25 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                setCachedDropInfo(null);
              }}
              onDragOver={(e) => {
-               if (draggedItem && (draggedItem.type === SidebarItemType.MenuGroup || draggedItem.type === SidebarItemType.MenuItem)) {
+               if (draggedItem && (
+                 (draggedItem.type === SidebarItemType.MenuGroup || draggedItem.type === SidebarItemType.MenuItem) ||
+                 (draggedItem.type === SidebarItemType.Category && draggedItem.id !== item.id)
+               )) {
                  e.preventDefault();
+                 e.stopPropagation(); // Prevent root from handling this
+
+                 // Use the new contextual drop logic
+                 const dropContext = determineDropContext(e, e.currentTarget as HTMLElement, item.id, draggedItem.type);
+
                  setDragOverTarget(item.id);
+                 setDropPosition(dropContext.position);
 
-                 // Determine drop position based on mouse position
-                 const rect = e.currentTarget.getBoundingClientRect();
-                 const mouseY = e.clientY - rect.top;
-                 const elementHeight = rect.height;
-
-                 let newDropPosition: 'before' | 'after' | 'inside';
-                 if (mouseY < elementHeight * 0.25) {
-                   newDropPosition = 'before';
-                 } else if (mouseY > elementHeight * 0.75) {
-                   newDropPosition = 'after';
-                 } else {
-                   newDropPosition = 'inside';
-                 }
-                 setDropPosition(newDropPosition);
-
-                 // Cache drop information for consistency between preview and actual drop
-                 if (sidebarConfig?.sidebarItems) {
-                   const { parentId: resolvedParentId } = findNearestAppropriateParent(
-                     item.id,
-                     newDropPosition,
-                     draggedItem.type,
-                     sidebarConfig.sidebarItems
-                   );
-
-                   const targetIndex = calculateTargetIndex(
-                     item.id,
-                     newDropPosition,
-                     draggedItem.type
-                   );
-
-                   const destinationPath = buildDestinationPath(
-                     item.id,
-                     newDropPosition,
-                     draggedItem.type
-                   );
-
-                   setCachedDropInfo({
-                     parentId: resolvedParentId,
-                     targetIndex,
-                     destinationPath
-                   });
-                 }
+                 // Cache drop information using the contextual data
+                 setCachedDropInfo({
+                   parentId: dropContext.parentId,
+                   targetIndex: dropContext.targetIndex,
+                   destinationPath: dropContext.destinationPath
+                 });
                }
              }}
              onDragLeave={() => {
@@ -388,7 +562,11 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                const payload = JSON.parse(data);
 
                // Use cached drop information instead of recalculating
-               if (onMoveItem && cachedDropInfo && (payload.type === SidebarItemType.MenuGroup || payload.type === SidebarItemType.MenuItem)) {
+               if (onMoveItem && cachedDropInfo && (
+                 payload.type === SidebarItemType.MenuGroup ||
+                 payload.type === SidebarItemType.MenuItem ||
+                 payload.type === SidebarItemType.Category
+               )) {
                  onMoveItem(
                    payload.id,
                    item.id,
@@ -408,11 +586,11 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
               style={{
                 position: 'relative',
                 margin: '3px 0',
-                opacity: 0.5,
+                opacity: 0.7,
                 transform: 'scale(0.95)',
-                border: '2px dashed #3b82f6',
+                border: '2px dashed #10b981',
                 borderRadius: '4px',
-                background: 'rgba(59, 130, 246, 0.1)'
+                background: 'rgba(16, 185, 129, 0.1)'
               }}
             >
               <div style={{
@@ -422,7 +600,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
-                color: '#3b82f6',
+                color: '#10b981',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8
@@ -437,7 +615,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                     textTransform: 'none',
                     letterSpacing: 'normal'
                   }}>
-                    → {cachedDropInfo?.destinationPath || buildDestinationPath(item.id, 'before', draggedItem.type)}
+                    📍 {cachedDropInfo?.destinationPath || `Before ${item.title}`}
                   </span>
                 </div>
               </div>
@@ -453,11 +631,11 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                 left: 0,
                 right: 0,
                 margin: '3px 0',
-                opacity: 0.5,
+                opacity: 0.7,
                 transform: 'scale(0.95)',
-                border: '2px dashed #3b82f6',
+                border: '2px dashed #10b981',
                 borderRadius: '4px',
-                background: 'rgba(59, 130, 246, 0.1)',
+                background: 'rgba(16, 185, 129, 0.1)',
                 zIndex: 1000
               }}
             >
@@ -468,7 +646,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
-                color: '#3b82f6',
+                color: '#10b981',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8
@@ -483,7 +661,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                     textTransform: 'none',
                     letterSpacing: 'normal'
                   }}>
-                    → {cachedDropInfo?.destinationPath || buildDestinationPath(item.id, 'after', draggedItem.type)}
+                    📍 {cachedDropInfo?.destinationPath || `After ${item.title}`}
                   </span>
                 </div>
               </div>
@@ -522,8 +700,11 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 
     // Determine if this item is a valid drop target
     const isValidDropTarget = draggedItem && (
-      draggedItem.type === SidebarItemType.MenuItem || // MenuItem can go anywhere except inside another MenuItem
-      draggedItem.type === SidebarItemType.MenuGroup // MenuGroup can go anywhere
+      // MenuItem can drop to MenuGroup and Category (not to another MenuItem)
+      (draggedItem.type === SidebarItemType.MenuItem && (item.type === SidebarItemType.MenuGroup || item.type === SidebarItemType.Category)) ||
+      // MenuGroup can drop to Category only (not to MenuItem or another MenuGroup)
+      (draggedItem.type === SidebarItemType.MenuGroup && item.type === SidebarItemType.Category)
+      // Category cannot drop to any other items (only to root)
     );
 
     // Menu items cannot be dropped inside other menu items
@@ -551,52 +732,20 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
            onDragOver={(e) => {
              if (draggedItem && draggedItem.id !== item.id && isValidDropTarget) {
                e.preventDefault();
+               e.stopPropagation(); // Prevent root from handling this
+
+               // Use the new contextual drop logic
+               const dropContext = determineDropContext(e, e.currentTarget as HTMLElement, item.id, draggedItem.type);
+
                setDragOverTarget(item.id);
+               setDropPosition(dropContext.position);
 
-               // Determine drop position based on mouse position
-               const rect = e.currentTarget.getBoundingClientRect();
-               const mouseY = e.clientY - rect.top;
-               const elementHeight = rect.height;
-
-               let newDropPosition: 'before' | 'after' | 'inside';
-               if (mouseY < elementHeight * 0.3) {
-                 newDropPosition = 'before';
-               } else if (mouseY > elementHeight * 0.7) {
-                 newDropPosition = 'after';
-               } else if (canDropInside) {
-                 newDropPosition = 'inside';
-               } else {
-                 newDropPosition = 'after'; // Default to after if can't drop inside
-               }
-               setDropPosition(newDropPosition);
-
-               // Cache drop information for consistency between preview and actual drop
-               if (sidebarConfig?.sidebarItems) {
-                 const { parentId: resolvedParentId } = findNearestAppropriateParent(
-                   item.id,
-                   newDropPosition,
-                   draggedItem.type,
-                   sidebarConfig.sidebarItems
-                 );
-
-                 const targetIndex = calculateTargetIndex(
-                   item.id,
-                   newDropPosition,
-                   draggedItem.type
-                 );
-
-                 const destinationPath = buildDestinationPath(
-                   item.id,
-                   newDropPosition,
-                   draggedItem.type
-                 );
-
-                 setCachedDropInfo({
-                   parentId: resolvedParentId,
-                   targetIndex,
-                   destinationPath
-                 });
-               }
+               // Cache drop information using the contextual data
+               setCachedDropInfo({
+                 parentId: dropContext.parentId,
+                 targetIndex: dropContext.targetIndex,
+                 destinationPath: dropContext.destinationPath
+               });
              }
            }}
            onDragLeave={() => {
@@ -846,76 +995,9 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
           padding: 4,
-          borderRadius: 4,
-          border: dragOverTarget === 'root' ? `2px dashed ${theme.colors.primary}` : '2px solid transparent',
-          backgroundColor: dragOverTarget === 'root' ? hexToRgba(theme.colors.primary, 0.05) : 'transparent',
-          transition: 'border-color 200ms ease, background-color 200ms ease'
-        }}
-        onDragOver={(e) => {
-          if (draggedItem && (draggedItem.type === SidebarItemType.Category || draggedItem.type === SidebarItemType.MenuGroup)) {
-            e.preventDefault();
-            setDragOverTarget('root');
-
-            // Cache drop information for root level drops
-            setCachedDropInfo({
-              parentId: null, // root has no parent
-              targetIndex: 0, // always append to root
-              destinationPath: 'root(index: 0)'
-            });
-          }
-        }}
-        onDragLeave={(e) => {
-          // Only clear if we're leaving the nav area entirely
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-            setDragOverTarget(null);
-            setCachedDropInfo(null);
-          }
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOverTarget(null);
-          setDropPosition('inside');
-          const data = e.dataTransfer.getData('application/x-sidebar-item');
-          if (!data) return;
-          const payload = JSON.parse(data);
-
-          // Use cached drop information instead of hardcoding
-          if (onMoveItem && cachedDropInfo && (payload.type === SidebarItemType.Category || payload.type === SidebarItemType.MenuGroup)) {
-            onMoveItem(
-              payload.id,
-              null,
-              'inside',
-              cachedDropInfo.parentId,
-              cachedDropInfo.targetIndex
-            );
-          }
-
-          // Clear cached info after use
-          setCachedDropInfo(null);
+          borderRadius: 4
         }}
       >
-        {dragOverTarget === 'root' && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '60px',
-              left: '16px',
-              right: '16px',
-              textAlign: 'center',
-              color: theme.colors.primary,
-              fontSize: '14px',
-              fontWeight: 500,
-              padding: '8px',
-              backgroundColor: hexToRgba(theme.colors.primary, 0.1),
-              borderRadius: 4,
-              border: `1px solid ${theme.colors.primary}`,
-              zIndex: 5
-            }}
-          >
-            Drop here to move to root level
-          </div>
-        )}
-
         {sidebarConfig ? (
           <nav aria-label="Sidebar configuration">
             {renderMenu(sidebarConfig.sidebarItems)}
