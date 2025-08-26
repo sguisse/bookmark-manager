@@ -73,6 +73,47 @@ function DraggableBookmarkRow({
       draggable
       onDragStart={(e) => {
         onDragStart(bookmark);
+
+        // Create custom drag image with minimal content
+        const dragImage = document.createElement('div');
+        dragImage.style.cssText = `
+          position: fixed;
+          top: -1000px;
+          left: -1000px;
+          padding: 8px 12px;
+          background: rgba(59, 130, 246, 0.95);
+          color: white;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          max-width: 300px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        `;
+
+        // Add icon and title to drag image
+        const icon = bookmark.icon || '🌐';
+        if (bookmark.icon && (bookmark.icon.startsWith('http') || bookmark.icon.startsWith('data:'))) {
+          dragImage.innerHTML = `<img src="${bookmark.icon}" style="width: 16px; height: 16px; border-radius: 2px;"> ${bookmark.title}`;
+        } else {
+          dragImage.innerHTML = `<span style="font-size: 16px;">${icon}</span> ${bookmark.title}`;
+        }
+
+        document.body.appendChild(dragImage);
+        e.dataTransfer.setDragImage(dragImage, 20, 20);
+
+        // Clean up drag image after a short delay
+        setTimeout(() => {
+          if (document.body.contains(dragImage)) {
+            document.body.removeChild(dragImage);
+          }
+        }, 100);
+
         // Set both simple and cross-tab drag data
         e.dataTransfer.setData('text/plain', bookmark.id);
         e.dataTransfer.setData('application/x-bookmark-cross-tab',
@@ -163,6 +204,7 @@ function DraggableBookmarkRow({
           onDelete={onDelete}
           onToggleCollapsed={onToggleCollapsed}
           view={tableRowViewMode}
+          isDragging={isDragged}
         />
       </div>
 

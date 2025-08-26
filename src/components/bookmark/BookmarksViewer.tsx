@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Bookmark } from '../../types/bookmark';
-import { formatDate } from '../../services/Utils';
+import { formatDate, calculateVisibleCharacters } from '../../services/Utils';
 import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
 /*
@@ -17,37 +17,13 @@ import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 interface BookmarkTableRowProps {
   bookmark: Bookmark;
   view?: 'row' | 'card'; // 'row' (default) or 'card'
+  isDragging?: boolean; // New prop to indicate if this row is being dragged
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
   onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
 }
 
-// Measure how many characters fit into `width` (px) with given CSS font string.
-function calculateVisibleCharacters(text: string, width: number, font: string, ellipsis = '...'): number {
-  if (!text || width <= 0) return 0;
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return Math.max(0, Math.min(text.length, 40));
-  ctx.font = font;
 
-  let low = 0;
-  let high = text.length;
-  let best = 0;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    const substr = text.slice(0, mid);
-    const measured = ctx.measureText(substr + ellipsis).width;
-    if (measured <= width) {
-      best = mid;
-      low = mid + 1;
-    } else {
-      high = mid - 1;
-    }
-  }
-
-  return best;
-}
 
 function useTruncatedText(text: string, containerRef: React.RefObject<HTMLElement | null>, ellipsis = '...') {
   const [truncated, setTruncated] = useState(text);
@@ -76,7 +52,8 @@ function useTruncatedText(text: string, containerRef: React.RefObject<HTMLElemen
         return;
       }
 
-      const visible = calculateVisibleCharacters(text, width, font, ellipsis);
+      let iconWidth = 36;
+      let visible = calculateVisibleCharacters(text, width - iconWidth, font, ellipsis);
       if (visible >= text.length) setTruncated(text);
       else if (visible <= 0) setTruncated(ellipsis);
       else setTruncated(text.slice(0, visible) + ellipsis);
@@ -192,11 +169,15 @@ function renderIconElement(src: string | undefined, size: number) {
 
 
 // Card view component (expanded view within a table row)
-function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
-  const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme } = props;
+function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; isDragging?: boolean; }>) {
+  const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme, isDragging } = props;
   const [isHovered, setIsHovered] = useState(false);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
-  const truncatedTitle = useTruncatedText(bookmark.title, titleRef, '...');
+  const truncatedTitle = useTruncatedText(bookmark.title, titleRef);
+
+  // Calculate button visibility and interactivity
+  const buttonsOpacity = isDragging ? 0 : (isHovered ? 1 : 0);
+  const buttonsPointerEvents = isDragging ? 'none' : (isHovered ? 'auto' : 'none');
 
   const handleEditClick = (e: React.MouseEvent) => { e.stopPropagation(); onEdit(bookmark); };
   const handleDeleteClick = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(bookmark.id); };
@@ -252,7 +233,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', opacity: isHovered ? 1 : 0, transition: 'opacity 0.18s ease' }}>
+        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', opacity: buttonsOpacity, transition: 'opacity 0.18s ease', pointerEvents: buttonsPointerEvents }}>
           {onCollapse && (
             <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row view" style={actionButtonStyle(theme.colors.info)}>
               <ChevronUp size={16} />
@@ -297,11 +278,16 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
 }
 
 // Row view component (compact view within a table row)
-function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void }>) {
-  const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen } = props;
+function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; isDragging?: boolean; }>) {
+  const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen, isDragging } = props;
   const [isHovered, setIsHovered] = useState(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
-  const truncatedTitleRow = useTruncatedText(bookmark.title, btnRef, '...');
+  const truncatedTitleRow = useTruncatedText(bookmark.title, btnRef);
+
+  // Calculate button visibility and interactivity
+  const buttonsOpacity = isDragging ? 0 : (isHovered ? 1 : 0);
+  const buttonsPointerEvents = isDragging ? 'none' : (isHovered ? 'auto' : 'none');
+
   return (
     <div
       className="bookmark-row-view"
@@ -338,9 +324,9 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
             display: 'flex',
             gap: 1,
             alignItems: 'center',
-            opacity: isHovered ? 1 : 0,
+            opacity: buttonsOpacity,
             transition: 'opacity 120ms ease',
-            pointerEvents: isHovered ? 'auto' : 'none',
+            pointerEvents: buttonsPointerEvents,
             backgroundColor: theme.colors.surface,
             borderRadius: '4px',
             padding: '2px'
@@ -363,7 +349,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
 
 // Each BookmarkTableRow can display either a RowView (compact) or CardView (expanded)
 export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>) {
-  const { bookmark, onEdit, onDelete, onToggleCollapsed } = props;
+  const { bookmark, onEdit, onDelete, onToggleCollapsed, isDragging } = props;
   const { theme } = useTheme();
 
   const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
@@ -381,6 +367,7 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
           onOpen={openUrl}
           onCollapse={() => onToggleCollapsed(bookmark.id)}
           theme={theme}
+          isDragging={isDragging}
         />
       ) : (
         <RowView
@@ -391,6 +378,7 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
           expanded={!isCollapsed}
           theme={theme}
           onOpen={openUrl}
+          isDragging={isDragging}
         />
       )}
     </div>
@@ -415,8 +403,8 @@ const actionButtonStyle = (bg: string) => ({
 
 // smaller icon button style used in row view
 const smallIconButtonStyle = (bg: string) => ({
-  width: '32px',
-  height: '32px',
+  width: '28px',
+  height: '22px',
   padding: '4px',
   border: 'none',
   borderRadius: '6px',

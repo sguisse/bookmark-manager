@@ -43,4 +43,47 @@ export const readableTextColor = (bg: string) => {
   return l > 0.6 ? '#000' : '#fff';
 };
 
-export default { formatDate, normalizeColorForInput, hexToRgba, readableTextColor };
+// Measure how many characters fit into `width` (px) with given CSS font string.
+export function calculateVisibleCharacters(text: string, width: number, font: string, ellipsis = '...'): number {
+  if (!text || width <= 0) return 0;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return Math.max(0, Math.min(text.length, 40));
+  ctx.font = font;
+
+  // First check if the full text fits without ellipsis
+  const fullTextWidth = ctx.measureText(text).width;
+  if (fullTextWidth <= width) {
+    return text.length;
+  }
+
+  // Measure ellipsis width once
+  const ellipsisWidth = ctx.measureText(ellipsis).width;
+
+  // Adjust available width by subtracting ellipsis width
+  const availableWidth = width - ellipsisWidth;
+
+  if (availableWidth <= 0) {
+    return 0;
+  }
+
+  let low = 0;
+  let high = text.length;
+  let best = 0;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const substr = text.slice(0, mid);
+    const measured = ctx.measureText(substr).width;
+    if (measured <= availableWidth) {
+      best = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return best;
+}
+
+export default { formatDate, normalizeColorForInput, hexToRgba, readableTextColor, calculateVisibleCharacters };
