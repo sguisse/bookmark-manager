@@ -14,6 +14,8 @@ export interface SidebarPanelProps {
   onAddGroup: (groupId?: string | null) => void;
   onSidebarChange?: (newConfig: SidebarConfig) => void;
   onMoveItem?: (sourceId: string, targetId: string | null, position?: 'before' | 'after' | 'inside', parentId?: string | null, targetIndex?: number) => void;
+  onEditItem?: (nodeId: string) => void;
+  onDeleteItem?: (nodeId: string) => void;
 }
 
 export const SidebarPanel: React.FC<SidebarPanelProps> = ({
@@ -25,7 +27,9 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
   onAddBookmark,
   onAddGroup,
   onSidebarChange,
-  onMoveItem
+  onMoveItem,
+  onEditItem,
+  onDeleteItem
 }) => {
   const { theme } = useTheme();
 
@@ -101,6 +105,8 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           sidebarConfig={sidebarConfig}
           onSelectItem={handleSelectItem}
           onSidebarChange={onSidebarChange}
+          onEditItem={onEditItem}
+          onDeleteItem={onDeleteItem}
         />
 
         {/* Minimal group toggles preview to use openedGroups/onToggleGroup props */}

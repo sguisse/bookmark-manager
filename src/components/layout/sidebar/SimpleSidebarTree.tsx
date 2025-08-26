@@ -1,22 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { TreeView, useTree, RenderNodeOptions } from '../../common/treeview';
 import { TreeNode } from '../../common/treeview/types';
 import { convertSidebarToTreeNodes, convertTreeNodesToSidebar } from './sidebarAdapter';
 import { SidebarConfig, SidebarItemType } from '../../../types/sidebar';
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 
 interface SimpleSidebarTreeProps {
   sidebarConfig?: SidebarConfig;
   onSidebarChange?: (newConfig: SidebarConfig) => void;
   onSelectItem?: (nodeId: string) => void;
+  onEditItem?: (nodeId: string) => void;
+  onDeleteItem?: (nodeId: string) => void;
 }
 
 export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
   sidebarConfig,
   onSidebarChange,
-  onSelectItem
+  onSelectItem,
+  onEditItem,
+  onDeleteItem
 }) => {
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+
   // Convert sidebar config to tree nodes
   const initialNodes = sidebarConfig ? convertSidebarToTreeNodes(sidebarConfig) : [];
 
@@ -46,12 +52,34 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
     selectedId,
     toggleNode,
     selectNode,
-    moveItem
+    moveItem,
+    setNodes
   } = useTree({
     nodes: initialNodes,
     initialOpenNodes: getInitialExpandedNodes(),
     initialSelectedId: sidebarConfig?.lastSelectedItemId || null
   });
+
+  // Update nodes when sidebar config changes
+  useEffect(() => {
+    if (sidebarConfig) {
+      const updatedNodes = convertSidebarToTreeNodes(sidebarConfig);
+
+      // Check if there are new nodes compared to current nodes
+      const currentNodeIds = new Set(nodes.map(node => node.id));
+      const newNodes = updatedNodes.filter(node => !currentNodeIds.has(node.id));
+
+      // Update the tree nodes
+      setNodes(updatedNodes);
+
+      // If there's a new node, select it by default
+      if (newNodes.length > 0) {
+        const newestNode = newNodes[newNodes.length - 1]; // Select the last added node
+        selectNode(newestNode.id);
+        onSelectItem?.(newestNode.id);
+      }
+    }
+  }, [sidebarConfig, setNodes, nodes, selectNode, onSelectItem]);
 
   // Handle drop operations
   const handleDrop = (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => {
@@ -106,10 +134,28 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
     }
   };
 
+  // Handle delete operations with confirmation
+  const handleDelete = (nodeId: string) => {
+    if (onDeleteItem) {
+      const confirmDelete = window.confirm('Are you sure you want to delete this item and all its children?');
+      if (confirmDelete) {
+        onDeleteItem(nodeId);
+      }
+    }
+  };
+
+  // Handle edit operations
+  const handleEdit = (nodeId: string) => {
+    if (onEditItem) {
+      onEditItem(nodeId);
+    }
+  };
+
   // Custom node renderer
   const renderNode = (node: TreeNode, options: RenderNodeOptions) => {
     const { isOpen, isDragging, hasChildren, isSelected } = options;
     const nodeType = node.data?.type;
+    const isHovered = hoveredNodeId === node.id;
 
     return (
       <div
@@ -121,8 +167,14 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           fontWeight: nodeType === SidebarItemType.Category ? 'bold' : 'normal',
           fontSize: nodeType === SidebarItemType.Category ? '12px' : '14px',
           textTransform: nodeType === SidebarItemType.Category ? 'uppercase' : 'none',
-          letterSpacing: nodeType === SidebarItemType.Category ? '0.05em' : 'normal'
+          letterSpacing: nodeType === SidebarItemType.Category ? '0.05em' : 'normal',
+          position: 'relative',
+          padding: '4px 8px',
+          margin: '1px 0',
+          borderRadius: '4px'
         }}
+        onMouseEnter={() => setHoveredNodeId(node.id)}
+        onMouseLeave={() => setHoveredNodeId(null)}
       >
         {/* Expand/collapse button */}
         {hasChildren && (
@@ -193,6 +245,54 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           >
             {node.data.badge.label}
           </span>
+        )}
+
+        {/* Hover Actions */}
+        {isHovered && (
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            marginLeft: '8px'
+          }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(node.id);
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                borderRadius: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#666'
+              }}
+              title="Edit"
+            >
+              <Edit2 size={14} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(node.id);
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                borderRadius: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#d32f2f'
+              }}
+              title="Delete"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
         )}
       </div>
     );
