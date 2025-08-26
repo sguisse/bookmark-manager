@@ -3,7 +3,7 @@ import { TreeView, useTree, RenderNodeOptions } from '../../common/treeview';
 import { TreeNode } from '../../common/treeview/types';
 import { convertSidebarToTreeNodes, convertTreeNodesToSidebar } from './sidebarAdapter';
 import { SidebarConfig, SidebarItemType } from '../../../types/sidebar';
-import { DynamicIcon } from 'lucide-react/dynamic';
+import Image from '../../common/image/Image';
 import { ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 
 interface SimpleSidebarTreeProps {
@@ -214,15 +214,7 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
         {/* Icon */}
         {node.icon && (
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            {node.icon.startsWith('http') ? (
-              <img
-                src={node.icon}
-                alt=""
-                style={{ width: 16, height: 16, objectFit: 'contain' }}
-              />
-            ) : (
-              <DynamicIcon name={node.icon as any} size={16} />
-            )}
+            <Image value={node.icon} size={16} rounded={true} />
           </div>
         )}
 
@@ -236,7 +228,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           {node.text}
         </span>
 
-        {/* Badge */}
+
+        {/* Badge title */}
         {node.data?.badge && (
           <span
             style={{
@@ -252,7 +245,19 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
               marginLeft: '8px'
             }}
           >
-            {node.data.badge.label}
+            {/* Badge Icon */}
+        {node.data?.badge.icon && (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Image value={node.data.badge.icon} size={16} rounded={true} />
+          </div>
+        )}
+
+         {node.data?.badge.label && (
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+          {node.data.badge.label}
+          </div>
+        )}
+
           </span>
         )}
 
@@ -308,29 +313,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
   };
 
   // Custom validation for drops
-  const canDrop = (draggedNode: TreeNode, targetNode: TreeNode | null): boolean => {
-    const draggedType = draggedNode.data?.type;
-    const targetType = targetNode?.data?.type;
-
-    /*
-    // Categories can only be dropped at root level or after other categories
-    if (draggedType === SidebarItemType.Category) {
-      return !targetNode || targetType === SidebarItemType.Category;
-    }
-
-    // MenuGroups can be dropped in Categories or after other MenuGroups
-    if (draggedType === SidebarItemType.MenuGroup) {
-      return !targetNode ||
-             targetType === SidebarItemType.Category ||
-             targetType === SidebarItemType.MenuGroup;
-    }
-
-    // MenuItems can be dropped anywhere
-    if (draggedType === SidebarItemType.MenuItem) {
-      return true;
-    }
-    */
-
+  const canDrop = (_draggedNode: TreeNode, _targetNode: TreeNode | null): boolean => {
+    // Add custom drop rules here if needed. By default allow all drops.
     return true;
   };
 

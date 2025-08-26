@@ -4,6 +4,7 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { FormDisplayMode } from '../../../types/app';
 import { v4 as uuidv4 } from 'uuid';
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import Image from '../../common/image/Image';
 
 interface SidebarFormProps {
   mode?: FormDisplayMode;
@@ -31,19 +32,24 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
   const [badgeColor, setBadgeColor] = useState('');
   const [badgeBgColor, setBadgeBgColor] = useState('');
   const [showBadgeOptions, setShowBadgeOptions] = useState(false);
+  // store the preview text/value set on blur (could be image URL, emoji, or lucide icon name)
+  const [iconPreviewValue, setIconPreviewValue] = useState('');
+  const [badgeIconPreviewValue, setBadgeIconPreviewValue] = useState('');
 
   useEffect(() => {
     // Prefill values when opening the form in edit mode
     setType(initial?.type ?? SidebarItemType.MenuItem);
     setTitle(initial?.title || '');
     setIcon(initial?.icon || '');
+    setIconPreviewValue(initial?.icon || '');
     setFlexLayoutId((initial as any)?.flexLayoutId || '');
     const existingBadge = (initial as any)?.badge;
     if (existingBadge) {
-      setBadgeLabel(existingBadge.label || '');
-      setBadgeIcon(existingBadge.icon || '');
-      setBadgeColor(existingBadge.color || '');
-      setBadgeBgColor(existingBadge.bgColor || '');
+    setBadgeLabel(existingBadge.label || '');
+    setBadgeIcon(existingBadge.icon || '');
+    setBadgeColor(existingBadge.color || '');
+    setBadgeBgColor(existingBadge.bgColor || '');
+    setBadgeIconPreviewValue(existingBadge.icon || '');
       setShowBadgeOptions(true);
     } else {
       setBadgeLabel('');
@@ -110,10 +116,10 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
     } else {
       const item: SidebarItem = { id, title: title.trim(), type: SidebarItemType.MenuItem, flexLayoutId: flexLayoutId || id };
       if (icon) (item as any).icon = icon;
-      if (showBadgeOptions && badgeLabel.trim()) {
+      if (showBadgeOptions) {
         (item as any).badge = {
           id: uuidv4(),
-          label: badgeLabel.trim(),
+          label: badgeLabel ? badgeLabel.trim() : '',
           icon: badgeIcon || undefined,
           color: badgeColor || undefined,
           bgColor: badgeBgColor || undefined
@@ -175,7 +181,10 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                 <>
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
-                    <input id="sf-icon" value={icon} onChange={(e) => setIcon(e.target.value)} style={inputStyle} placeholder="camera or https://..." />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Image value={iconPreviewValue} size={20} rounded style={{ display: 'inline-block' }} />
+                      <input id="sf-icon" value={icon} onChange={(e) => setIcon(e.target.value)} onBlur={() => setIconPreviewValue(icon)} style={inputStyle} placeholder="camera or https://..." />
+                    </div>
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="sf-flex" style={{ display: 'block', marginBottom: 4 }}>Flex layout id (optional)</label>
@@ -208,16 +217,19 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="badge-icon" style={{ display: 'block', marginBottom: 4 }}>Badge icon (optional)</label>
-                    <input id="badge-icon" value={badgeIcon} onChange={(e) => setBadgeIcon(e.target.value)} style={inputStyle} placeholder="camera or https://..." />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Image value={badgeIconPreviewValue} size={20} rounded style={{ display: 'inline-block' }} />
+                      <input id="badge-icon" value={badgeIcon} onChange={(e) => setBadgeIcon(e.target.value)} onBlur={() => setBadgeIconPreviewValue(badgeIcon)} style={inputStyle} placeholder="camera or https://..." />
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <div style={{ flex: 1 }}>
                       <label htmlFor="badge-color" style={{ display: 'block', marginBottom: 4 }}>Text color</label>
-                      <input id="badge-color" value={badgeColor} onChange={(e) => setBadgeColor(e.target.value)} style={inputStyle} placeholder="#fff" />
+                      <input id="badge-color" type="color" value={badgeColor || '#ffffff'} onChange={(e) => setBadgeColor(e.target.value)} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <label htmlFor="badge-bgcolor" style={{ display: 'block', marginBottom: 4 }}>Background color</label>
-                      <input id="badge-bgcolor" value={badgeBgColor} onChange={(e) => setBadgeBgColor(e.target.value)} style={inputStyle} placeholder="#1976d2" />
+                      <input id="badge-bgcolor" type="color" value={badgeBgColor || '#1976d2'} onChange={(e) => setBadgeBgColor(e.target.value)} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
                     </div>
                   </div>
                 </div>
