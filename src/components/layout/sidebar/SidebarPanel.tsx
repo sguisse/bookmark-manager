@@ -14,7 +14,7 @@ export interface SidebarPanelProps {
   onToggleGroup: (id: string) => void;
   onSelectItem: (id: string) => void;
   onCreateItem?: () => void;
-  onMoveItem?: (sourceId: string, targetId: string | null) => void;
+  onMoveItem?: (sourceId: string, targetId: string | null, position?: 'before' | 'after' | 'inside', parentId?: string | null, targetIndex?: number) => void;
 }
 
 export const SidebarPanel: React.FC<SidebarPanelProps> = ({
@@ -31,6 +31,233 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
   const [draggedItem, setDraggedItem] = React.useState<{ id: string; type: SidebarItemType; title: string; icon?: string } | null>(null);
   const [dragOverTarget, setDragOverTarget] = React.useState<string | null>(null);
   const [dropPosition, setDropPosition] = React.useState<'before' | 'after' | 'inside'>('inside');
+  const [cachedDropInfo, setCachedDropInfo] = React.useState<{
+    parentId: string | null;
+    targetIndex: number;
+    destinationPath: string;
+  } | null>(null);
+
+  // Helper function to find the nearest appropriate parent for the dropped item
+  const findNearestAppropriateParent = (
+    targetId: string,
+    position: 'before' | 'after' | 'inside',
+    draggedType: SidebarItemType,
+    items: MenuNode[]
+  ): { parentId: string | null; targetId: string } => {
+
+    // Helper to find item and its parent in the tree
+    const findItemWithParent = (nodes: MenuNode[], parentId: string | null = null): { item: MenuNode; parentId: string | null; parentType: SidebarItemType | null } | null => {
+      for (const node of nodes) {
+        if (node.id === targetId) {
+          const parent = parentId ? nodes.find(n => n.id === parentId) : null;
+          return { item: node, parentId, parentType: parent?.type || null };
+        }
+        if ('children' in node && node.children) {
+          const result = findItemWithParent(node.children as MenuNode[], node.id);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+
+    const targetInfo = findItemWithParent(items);
+    if (!targetInfo) return { parentId: null, targetId };
+
+    const { item: targetItem, parentId: currentParentId, parentType } = targetInfo;
+
+    // If position is 'inside', the target becomes the parent (if it can contain the dragged item)
+    if (position === 'inside') {
+      // Check if target can contain the dragged item
+      if (targetItem.type === SidebarItemType.Category || targetItem.type === SidebarItemType.MenuGroup) {
+        // Categories can contain MenuGroups and MenuItems
+        // MenuGroups can contain MenuItems
+        if (targetItem.type === SidebarItemType.Category &&
+            (draggedType === SidebarItemType.MenuGroup || draggedType === SidebarItemType.MenuItem)) {
+          return { parentId: targetId, targetId };
+        }
+        if (targetItem.type === SidebarItemType.MenuGroup && draggedType === SidebarItemType.MenuItem) {
+          return { parentId: targetId, targetId };
+        }
+      }
+      // If target can't contain the item, fall back to 'after' behavior
+      position = 'after';
+    }
+
+    // For 'before' and 'after', find the appropriate parent
+    if (position === 'before' || position === 'after') {
+      // The item should be placed in the same parent as the target
+
+      // If target is at root level (no parent)
+      if (!currentParentId) {
+        return { parentId: null, targetId };
+      }
+
+      // Check if the current parent can accept the dragged item
+      if (parentType === SidebarItemType.Category &&
+          (draggedType === SidebarItemType.MenuGroup || draggedType === SidebarItemType.MenuItem)) {
+        return { parentId: currentParentId, targetId };
+      }
+
+      if (parentType === SidebarItemType.MenuGroup && draggedType === SidebarItemType.MenuItem) {
+        return { parentId: currentParentId, targetId };
+      }
+
+      // If current parent can't accept the item, find the nearest parent up the hierarchy that can
+      const findParentRecursive = (nodeId: string): string | null => {
+        // Find the specific node first
+        const findNodeWithParent = (nodes: MenuNode[], searchId: string, parentId: string | null = null): { item: MenuNode; parentId: string | null; parentType: SidebarItemType | null } | null => {
+          for (const node of nodes) {
+            if (node.id === searchId) {
+              const parent = parentId ? nodes.find(n => n.id === parentId) : null;
+              return { item: node, parentId, parentType: parent?.type || null };
+            }
+            if ('children' in node && node.children) {
+              const result = findNodeWithParent(node.children as MenuNode[], searchId, node.id);
+              if (result) return result;
+            }
+          }
+          return null;
+        };
+
+        const nodeInfo = findNodeWithParent(items, nodeId);
+        if (!nodeInfo || !nodeInfo.parentId) return null;
+
+        const grandParentInfo = findNodeWithParent(items, nodeInfo.parentId);
+        if (!grandParentInfo) return null;
+
+        // Check if grandparent can accept the dragged item
+        if (grandParentInfo.item.type === SidebarItemType.Category &&
+            (draggedType === SidebarItemType.MenuGroup || draggedType === SidebarItemType.MenuItem)) {
+          return grandParentInfo.item.id;
+        }
+
+        // Continue up the hierarchy
+        return findParentRecursive(grandParentInfo.item.id);
+      };
+
+      const appropriateParent = findParentRecursive(targetId);
+      return { parentId: appropriateParent, targetId };
+    }
+
+    return { parentId: currentParentId, targetId };
+  };
+
+  // Helper function to build the destination path for drop preview
+  const buildDestinationPath = (
+    targetId: string,
+    position: 'before' | 'after' | 'inside',
+    draggedType: SidebarItemType
+  ): string => {
+    if (!sidebarConfig?.sidebarItems) return 'root(index: 0)';
+
+    const { parentId } = findNearestAppropriateParent(
+      targetId,
+      position,
+      draggedType,
+      sidebarConfig.sidebarItems
+    );
+
+    // Helper to find item by ID in the tree
+    const findItemById = (nodes: MenuNode[], id: string): MenuNode | null => {
+      for (const node of nodes) {
+        if (node.id === id) return node;
+        if ('children' in node && node.children) {
+          const found = findItemById(node.children as MenuNode[], id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Helper to build path from root to item
+    const buildPathToItem = (nodes: MenuNode[], targetId: string, currentPath: string[] = []): string[] | null => {
+      for (const node of nodes) {
+        const newPath = [...currentPath, node.title];
+        if (node.id === targetId) {
+          return newPath;
+        }
+        if ('children' in node && node.children) {
+          const found = buildPathToItem(node.children as MenuNode[], targetId, newPath);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    // Helper to calculate the target index position
+    const targetIndex = calculateTargetIndex(targetId, position, draggedType);    if (!parentId) {
+      // Moving to root level
+      return `root(index: ${targetIndex})`;
+    }
+
+    const pathToParent = buildPathToItem(sidebarConfig.sidebarItems, parentId);
+    if (!pathToParent) return `root(index: ${targetIndex})`;
+
+    const pathString = ['root', ...pathToParent].join('/');
+    return `${pathString}(index: ${targetIndex})`;
+  };
+
+  // Helper function to calculate target index (shared between preview and drop logic)
+  const calculateTargetIndex = (
+    targetId: string,
+    position: 'before' | 'after' | 'inside',
+    draggedType: SidebarItemType
+  ): number => {
+    if (!sidebarConfig?.sidebarItems) return 0;
+
+    const { parentId, targetId: resolvedTargetId } = findNearestAppropriateParent(
+      targetId,
+      position,
+      draggedType,
+      sidebarConfig.sidebarItems
+    );
+
+    const findItemById = (nodes: MenuNode[], id: string): MenuNode | null => {
+      for (const node of nodes) {
+        if (node.id === id) return node;
+        if ('children' in node && node.children) {
+          const found = findItemById(node.children as MenuNode[], id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    let parentContainer: MenuNode[] = sidebarConfig.sidebarItems;
+
+    // If parentId exists, get the parent's children array
+    if (parentId) {
+      const parent = findItemById(sidebarConfig.sidebarItems, parentId);
+      if (parent && 'children' in parent && parent.children) {
+        parentContainer = parent.children as MenuNode[];
+      }
+    }
+
+    // Find the target item's current index in the parent container
+    const targetItemIndex = parentContainer.findIndex(item => item.id === resolvedTargetId);
+
+    if (targetItemIndex === -1) {
+      // If target not found, it will be at the end
+      return parentContainer.length;
+    }
+
+    // Calculate the final index based on position
+    switch (position) {
+      case 'before':
+        return targetItemIndex;
+      case 'after':
+        return targetItemIndex + 1;
+      case 'inside':
+        // For 'inside', the item goes to the beginning of the target's children
+        const targetItem = findItemById(sidebarConfig.sidebarItems, resolvedTargetId);
+        if (targetItem && 'children' in targetItem && targetItem.children) {
+          return 0; // First position in the target's children
+        }
+        return targetItemIndex + 1; // Fallback to 'after' if can't go inside
+      default:
+        return targetItemIndex;
+    }
+  };
 
   const renderIcon = (icon?: string) => {
     if (!icon) return <DynamicIcon name="camera" color={theme.colors.text.primary} size={20} />;
@@ -94,6 +321,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                setDraggedItem(null);
                setDragOverTarget(null);
                setDropPosition('inside');
+               setCachedDropInfo(null);
              }}
              onDragOver={(e) => {
                if (draggedItem && (draggedItem.type === SidebarItemType.MenuGroup || draggedItem.type === SidebarItemType.MenuItem)) {
@@ -105,29 +333,73 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                  const mouseY = e.clientY - rect.top;
                  const elementHeight = rect.height;
 
+                 let newDropPosition: 'before' | 'after' | 'inside';
                  if (mouseY < elementHeight * 0.25) {
-                   setDropPosition('before');
+                   newDropPosition = 'before';
                  } else if (mouseY > elementHeight * 0.75) {
-                   setDropPosition('after');
+                   newDropPosition = 'after';
                  } else {
-                   setDropPosition('inside');
+                   newDropPosition = 'inside';
+                 }
+                 setDropPosition(newDropPosition);
+
+                 // Cache drop information for consistency between preview and actual drop
+                 if (sidebarConfig?.sidebarItems) {
+                   const { parentId: resolvedParentId } = findNearestAppropriateParent(
+                     item.id,
+                     newDropPosition,
+                     draggedItem.type,
+                     sidebarConfig.sidebarItems
+                   );
+
+                   const targetIndex = calculateTargetIndex(
+                     item.id,
+                     newDropPosition,
+                     draggedItem.type
+                   );
+
+                   const destinationPath = buildDestinationPath(
+                     item.id,
+                     newDropPosition,
+                     draggedItem.type
+                   );
+
+                   setCachedDropInfo({
+                     parentId: resolvedParentId,
+                     targetIndex,
+                     destinationPath
+                   });
                  }
                }
              }}
              onDragLeave={() => {
                setDragOverTarget(null);
                setDropPosition('inside');
+               setCachedDropInfo(null);
              }}
              onDrop={(e) => {
                e.stopPropagation();
+               const currentDropPosition = dropPosition;
                setDragOverTarget(null);
                setDropPosition('inside');
+
                const data = e.dataTransfer.getData('application/x-sidebar-item');
                if (!data) return;
                const payload = JSON.parse(data);
-               if (onMoveItem && (payload.type === SidebarItemType.MenuGroup || payload.type === SidebarItemType.MenuItem)) {
-                 onMoveItem(payload.id, item.id);
+
+               // Use cached drop information instead of recalculating
+               if (onMoveItem && cachedDropInfo && (payload.type === SidebarItemType.MenuGroup || payload.type === SidebarItemType.MenuItem)) {
+                 onMoveItem(
+                   payload.id,
+                   item.id,
+                   currentDropPosition,
+                   cachedDropInfo.parentId,
+                   cachedDropInfo.targetIndex
+                 );
                }
+
+               // Clear cached info after use
+               setCachedDropInfo(null);
              }}
         >
           {/* Drop preview before */}
@@ -156,7 +428,18 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                 gap: 8
               }}>
                 {renderIcon(draggedItem.icon)}
-                {draggedItem.title}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span>{draggedItem.title}</span>
+                  <span style={{
+                    fontSize: 10,
+                    opacity: 0.8,
+                    fontWeight: 400,
+                    textTransform: 'none',
+                    letterSpacing: 'normal'
+                  }}>
+                    → {cachedDropInfo?.destinationPath || buildDestinationPath(item.id, 'before', draggedItem.type)}
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -191,7 +474,18 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                 gap: 8
               }}>
                 {renderIcon(draggedItem.icon)}
-                {draggedItem.title}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span>{draggedItem.title}</span>
+                  <span style={{
+                    fontSize: 10,
+                    opacity: 0.8,
+                    fontWeight: 400,
+                    textTransform: 'none',
+                    letterSpacing: 'normal'
+                  }}>
+                    → {cachedDropInfo?.destinationPath || buildDestinationPath(item.id, 'after', draggedItem.type)}
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -252,6 +546,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
              setDraggedItem(null);
              setDragOverTarget(null);
              setDropPosition('inside');
+             setCachedDropInfo(null);
            }}
            onDragOver={(e) => {
              if (draggedItem && draggedItem.id !== item.id && isValidDropTarget) {
@@ -263,32 +558,75 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
                const mouseY = e.clientY - rect.top;
                const elementHeight = rect.height;
 
+               let newDropPosition: 'before' | 'after' | 'inside';
                if (mouseY < elementHeight * 0.3) {
-                 setDropPosition('before');
+                 newDropPosition = 'before';
                } else if (mouseY > elementHeight * 0.7) {
-                 setDropPosition('after');
+                 newDropPosition = 'after';
                } else if (canDropInside) {
-                 setDropPosition('inside');
+                 newDropPosition = 'inside';
                } else {
-                 setDropPosition('after'); // Default to after if can't drop inside
+                 newDropPosition = 'after'; // Default to after if can't drop inside
+               }
+               setDropPosition(newDropPosition);
+
+               // Cache drop information for consistency between preview and actual drop
+               if (sidebarConfig?.sidebarItems) {
+                 const { parentId: resolvedParentId } = findNearestAppropriateParent(
+                   item.id,
+                   newDropPosition,
+                   draggedItem.type,
+                   sidebarConfig.sidebarItems
+                 );
+
+                 const targetIndex = calculateTargetIndex(
+                   item.id,
+                   newDropPosition,
+                   draggedItem.type
+                 );
+
+                 const destinationPath = buildDestinationPath(
+                   item.id,
+                   newDropPosition,
+                   draggedItem.type
+                 );
+
+                 setCachedDropInfo({
+                   parentId: resolvedParentId,
+                   targetIndex,
+                   destinationPath
+                 });
                }
              }
            }}
            onDragLeave={() => {
              setDragOverTarget(null);
              setDropPosition('inside');
+             setCachedDropInfo(null);
            }}
            onDrop={(e) => {
              e.stopPropagation();
+             const currentDropPosition = dropPosition;
              setDragOverTarget(null);
              setDropPosition('inside');
+
              const data = e.dataTransfer.getData('application/x-sidebar-item');
              if (!data) return;
              const payload = JSON.parse(data);
 
-             if (onMoveItem && payload.id !== item.id) {
-               onMoveItem(payload.id, item.id);
+             // Use cached drop information instead of recalculating
+             if (onMoveItem && cachedDropInfo && payload.id !== item.id) {
+               onMoveItem(
+                 payload.id,
+                 item.id,
+                 currentDropPosition,
+                 cachedDropInfo.parentId,
+                 cachedDropInfo.targetIndex
+               );
              }
+
+             // Clear cached info after use
+             setCachedDropInfo(null);
            }}
       >
         {/* Drop preview before */}
@@ -315,7 +653,16 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
               fontWeight: 500
             }}>
               {renderIcon(draggedItem.icon)}
-              {draggedItem.title}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span>{draggedItem.title}</span>
+                <span style={{
+                  fontSize: 10,
+                  opacity: 0.8,
+                  fontWeight: 400
+                }}>
+                  → {cachedDropInfo?.destinationPath || buildDestinationPath(item.id, 'before', draggedItem.type)}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -348,7 +695,16 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
               fontWeight: 500
             }}>
               {renderIcon(draggedItem.icon)}
-              {draggedItem.title}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span>{draggedItem.title}</span>
+                <span style={{
+                  fontSize: 10,
+                  opacity: 0.8,
+                  fontWeight: 400
+                }}>
+                  → {cachedDropInfo?.destinationPath || buildDestinationPath(item.id, 'after', draggedItem.type)}
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -499,12 +855,20 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           if (draggedItem && (draggedItem.type === SidebarItemType.Category || draggedItem.type === SidebarItemType.MenuGroup)) {
             e.preventDefault();
             setDragOverTarget('root');
+
+            // Cache drop information for root level drops
+            setCachedDropInfo({
+              parentId: null, // root has no parent
+              targetIndex: 0, // always append to root
+              destinationPath: 'root(index: 0)'
+            });
           }
         }}
         onDragLeave={(e) => {
           // Only clear if we're leaving the nav area entirely
           if (!e.currentTarget.contains(e.relatedTarget as Node)) {
             setDragOverTarget(null);
+            setCachedDropInfo(null);
           }
         }}
         onDrop={(e) => {
@@ -515,9 +879,19 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           if (!data) return;
           const payload = JSON.parse(data);
 
-          if (onMoveItem && (payload.type === SidebarItemType.Category || payload.type === SidebarItemType.MenuGroup)) {
-            onMoveItem(payload.id, null); // Move to root
+          // Use cached drop information instead of hardcoding
+          if (onMoveItem && cachedDropInfo && (payload.type === SidebarItemType.Category || payload.type === SidebarItemType.MenuGroup)) {
+            onMoveItem(
+              payload.id,
+              null,
+              'inside',
+              cachedDropInfo.parentId,
+              cachedDropInfo.targetIndex
+            );
           }
+
+          // Clear cached info after use
+          setCachedDropInfo(null);
         }}
       >
         {dragOverTarget === 'root' && (

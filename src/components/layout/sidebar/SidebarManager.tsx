@@ -133,7 +133,13 @@ export const SidebarManager: React.FC = () => {
     setShowCreateForm(false);
   };
 
-  const moveItem = (sourceId: string, targetId: string | null) => {
+  const moveItem = (
+    sourceId: string,
+    targetId: string | null,
+    position?: 'before' | 'after' | 'inside',
+    parentId?: string | null,
+    targetIndex?: number
+  ) => {
     if (!sidebarConfig) return;
 
     // Find and remove the source item
@@ -158,31 +164,102 @@ export const SidebarManager: React.FC = () => {
 
     if (!sourceItem) return; // Item not found
 
-    // Insert the item in the new location
-    if (targetId === null) {
-      // Move to root
-      updated.sidebarItems = updated.sidebarItems || [];
-      updated.sidebarItems.push(sourceItem);
-    } else {
-      // Find target and insert as child
-      const insertIntoTarget = (items: MenuNode[]): boolean => {
+    // Insert the item using the precise position information
+    if (position === 'inside' && parentId) {
+      // Insert inside the specified parent at the given index
+      const insertIntoParent = (items: MenuNode[]): boolean => {
         for (const item of items) {
-          if (item.id === targetId) {
+          if (item.id === parentId) {
             if (!('children' in item)) {
               (item as any).children = [];
             }
-            (item as any).children = (item as any).children || [];
-            (item as any).children.push(sourceItem);
+            const children = (item as any).children || [];
+            const insertIndex = targetIndex !== undefined ? Math.min(targetIndex, children.length) : children.length;
+            children.splice(insertIndex, 0, sourceItem);
+            (item as any).children = children;
             return true;
           }
           if ('children' in item && item.children) {
-            if (insertIntoTarget(item.children as MenuNode[])) return true;
+            if (insertIntoParent(item.children as MenuNode[])) return true;
           }
         }
         return false;
       };
 
-      insertIntoTarget(updated.sidebarItems as MenuNode[]);
+      if (!insertIntoParent(updated.sidebarItems as MenuNode[])) {
+        // If parent not found, fall back to root level
+        updated.sidebarItems = updated.sidebarItems || [];
+        const insertIndex = targetIndex !== undefined ? Math.min(targetIndex, updated.sidebarItems.length) : updated.sidebarItems.length;
+        updated.sidebarItems.splice(insertIndex, 0, sourceItem);
+      }
+    } else if ((position === 'before' || position === 'after') && parentId !== undefined) {
+      // Insert before or after target within the specified parent
+      const insertRelativeToTarget = (items: MenuNode[]): boolean => {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].id === targetId) {
+            const insertIndex = position === 'before' ? i : i + 1;
+            if (sourceItem) {
+              items.splice(insertIndex, 0, sourceItem);
+            }
+            return true;
+          }
+          if ('children' in items[i] && (items[i] as any).children) {
+            if (insertRelativeToTarget((items[i] as any).children as MenuNode[])) return true;
+          }
+        }
+        return false;
+      };
+
+      if (parentId === null) {
+        // Insert at root level
+        insertRelativeToTarget(updated.sidebarItems as MenuNode[]);
+      } else {
+        // Find the parent and insert within its children
+        const insertIntoParent = (items: MenuNode[]): boolean => {
+          for (const item of items) {
+            if (item.id === parentId) {
+              const children = (item as any).children || [];
+              insertRelativeToTarget(children);
+              return true;
+            }
+            if ('children' in item && item.children) {
+              if (insertIntoParent(item.children as MenuNode[])) return true;
+            }
+          }
+          return false;
+        };
+        insertIntoParent(updated.sidebarItems as MenuNode[]);
+      }
+    } else if (parentId) {
+      // Fallback: Insert into specified parent using targetIndex
+      const insertIntoSpecifiedParent = (items: MenuNode[]): boolean => {
+        for (const item of items) {
+          if (item.id === parentId) {
+            if (!('children' in item)) {
+              (item as any).children = [];
+            }
+            const children = (item as any).children || [];
+            const insertIndex = targetIndex !== undefined ? Math.min(targetIndex, children.length) : children.length;
+            if (sourceItem) {
+              children.splice(insertIndex, 0, sourceItem);
+            }
+            (item as any).children = children;
+            return true;
+          }
+          if ('children' in item && item.children) {
+            if (insertIntoSpecifiedParent(item.children as MenuNode[])) return true;
+          }
+        }
+        return false;
+      };
+      insertIntoSpecifiedParent(updated.sidebarItems as MenuNode[]);
+    } else {
+      // Fallback: Insert at root level using targetIndex
+      updated.sidebarItems = updated.sidebarItems || [];
+      const insertIndex = targetIndex !== undefined ? Math.min(targetIndex, updated.sidebarItems.length) : updated.sidebarItems.length;
+      if (sourceItem) {
+        updated.sidebarItems.splice(insertIndex, 0, sourceItem);
+      }
     }
 
     updated.lastUpdateDate = new Date();
