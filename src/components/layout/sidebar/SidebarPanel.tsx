@@ -53,40 +53,27 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
       boxSizing: 'border-box',
       borderRight: `1px solid ${theme.colors.border}`
     }}>
-  {/* expose selected menu id as data attribute for testing/styling */}
-  <div data-selected-item={selectedMenuItem?.id ?? ''} />
-      <div className="sidebar-header" style={{
-        marginBottom: 16,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <h2 style={{
-          margin: 0,
-          fontSize: 18,
-          color: theme.colors.text.primary,
-          fontWeight: 600
-        }}>
-          Navigation
-        </h2>
-        <button
-          onClick={() => onAddGroup()}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: theme.colors.text.primary,
-            cursor: 'pointer',
-            padding: 4,
-            borderRadius: 4,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          title="Add Group"
-        >
-          <Plus size={16} />
-        </button>
+  {/* Header: title/logo */}
+      <div id="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/app-icon.svg" alt="App" style={{ width: 20, height: 20, objectFit: 'contain', display: 'block' }} />
+          <div style={{ fontSize: 20, fontWeight: 700 }}>Web Fusion</div>
+        </div>
       </div>
+
+      {/* Header separator aligned with the main header bottom (cf DashboardLayout header tall) */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: '43px',
+          height: 2,
+          background: theme.colors.border,
+          pointerEvents: 'none'
+        }}
+      />
 
       <div className="sidebar-content">
         <SimpleSidebarTree

@@ -18,7 +18,7 @@ export interface UseTreeResult {
   collapseNode: (nodeId: string) => void;
   expandAll: () => void;
   collapseAll: () => void;
-  moveItem: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => void;
+  moveItem: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => TreeNode[];
   setNodes: (nodes: TreeNode[]) => void;
 }
 
@@ -74,8 +74,13 @@ export const useTree = ({
     draggedId: string,
     targetId: string | null,
     position: 'before' | 'after' | 'inside'
-  ) => {
-    setNodes(currentNodes => moveNode(currentNodes, draggedId, targetId, position));
+  ): TreeNode[] => {
+    let updatedNodes: TreeNode[] = [];
+    setNodes(currentNodes => {
+      updatedNodes = moveNode(currentNodes, draggedId, targetId, position);
+      return updatedNodes;
+    });
+    return updatedNodes;
   }, []);
 
   return {

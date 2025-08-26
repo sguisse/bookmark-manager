@@ -1,6 +1,6 @@
 import React from 'react';
-import { TreeView, useTree, RenderNodeOptions } from './';
-import { TreeNode } from './types';
+import { TreeView, useTree, RenderNodeOptions } from '../../common/treeview';
+import { TreeNode } from '../../common/treeview/types';
 import { convertSidebarToTreeNodes, convertTreeNodesToSidebar } from './sidebarAdapter';
 import { SidebarConfig, SidebarItemType } from '../../../types/sidebar';
 import { DynamicIcon } from 'lucide-react/dynamic';
@@ -19,6 +19,25 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
 }) => {
   // Convert sidebar config to tree nodes
   const initialNodes = sidebarConfig ? convertSidebarToTreeNodes(sidebarConfig) : [];
+  
+  // Extract initially expanded nodes from sidebar config
+  const getInitialExpandedNodes = (): string[] => {
+    const expandedIds: string[] = [];
+    const traverse = (items: any[]) => {
+      items.forEach(item => {
+        if (item.expanded) {
+          expandedIds.push(item.id);
+        }
+        if (item.children && item.children.length > 0) {
+          traverse(item.children);
+        }
+      });
+    };
+    if (sidebarConfig?.sidebarItems) {
+      traverse(sidebarConfig.sidebarItems);
+    }
+    return expandedIds;
+  };
 
   // Initialize tree state
   const {
@@ -30,18 +49,20 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
     moveItem
   } = useTree({
     nodes: initialNodes,
-    initialOpenNodes: [], // Start with all collapsed
-    initialSelectedId: null
+    initialOpenNodes: getInitialExpandedNodes(),
+    initialSelectedId: sidebarConfig?.lastSelectedItemId || null
   });
 
   // Handle drop operations
   const handleDrop = (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => {
     console.log('Drop:', { draggedId, targetId, position });
-    moveItem(draggedId, targetId, position);
 
-    // Convert back to sidebar config and notify parent
-    if (onSidebarChange) {
-      const newConfig = convertTreeNodesToSidebar(nodes);
+    // Move the item and get the updated nodes
+    const updatedNodes = moveItem(draggedId, targetId, position);
+
+    // Convert back to sidebar config and notify parent with the fresh data
+    if (onSidebarChange && updatedNodes) {
+      const newConfig = convertTreeNodesToSidebar(updatedNodes);
       onSidebarChange(newConfig);
     }
   };
@@ -50,6 +71,39 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
   const handleSelect = (nodeId: string) => {
     selectNode(nodeId);
     onSelectItem?.(nodeId);
+  };
+
+  // Handle toggle operations (expand/collapse) with config persistence
+  const handleToggle = (nodeId: string) => {
+    // Toggle the node in the tree state
+    toggleNode(nodeId);
+    
+    // Save the expanded state to the sidebar config
+    if (onSidebarChange && sidebarConfig) {
+      const isCurrentlyOpen = openNodes.has(nodeId);
+      const newExpandedState = !isCurrentlyOpen;
+      
+      // Update the sidebar config with the new expanded state
+      const updateExpandedState = (items: any[]): any[] => {
+        return items.map(item => {
+          if (item.id === nodeId) {
+            return { ...item, expanded: newExpandedState };
+          }
+          if (item.children && item.children.length > 0) {
+            return { ...item, children: updateExpandedState(item.children) };
+          }
+          return item;
+        });
+      };
+      
+      const updatedConfig = {
+        ...sidebarConfig,
+        sidebarItems: updateExpandedState(sidebarConfig.sidebarItems),
+        lastUpdateDate: new Date()
+      };
+      
+      onSidebarChange(updatedConfig);
+    }
   };
 
   // Custom node renderer
@@ -75,7 +129,7 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              toggleNode(node.id);
+              handleToggle(node.id);
             }}
             style={{
               background: 'none',
@@ -170,22 +224,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
   };
 
   return (
-    <div style={{
-      fontFamily: 'system-ui, sans-serif',
-      backgroundColor: '#fafafa',
-      border: '1px solid #ddd',
-      borderRadius: '4px',
-      overflow: 'hidden'
-    }}>
-      <div style={{
-        padding: '12px',
-        borderBottom: '1px solid #ddd',
-        backgroundColor: '#fff',
-        fontWeight: 'bold'
-      }}>
-        Sidebar Tree Structure
-      </div>
-      <div style={{ padding: '8px' }}>
+
+      <div style={{ padding: '2px' }}>
         <TreeView
           nodes={nodes}
           rootId={null}
@@ -193,12 +233,11 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           openNodes={openNodes}
           onDrop={handleDrop}
           onSelect={handleSelect}
-          onToggle={toggleNode}
+          onToggle={handleToggle}
           renderNode={renderNode}
           canDrop={canDrop}
           className="sidebar-tree"
         />
       </div>
-    </div>
   );
 };
