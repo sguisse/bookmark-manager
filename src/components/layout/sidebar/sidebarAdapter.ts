@@ -67,7 +67,7 @@ export const convertTreeNodesToSidebar = (nodes: TreeNode[]): SidebarConfig => {
     if (node.data?.type === SidebarItemType.Category && node.data?.expanded !== undefined) {
       item.expanded = node.data.expanded;
     }
-    
+
     if (node.data?.type === SidebarItemType.MenuGroup) {
       item.expanded = node.data?.expanded ?? false;
     }

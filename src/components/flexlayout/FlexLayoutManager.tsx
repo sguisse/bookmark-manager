@@ -7,11 +7,11 @@ import createFlexLayoutFactory, { onRenderTab as defaultOnRenderTab } from './Fl
 import { v4 as uuidv4 } from 'uuid';
 import { FormDisplayMode } from '../../types/app';
 import FlexLayoutTabForm from './FlexLayoutTabForm';
-import { SidebarMenuItem } from '../../types/sidebar';
+import { SidebarItem } from '../../types/sidebar';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface FlexLayoutManagerProps {
-  onFlexLayoutTabUpdate?: (menuItem: SidebarMenuItem, nodeId: string, config: any) => void;
+  onFlexLayoutTabUpdate?: (menuItem: SidebarItem, nodeId: string, config: any) => void;
 }
 
 export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {

@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
-import { SidebarMenuItem } from '../types/sidebar';
+import { SidebarItem } from '../types/sidebar';
 
 type ApplicationContextValue = {
-  selectedMenuItem: SidebarMenuItem | null;
-  setSelectedMenuItem: (item: SidebarMenuItem | null) => void;
+  selectedMenuItem: SidebarItem | null;
+  setSelectedMenuItem: (item: SidebarItem | null) => void;
 };
 
 const ApplicationContext = createContext<ApplicationContextValue | undefined>(undefined);
 
 export const ApplicationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [selectedMenuItem, setSelectedMenuItem] = useState<SidebarMenuItem | null>(null);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<SidebarItem | null>(null);
   const value = useMemo(() => ({ selectedMenuItem, setSelectedMenuItem }), [selectedMenuItem]);
   return (
     <ApplicationContext.Provider value={value}>

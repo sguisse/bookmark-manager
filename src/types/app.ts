@@ -1,7 +1,7 @@
-import { SidebarMenuItem } from "./sidebar";
+import { SidebarItem } from "./sidebar";
 
 export interface ApplicationConfig {
-  lastSelectedMenuItem: SidebarMenuItem;
+  lastSelectedMenuItem: SidebarItem;
 }
 
 export enum FormDisplayMode {

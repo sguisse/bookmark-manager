@@ -19,7 +19,7 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
 }) => {
   // Convert sidebar config to tree nodes
   const initialNodes = sidebarConfig ? convertSidebarToTreeNodes(sidebarConfig) : [];
-  
+
   // Extract initially expanded nodes from sidebar config
   const getInitialExpandedNodes = (): string[] => {
     const expandedIds: string[] = [];
@@ -77,12 +77,12 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
   const handleToggle = (nodeId: string) => {
     // Toggle the node in the tree state
     toggleNode(nodeId);
-    
+
     // Save the expanded state to the sidebar config
     if (onSidebarChange && sidebarConfig) {
       const isCurrentlyOpen = openNodes.has(nodeId);
       const newExpandedState = !isCurrentlyOpen;
-      
+
       // Update the sidebar config with the new expanded state
       const updateExpandedState = (items: any[]): any[] => {
         return items.map(item => {
@@ -95,13 +95,13 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           return item;
         });
       };
-      
+
       const updatedConfig = {
         ...sidebarConfig,
         sidebarItems: updateExpandedState(sidebarConfig.sidebarItems),
         lastUpdateDate: new Date()
       };
-      
+
       onSidebarChange(updatedConfig);
     }
   };
@@ -203,6 +203,7 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
     const draggedType = draggedNode.data?.type;
     const targetType = targetNode?.data?.type;
 
+    /*
     // Categories can only be dropped at root level or after other categories
     if (draggedType === SidebarItemType.Category) {
       return !targetNode || targetType === SidebarItemType.Category;
@@ -219,8 +220,9 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
     if (draggedType === SidebarItemType.MenuItem) {
       return true;
     }
+    */
 
-    return false;
+    return true;
   };
 
   return (

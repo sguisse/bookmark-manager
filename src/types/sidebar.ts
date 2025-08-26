@@ -38,8 +38,3 @@ export interface SidebarItem {
   // For MenuItems - optional badge display
   badge?: Badge;
 }
-
-// Type aliases for backward compatibility and clarity
-export type SidebarCategory = SidebarItem & { type: SidebarItemType.Category };
-export type SidebarMenuGroup = SidebarItem & { type: SidebarItemType.MenuGroup };
-export type SidebarMenuItem = SidebarItem & { type: SidebarItemType.MenuItem };

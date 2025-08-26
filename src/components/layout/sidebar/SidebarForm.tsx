@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { SidebarConfig, SidebarItemType, SidebarCategory, SidebarMenuGroup, SidebarMenuItem } from '../../../types/sidebar';
+import { SidebarConfig, SidebarItemType, SidebarItem } from '../../../types/sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { FormDisplayMode } from '../../../types/app';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,9 +8,9 @@ interface SidebarFormProps {
   mode?: FormDisplayMode;
   visible: boolean;
   config?: SidebarConfig | null;
-  initial?: Partial<SidebarMenuItem> | null;
+  initial?: Partial<SidebarItem> | null;
   onCancel: () => void;
-  onCreate: (parentId: string | null, item: SidebarCategory | SidebarMenuGroup | SidebarMenuItem) => void;
+  onCreate: (parentId: string | null, item: SidebarItem) => void;
 }
 
 export default function SidebarForm(props: Readonly<SidebarFormProps>) {
@@ -59,13 +59,13 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
 
     const id = uuidv4();
     if (type === SidebarItemType.Category) {
-      const cat: SidebarCategory = { id, title: title.trim(), type: SidebarItemType.Category, children: [] };
+      const cat: SidebarItem = { id, title: title.trim(), type: SidebarItemType.Category, children: [] };
       onCreate(parentId, cat);
     } else if (type === SidebarItemType.MenuGroup) {
-      const grp: SidebarMenuGroup = { id, title: title.trim(), type: SidebarItemType.MenuGroup, expanded: false, children: [] };
+      const grp: SidebarItem = { id, title: title.trim(), type: SidebarItemType.MenuGroup, expanded: false, children: [] };
       onCreate(parentId, grp);
     } else {
-      const item: SidebarMenuItem = { id, title: title.trim(), type: SidebarItemType.MenuItem, flexLayoutId: flexLayoutId || id };
+      const item: SidebarItem = { id, title: title.trim(), type: SidebarItemType.MenuItem, flexLayoutId: flexLayoutId || id };
       if (icon) (item as any).icon = icon;
       onCreate(parentId, item);
     }

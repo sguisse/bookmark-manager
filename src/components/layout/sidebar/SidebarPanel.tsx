@@ -1,13 +1,13 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { SidebarConfig, SidebarMenuItem } from '../../../types/sidebar';
+import { SidebarConfig, SidebarItem } from '../../../types/sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { SimpleSidebarTree } from '../../common/treeview';
 
 export interface SidebarPanelProps {
   sidebarConfig?: SidebarConfig;
   openedGroups?: Record<string, boolean>;
-  selectedMenuItem?: SidebarMenuItem | null;
+  selectedMenuItem?: SidebarItem | null;
   onToggleGroup?: (id: string) => void;
   onSelectItem: (nodeId: string) => void;
   onAddBookmark: () => void;

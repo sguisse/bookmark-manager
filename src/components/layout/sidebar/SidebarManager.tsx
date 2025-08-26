@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import SidebarPanel from './SidebarPanel';
 import SidebarForm from './SidebarForm';
 import { SidebarService } from '../../../services/sidebarService';
-import { SidebarConfig, SidebarMenuItem } from '../../../types/sidebar';
+import { SidebarConfig, SidebarItem } from '../../../types/sidebar';
 import { useApplication } from '../../../contexts/ApplicationContext';
 
 export const SidebarManager: React.FC = () => {
@@ -13,7 +13,7 @@ export const SidebarManager: React.FC = () => {
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
 
   // Local type alias used across this manager for sidebar tree nodes
-  type MenuNode = import('../../../types/sidebar').SidebarCategory | import('../../../types/sidebar').SidebarMenuGroup | import('../../../types/sidebar').SidebarMenuItem;
+  type MenuNode = SidebarItem;
 
   useEffect(() => {
     try {
@@ -33,7 +33,7 @@ export const SidebarManager: React.FC = () => {
         setOpenedGroups(initialOpen);
 
         if (config.lastSelectedItemId) {
-          const find = (items?: MenuNode[]): SidebarMenuItem | undefined => {
+          const find = (items?: MenuNode[]): SidebarItem | undefined => {
             if (!items) return undefined;
             for (const it of items) {
               if (it.id === config.lastSelectedItemId && !('children' in it)) return it as any;
@@ -65,7 +65,7 @@ export const SidebarManager: React.FC = () => {
   }, []);
 
   const menuItemSelectionHandler = (id: string) => {
-    const findItem = (items?: MenuNode[]): SidebarMenuItem | undefined => {
+    const findItem = (items?: MenuNode[]): SidebarItem | undefined => {
       if (!items) return undefined;
       for (const it of items) {
         if (it.id === id && !('children' in it)) return it as any;
