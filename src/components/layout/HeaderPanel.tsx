@@ -1,5 +1,4 @@
-import React from 'react';
-import { Menu, ChevronDown } from 'lucide-react';
+import { Menu, Sun, Moon } from 'lucide-react';
 import { useApplication } from '../../contexts/ApplicationContext';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -16,39 +15,37 @@ export default function HeaderPanel(_props: Readonly<HeaderPanelProps>) {
     }
   };
 
-  const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedTheme = event.target.value as 'light' | 'dark';
-    if ((selectedTheme === 'light' && isDarkMode) ||
-        (selectedTheme === 'dark' && !isDarkMode)) {
-      toggleTheme();
-    }
+  // toggles theme using ThemeContext
+  const handleThemeToggle = () => {
+    toggleTheme();
   };
 
   const headerTitle = selectedMenuItem?.title || 'Welcome';
 
   return (
-    <header
-      className="header-panel"
-      onDragOver={(e) => {
-        // allow drop when dragging bookmarks folder
-        if (e.dataTransfer && (Array.from(e.dataTransfer.types || []).includes('application/x-bookmarks-folder') || Array.from(e.dataTransfer.types || []).includes('text/plain'))) {
-          e.preventDefault();
-          if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        }
-      }}
-      onDrop={(e) => {
-        const raw = (e.dataTransfer?.getData('application/x-bookmarks-folder') || e.dataTransfer?.getData('text/plain') || '').trim();
-        if (!raw) return;
-        let payload: { title?: string; urls?: string[] } = { title: raw, urls: [] };
-        // only attempt to parse if the payload looks like JSON
-        if (raw.startsWith('{') || raw.startsWith('[')) {
-          const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === 'object') payload = parsed;
-        }
-        window.dispatchEvent(new CustomEvent('app:header:dropped-bookmarks', { detail: payload }));
-      }}
-    >
-      <div className="header-content">
+    <header className="header-panel">
+      <section
+        className="header-content"
+        aria-label="Header"
+        onDragOver={(e) => {
+          // allow drop when dragging bookmarks folder
+          if (e.dataTransfer && (Array.from(e.dataTransfer.types || []).includes('application/x-bookmarks-folder') || Array.from(e.dataTransfer.types || []).includes('text/plain'))) {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+          }
+        }}
+        onDrop={(e) => {
+          const raw = (e.dataTransfer?.getData('application/x-bookmarks-folder') || e.dataTransfer?.getData('text/plain') || '').trim();
+          if (!raw) return;
+          let payload: { title?: string; urls?: string[] } = { title: raw, urls: [] };
+          // only attempt to parse if the payload looks like JSON
+          if (raw.startsWith('{') || raw.startsWith('[')) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') payload = parsed;
+          }
+          window.dispatchEvent(new CustomEvent('app:header:dropped-bookmarks', { detail: payload }));
+        }}
+      >
         <div className="header-left">
           <button
             onClick={toggleSidebarFromHeader}
@@ -62,19 +59,20 @@ export default function HeaderPanel(_props: Readonly<HeaderPanelProps>) {
 
         <div className="header-right">
           <div className="theme-switcher">
-            <select
-              className="theme-select"
-              value={isDarkMode ? 'dark' : 'light'}
-              onChange={handleThemeChange}
-              aria-label="Select theme"
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleThemeToggle();
+              }}
+              className="sidebar-toggle-btn"
+              aria-label="Toggle theme"
+              title={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
             >
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-            <ChevronDown size={14} className="theme-select-arrow" />
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
         </div>
-      </div>
+  </section>
     </header>
   );
 }

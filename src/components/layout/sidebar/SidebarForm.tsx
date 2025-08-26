@@ -86,7 +86,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       />
 
       <dialog open style={{ background: theme.colors.surface, padding: 16, borderRadius: 8, minWidth: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', position: 'relative', zIndex: 1, border: `1px solid ${theme.colors.border}` }}>
-        <h3 style={{ marginTop: 0 }}>{mode === FormDisplayMode.Create ? 'Create Sidebar Item' : 'Edit Sidebar Item'}</h3>
+        <h3 style={{ marginBottom: '10px' }}>{mode === FormDisplayMode.Create ? 'Create Sidebar Item' : 'Edit Sidebar Item'}</h3>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 8 }}>
             <label htmlFor="sf-type" style={{ display: 'block', marginBottom: 4 }}>Type</label>
@@ -98,12 +98,23 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
           </div>
 
           <div style={{ marginBottom: 8 }}>
+            <label htmlFor="sf-parent" style={{ display: 'block', marginBottom: 4 }}>Parent</label>
+            <select id="sf-parent" value={parentId || ''} onChange={(e) => setParentId(e.target.value || null)} style={inputStyle}>
+              <option value="">(root)</option>
+              {allNodes.filter(n => n.type === SidebarItemType.Category || n.type === SidebarItemType.MenuGroup).map(n => (
+                <option key={n.id} value={n.id}>{n.title} ({n.type})</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: 8 }}>
             <label htmlFor="sf-title" style={{ display: 'block', marginBottom: 4 }}>Title</label>
             <input id="sf-title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} autoFocus />
           </div>
 
+
           {/* fields conditional by type */}
-          {type === SidebarItemType.MenuItem && (
+          {type !== SidebarItemType.Category && (
             <>
               <div style={{ marginBottom: 8 }}>
                 <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
@@ -116,15 +127,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
             </>
           )}
 
-          <div style={{ marginBottom: 8 }}>
-            <label htmlFor="sf-parent" style={{ display: 'block', marginBottom: 4 }}>Parent</label>
-            <select id="sf-parent" value={parentId || ''} onChange={(e) => setParentId(e.target.value || null)} style={inputStyle}>
-              <option value="">(root)</option>
-              {allNodes.filter(n => n.type === SidebarItemType.Category || n.type === SidebarItemType.MenuGroup).map(n => (
-                <option key={n.id} value={n.id}>{n.title} ({n.type})</option>
-              ))}
-            </select>
-          </div>
+
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
             <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: 'transparent' }}>Cancel</button>
