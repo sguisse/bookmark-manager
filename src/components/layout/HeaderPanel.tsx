@@ -24,7 +24,7 @@ export default function HeaderPanel(_props: Readonly<HeaderPanelProps>) {
     }
   };
 
-  const headerTitle = selectedMenuItem?.title || 'Bookmark Manager';
+  const headerTitle = selectedMenuItem?.title || 'Welcome';
 
   return (
     <header

@@ -3,6 +3,7 @@ import SidebarPanel from './SidebarPanel';
 import SidebarForm from './SidebarForm';
 import { SidebarService } from '../../../services/sidebarService';
 import { SidebarConfig, SidebarItem } from '../../../types/sidebar';
+import { FormDisplayMode } from '../../../types/app';
 import { useApplication } from '../../../contexts/ApplicationContext';
 
 export const SidebarManager: React.FC = () => {
@@ -10,6 +11,7 @@ export const SidebarManager: React.FC = () => {
   const [openedGroups, setOpenedGroups] = useState<Record<string, boolean>>({});
   // visibility state is not needed here; SidebarPanel uses config.viewMode
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
 
   // Local type alias used across this manager for sidebar tree nodes
@@ -111,41 +113,127 @@ export const SidebarManager: React.FC = () => {
   };
 
   const handleCreateClick = () => {
+    setEditingItemId(null); // Clear editing state for create mode
     setShowCreateForm(true);
   };
 
-  const handleCreate = (parentId: string | null, item: any) => {
-    if (!sidebarConfig) return;
-    // Insert under parentId if provided; otherwise append at top-level
-  const updated = { ...sidebarConfig } as SidebarConfig;
+  // Helper function to find an item by ID in the sidebar config
+  const findItemById = useCallback((itemId: string): SidebarItem | null => {
+    if (!sidebarConfig?.sidebarItems) return null;
 
-    const insertInto = (children: any[] | undefined, pid: string | null): boolean => {
-      if (!Array.isArray(children)) return false;
-      if (!pid) return false;
-      for (const ch of children) {
-        if (ch.id === pid) {
-          if (!('children' in ch)) ch.children = [];
-          ch.children = ch.children || [];
-          ch.children.push(item);
-          return true;
+    const search = (items: SidebarItem[]): SidebarItem | null => {
+      for (const item of items) {
+        if (item.id === itemId) {
+          return item;
         }
-        if (ch.children && insertInto(ch.children, pid)) return true;
+        if (item.children && item.children.length > 0) {
+          const found = search(item.children);
+          if (found) return found;
+        }
       }
-      return false;
+      return null;
     };
 
-    if (parentId) {
-      insertInto(updated.sidebarItems as any[], parentId);
-    } else {
-      // append to top-level (as a category or group or item)
-      updated.sidebarItems = updated.sidebarItems || [];
-      updated.sidebarItems.push(item);
-    }
+    return search(sidebarConfig.sidebarItems);
+  }, [sidebarConfig]);
 
-    updated.lastUpdateDate = new Date();
-    SidebarService.saveConfig(updated);
-    setSidebarConfig(updated);
-    setShowCreateForm(false);
+  const handleEditItem = useCallback((nodeId: string) => {
+    setEditingItemId(nodeId);
+    setShowCreateForm(true);
+    console.log('Edit item:', nodeId);
+  }, []);
+
+  const handleDeleteItem = useCallback((nodeId: string) => {
+    if (!sidebarConfig) return;
+
+    // Remove the item from the config
+    const removeItem = (items: any[]): any[] => {
+      return items.filter(item => {
+        if (item.id === nodeId) {
+          return false; // Remove this item
+        }
+        if (item.children && item.children.length > 0) {
+          item.children = removeItem(item.children);
+        }
+        return true;
+      });
+    };
+
+    const updatedConfig = {
+      ...sidebarConfig,
+      sidebarItems: removeItem(sidebarConfig.sidebarItems),
+      lastUpdateDate: new Date()
+    };
+
+    SidebarService.saveConfig(updatedConfig);
+    setSidebarConfig(updatedConfig);
+
+    // Clear selection if the deleted item was selected
+    if (selectedMenuItem?.id === nodeId) {
+      setSelectedMenuItem(null);
+    }
+  }, [sidebarConfig, selectedMenuItem, setSelectedMenuItem]);
+
+  const handleCreate = (parentId: string | null, item: any) => {
+    if (!sidebarConfig) return;
+
+    if (editingItemId) {
+      // Edit mode: update existing item
+      const updateItem = (items: any[]): any[] => {
+        return items.map(existingItem => {
+          if (existingItem.id === editingItemId) {
+            return { ...existingItem, ...item, id: editingItemId }; // Keep the original ID
+          }
+          if (existingItem.children && existingItem.children.length > 0) {
+            return { ...existingItem, children: updateItem(existingItem.children) };
+          }
+          return existingItem;
+        });
+      };
+
+      const updatedConfig = {
+        ...sidebarConfig,
+        sidebarItems: updateItem(sidebarConfig.sidebarItems),
+        lastUpdateDate: new Date()
+      };
+
+      SidebarService.saveConfig(updatedConfig);
+      setSidebarConfig(updatedConfig);
+      setShowCreateForm(false);
+      setEditingItemId(null);
+    } else {
+      // Create mode: insert new item
+      const updated = { ...sidebarConfig } as SidebarConfig;
+
+      const insertInto = (children: any[] | undefined, pid: string | null): boolean => {
+        if (!Array.isArray(children)) return false;
+        if (!pid) return false;
+        for (const ch of children) {
+          if (ch.id === pid) {
+            if (!('children' in ch)) ch.children = [];
+            ch.children = ch.children || [];
+            ch.children.push(item);
+            return true;
+          }
+          if (ch.children && insertInto(ch.children, pid)) return true;
+        }
+        return false;
+      };
+
+      if (parentId) {
+        insertInto(updated.sidebarItems as any[], parentId);
+      } else {
+        // append to top-level (as a category or group or item)
+        updated.sidebarItems = updated.sidebarItems || [];
+        updated.sidebarItems.push(item);
+      }
+
+      updated.lastUpdateDate = new Date();
+      SidebarService.saveConfig(updated);
+      setSidebarConfig(updated);
+      setShowCreateForm(false);
+      setEditingItemId(null);
+    }
   };
 
   const moveItem = (
@@ -295,12 +383,19 @@ export const SidebarManager: React.FC = () => {
         onAddGroup={handleCreateClick}
         onSidebarChange={handleSidebarChange}
         onMoveItem={moveItem}
+        onEditItem={handleEditItem}
+        onDeleteItem={handleDeleteItem}
       />
       {showCreateForm && (
         <SidebarForm
+          mode={editingItemId ? FormDisplayMode.Edit : FormDisplayMode.Create}
           visible={showCreateForm}
           config={sidebarConfig || null}
-          onCancel={() => setShowCreateForm(false)}
+          initial={editingItemId ? findItemById(editingItemId) : null}
+          onCancel={() => {
+            setShowCreateForm(false);
+            setEditingItemId(null);
+          }}
           onCreate={handleCreate}
         />
       )}

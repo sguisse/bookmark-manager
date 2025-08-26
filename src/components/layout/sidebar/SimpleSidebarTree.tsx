@@ -79,7 +79,7 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
         onSelectItem?.(newestNode.id);
       }
     }
-  }, [sidebarConfig, setNodes, nodes, selectNode, onSelectItem]);
+  }, [sidebarConfig]); // Removed nodes, selectNode, onSelectItem from dependencies to prevent infinite loop
 
   // Handle drop operations
   const handleDrop = (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => {
@@ -136,18 +136,26 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
 
   // Handle delete operations with confirmation
   const handleDelete = (nodeId: string) => {
+    console.log('handleDelete called with nodeId:', nodeId);
     if (onDeleteItem) {
       const confirmDelete = window.confirm('Are you sure you want to delete this item and all its children?');
       if (confirmDelete) {
+        console.log('User confirmed deletion, calling onDeleteItem');
         onDeleteItem(nodeId);
       }
+    } else {
+      console.warn('onDeleteItem prop is not provided');
     }
   };
 
   // Handle edit operations
   const handleEdit = (nodeId: string) => {
+    console.log('handleEdit called with nodeId:', nodeId);
     if (onEditItem) {
+      console.log('Calling onEditItem');
       onEditItem(nodeId);
+    } else {
+      console.warn('onEditItem prop is not provided');
     }
   };
 
@@ -169,7 +177,7 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           textTransform: nodeType === SidebarItemType.Category ? 'uppercase' : 'none',
           letterSpacing: nodeType === SidebarItemType.Category ? '0.05em' : 'normal',
           position: 'relative',
-          padding: '4px 8px',
+          padding: '4px 2px',
           margin: '1px 0',
           borderRadius: '4px'
         }}

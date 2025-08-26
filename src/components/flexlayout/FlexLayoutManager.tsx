@@ -519,7 +519,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           )}
         </div>
       ) : (
-        <div>No layout configuration found.</div>
+        <div style={{ padding: '16px', textAlign: 'center' }}>Select a menu to start...</div>
       )}
     </div>
   );

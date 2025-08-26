@@ -198,7 +198,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         aria-expanded={hasChildren ? isOpen : undefined}
         style={{
           paddingLeft: `${depth * 20}px`,
-          padding: '4px 8px',
+          padding: '4px 0px',
           cursor: 'pointer',
           opacity: isDragging ? 0.5 : 1,
           backgroundColor,

@@ -53,7 +53,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
       minHeight: '100vh',
       backgroundColor: theme.colors.sidebarBackground,
       color: theme.colors.text.primary,
-      padding: 12,
+      padding: '8px 5px 5px 5px',
       boxSizing: 'border-box',
       borderRight: `1px solid ${theme.colors.border}`
     }}>
@@ -108,18 +108,6 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
         />
-
-        {/* Minimal group toggles preview to use openedGroups/onToggleGroup props */}
-        {openedGroups && onToggleGroup && (
-          <div style={{ marginTop: 12 }}>
-            {Object.keys(openedGroups).map(gid => (
-              <div key={gid} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button onClick={() => onToggleGroup(gid)} style={{ padding: 4, cursor: 'pointer' }}>{openedGroups[gid] ? 'Collapse' : 'Expand'}</button>
-                <span style={{ fontSize: 12, color: theme.colors.text.secondary }}>{gid}</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <div className="sidebar-footer" style={{
