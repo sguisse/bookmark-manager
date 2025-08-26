@@ -245,8 +245,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
               justifyContent: 'center',
               padding: '2px 6px',
               borderRadius: '999px',
-              background: node.data.badge.color || '#3399ff',
-              color: '#fff',
+              background: node.data.badge.bgColor || '#3399ff',
+              color: node.data.badge.color || '#fff',
               fontSize: '10px',
               fontWeight: 'bold',
               marginLeft: '8px'

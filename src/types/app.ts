@@ -22,6 +22,8 @@ export interface Badge {
   id: string;
   label: string;
   color?: string;
+  // background color for the badge
+  bgColor?: string;
   // optional icon to display alongside the label
   icon?: string;
 }
