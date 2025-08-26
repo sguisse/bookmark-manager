@@ -149,10 +149,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   // Calculate background color
   let backgroundColor = 'transparent';
+  let borderRadius = '0px';
   if (isSelected) {
     backgroundColor = '#e3f2fd';
+    borderRadius = '4px';
   } else if (isDropTarget && dropPosition === 'inside') {
     backgroundColor = '#f3e5f5';
+    borderRadius = '4px';
   }
 
   // Render options for custom renderer
@@ -199,6 +202,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           cursor: 'pointer',
           opacity: isDragging ? 0.5 : 1,
           backgroundColor,
+          borderRadius,
           border: isDropTarget && dropPosition === 'inside' ? '1px dashed #9c27b0' : 'none',
           userSelect: 'none',
           outline: 'none'
