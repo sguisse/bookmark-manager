@@ -172,6 +172,11 @@ export const SidebarManager: React.FC = () => {
     if (selectedMenuItem?.id === nodeId) {
       setSelectedMenuItem(null);
     }
+
+    // Notify other components that this item was deleted
+    window.dispatchEvent(new CustomEvent('sidebar:item:deleted', {
+      detail: { deletedItemId: nodeId }
+    }));
   }, [sidebarConfig, selectedMenuItem, setSelectedMenuItem]);
 
   const handleCreate = (parentId: string | null, item: any) => {

@@ -18,7 +18,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   const { onFlexLayoutTabUpdate } = props;
   const [layout, setLayout] = useState<FlexLayoutConfig | null>(null);
   const [model, setModel] = useState<Model | null>(null);
-  const { selectedMenuItem } = useApplication();
+  const { selectedMenuItem, setSelectedMenuItem } = useApplication();
   const { success } = useNotifications();
 
   // Load layout configuration when a menu item is selected
@@ -34,8 +34,29 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
       } catch (err) {
         console.warn('Error loading layout for selected menu item', err);
       }
+    } else {
+      // Clear layout when no menu item is selected
+      setLayout(null);
     }
   }, [selectedMenuItem]);
+
+  // Listen for sidebar item deletion events and clear selection if the current item was deleted
+  useEffect(() => {
+    const handleItemDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{ deletedItemId: string }>;
+      const deletedItemId = customEvent.detail?.deletedItemId;
+
+      if (deletedItemId && selectedMenuItem?.id === deletedItemId) {
+        console.log('Clearing selected menu item because it was deleted:', deletedItemId);
+        setSelectedMenuItem(null);
+      }
+    };
+
+    window.addEventListener('sidebar:item:deleted', handleItemDeleted as EventListener);
+    return () => {
+      window.removeEventListener('sidebar:item:deleted', handleItemDeleted as EventListener);
+    };
+  }, [selectedMenuItem, setSelectedMenuItem]);
 
   // When a layout config is available, create a flexlayout Model
   useEffect(() => {

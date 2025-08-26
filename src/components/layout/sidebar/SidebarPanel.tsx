@@ -112,11 +112,11 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
 
       <div className="sidebar-footer" style={{
         position: 'absolute',
-        bottom: 16,
+        bottom: 10,
         left: 16,
         right: 16,
         textAlign: 'center',
-        fontSize: 12,
+        fontSize: 14,
         color: theme.colors.text.secondary
       }}>
         Todo: Define the footer
