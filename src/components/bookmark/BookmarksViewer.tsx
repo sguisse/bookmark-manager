@@ -52,7 +52,7 @@ function useTruncatedText(text: string, containerRef: React.RefObject<HTMLElemen
         return;
       }
 
-      let iconWidth = 36;
+      let iconWidth = 38;
       let visible = calculateVisibleCharacters(text, width - iconWidth, font, ellipsis);
       if (visible >= text.length) setTruncated(text);
       else if (visible <= 0) setTruncated(ellipsis);
@@ -61,14 +61,41 @@ function useTruncatedText(text: string, containerRef: React.RefObject<HTMLElemen
 
     compute();
 
+    const cleanupFunctions: (() => void)[] = [];
+
+    // 1. Observe the element itself with ResizeObserver
     if ((window as any).ResizeObserver) {
       const _ro = new (window as any).ResizeObserver(() => compute());
       _ro.observe(el);
-      return () => _ro.disconnect();
+      cleanupFunctions.push(() => _ro.disconnect());
     }
 
+    // 2. Observe the FlexLayout tab container if present
+    const flexTab = el.closest('.flexlayout__tab');
+    if (flexTab && flexTab instanceof HTMLElement && (window as any).ResizeObserver) {
+      const tabRo = new (window as any).ResizeObserver(() => compute());
+      tabRo.observe(flexTab);
+      cleanupFunctions.push(() => tabRo.disconnect());
+    }
+
+    // 3. Listen for FlexLayout-specific resize events
+    const handleFlexLayoutResize = () => {
+      // Small delay to ensure FlexLayout has completed its resize
+      setTimeout(compute, 10);
+    };
+
+    // Listen for custom FlexLayout events
+    window.addEventListener('flexlayout-resize', handleFlexLayoutResize);
+    cleanupFunctions.push(() => window.removeEventListener('flexlayout-resize', handleFlexLayoutResize));
+
+    // 4. Fallback window resize listener
     window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
+    cleanupFunctions.push(() => window.removeEventListener('resize', compute));
+
+    // Return cleanup function
+    return () => {
+      cleanupFunctions.forEach(cleanup => cleanup());
+    };
   }, [text, containerRef, ellipsis]);
 
   return truncated;
@@ -167,13 +194,16 @@ function renderIconElement(src: string | undefined, size: number) {
   return <img src={src} alt="icon" style={{ width: size, height: size, objectFit: 'cover', borderRadius: Math.max(4, Math.floor(size / 6)) }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />;
 }
 
-
+//------------------------------------------------------------------
 // Card view component (expanded view within a table row)
+//------------------------------------------------------------------
 function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; isDragging?: boolean; }>) {
   const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme, isDragging } = props;
   const [isHovered, setIsHovered] = useState(false);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const urlRef = useRef<HTMLDivElement | null>(null);
   const truncatedTitle = useTruncatedText(bookmark.title, titleRef);
+  const truncatedUrl = useTruncatedText(bookmark.url, urlRef);
 
   // Calculate button visibility and interactivity
   const buttonsOpacity = isDragging ? 0 : (isHovered ? 1 : 0);
@@ -205,22 +235,22 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
       onMouseLeave={() => setIsHovered(false)}
     >
 
-      {/* header: icon + title on the left, actions on the right (vertically centered) */}
+      {/* header: icon + title on the left, actions on the right (positioned over title on hover) */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {renderIconElement(bookmark.icon, 20)}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
             <DelayedTooltip
               title={bookmark.title}
               url={bookmark.url}
             >
               <h3
                 ref={titleRef}
+                className="bookmark-title"
                 style={{
-                  ...titleStyle(theme),
-                  whiteSpace: 'normal',
+                  ...titleStyleCardView(theme),
                   margin: 0,
                   paddingLeft: '5px',
                   color: bookmark.color || theme.colors.text.primary,
@@ -230,27 +260,48 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
                 {truncatedTitle}
               </h3>
             </DelayedTooltip>
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', opacity: buttonsOpacity, transition: 'opacity 0.18s ease', pointerEvents: buttonsPointerEvents }}>
-          {onCollapse && (
-            <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row view" style={actionButtonStyle(theme.colors.info)}>
-              <ChevronUp size={16} />
-            </button>
-          )}
-          <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>
-            <Edit size={16} />
-          </button>
-          <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>
-            <Trash2 size={16} />
-          </button>
+            {/* Action buttons positioned over the title on hover */}
+            <div style={{
+              position: 'absolute',
+              right: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              gap: '0.25rem',
+              alignItems: 'center',
+              opacity: buttonsOpacity,
+              transition: 'opacity 0.18s ease',
+              pointerEvents: buttonsPointerEvents,
+              backgroundColor: theme.colors.surface,
+              borderRadius: '4px',
+              padding: '2px'
+            }}>
+              {onCollapse && (
+                <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row view" style={actionButtonStyle(theme.colors.info)}>
+                  <ChevronUp size={16} />
+                </button>
+              )}
+              <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>
+                <Edit size={16} />
+              </button>
+              <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div style={{ paddingRight: '0px' }}>
         {/* show URL first, then description */}
-        <div style={{ ...urlStyle(theme) }} title={bookmark.url}>{bookmark.url}</div>
+        <div
+          ref={urlRef}
+          style={{ ...urlStyle(theme) }}
+          title={bookmark.url}
+        >
+          {truncatedUrl}
+        </div>
         {bookmark.description && <p style={descriptionStyle(theme)} title={bookmark.description}>{bookmark.description}</p>}
 
         {bookmark.tags && bookmark.tags.length > 0 && (
@@ -277,12 +328,14 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
   );
 }
 
+//------------------------------------------------------------------
 // Row view component (compact view within a table row)
+//------------------------------------------------------------------
 function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; isDragging?: boolean; }>) {
   const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen, isDragging } = props;
   const [isHovered, setIsHovered] = useState(false);
-  const btnRef = useRef<HTMLButtonElement | null>(null);
-  const truncatedTitleRow = useTruncatedText(bookmark.title, btnRef);
+  const titleRef = useRef<HTMLButtonElement | null>(null);
+  const truncatedTitle = useTruncatedText(bookmark.title, titleRef);
 
   // Calculate button visibility and interactivity
   const buttonsOpacity = isDragging ? 0 : (isHovered ? 1 : 0);
@@ -306,12 +359,12 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
             <button
               className="bookmark-title"
               onClick={(e) => { e.stopPropagation(); onOpen(bookmark.url); }}
-              ref={btnRef}
+              ref={titleRef}
               style={{
                 color: bookmark.color || theme.colors.text.primary,
               }}
             >
-              {truncatedTitleRow}
+              {truncatedTitle}
             </button>
           </DelayedTooltip>
 
@@ -347,7 +400,9 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
   );
 }
 
+//------------------------------------------------------------------
 // Each BookmarkTableRow can display either a RowView (compact) or CardView (expanded)
+//------------------------------------------------------------------
 export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>) {
   const { bookmark, onEdit, onDelete, onToggleCollapsed, isDragging } = props;
   const { theme } = useTheme();
@@ -422,6 +477,17 @@ const titleStyle = (theme: any) => ({
   margin: '0 0 0.5rem 0',
   fontSize: theme.fonts.sizes.medium,
   fontWeight: 600,
+  color: theme.colors.text.primary,
+  lineHeight: '1.4',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap'
+} as React.CSSProperties);
+
+// CardView title style - consistent with RowView for better UX
+const titleStyleCardView = (theme: any) => ({
+  fontSize: theme.fonts.sizes.medium,
+  fontWeight: 500, // Slightly lighter than original for better readability in card view
   color: theme.colors.text.primary,
   lineHeight: '1.4',
   overflow: 'hidden',
