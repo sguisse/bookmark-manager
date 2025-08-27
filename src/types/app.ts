@@ -20,10 +20,9 @@ export interface BaseAuditing {
 
 export interface Badge {
   id: string;
-  label: string;
+  title?: string;
+  icon?: string;
   color?: string;
   // background color for the badge
   bgColor?: string;
-  // optional icon to display alongside the label
-  icon?: string;
 }

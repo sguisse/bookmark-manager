@@ -8,20 +8,23 @@ export class SidebarService {
    * Get default Sidebar configuration
    */
   static getDefaultConfig(): SidebarConfig {
+    const currentDate = new Date();
+
     return {
       lastSelectedItemId: 'bookmarks',
-      creationDate: null,
-      lastUpdateDate: null,
+      createdDate: currentDate,
+      lastModifiedDate: currentDate,
       viewMode: SidebarViewMode.Visible,
       footerItems: [
-        { id: 'help', type: SidebarItemType.MenuItem, title: 'Help', icon: 'help-circle' },
-        { id: 'about', type: SidebarItemType.MenuItem, title: 'About', icon: 'info' }
+        { id: 'help', type: SidebarItemType.MenuItem, title: 'Help', icon: 'help-circle', flexLayoutId: 'app-fusion-flexlayout-help' },
+        { id: 'about', type: SidebarItemType.MenuItem, title: 'About', icon: 'info', flexLayoutId: 'app-fusion-flexlayout-about' }
       ],
       sidebarItems: [
         {
           id: 'main-cat',
           type: SidebarItemType.Category,
           title: 'Main',
+          flexLayoutId: 'app-fusion-flexlayout-main',
           children: [
             {
               id: 'bookmarks',
@@ -29,28 +32,29 @@ export class SidebarService {
               title: 'Bookmarks',
               icon: 'bookmark',
               flexLayoutId: 'app-fusion-flexlayout-bookmarks',
-              badge: { id: 'bookmarks-new', label: 'new', color: '#3399ff' }
+              badge: { id: 'bookmarks-new', title: 'new', color: '#3399ff' }
             },
             {
               id: 'groups',
               type: SidebarItemType.MenuItem,
               title: 'Groups',
-              icon: 'group',
+
               flexLayoutId: 'app-fusion-flexlayout-groups'
             }
           ]
         },
         {
-          id: 'management-cat',
+          id: 'Decathlon-cat',
           type: SidebarItemType.Category,
-          title: 'Management',
+          title: 'Decathlon',
+          flexLayoutId: 'app-fusion-flexlayout-decathlon',
           children: [
             {
-              id: 'settings',
+              id: 'Architecture',
+              flexLayoutId: 'app-fusion-flexlayout-architecture',
               type: SidebarItemType.MenuGroup,
-              title: 'Settings',
-              icon: 'settings',
-              expanded: false,
+              title: 'Architecture',
+              expanded: true,
               children: [
                 {
                   id: 'profile',

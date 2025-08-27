@@ -238,23 +238,26 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
               justifyContent: 'center',
               padding: '2px 6px',
               borderRadius: '999px',
-              background: node.data.badge.bgColor || '#3399ff',
-              color: node.data.badge.color || '#fff',
+              background: node.data.badge.title ? (node.data.badge.bgColor || '#3399ff') : 'transparent',
+              color: (node.data.badge.title || node.data.badge.icon )? (node.data.badge.color || '#fff') : 'transparent',
               fontSize: '10px',
               fontWeight: 'bold',
+              height: '16px',
               marginLeft: '8px'
             }}
           >
-            {/* Badge Icon */}
+
+        {/* Badge Icon */}
         {node.data?.badge.icon && (
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Image value={node.data.badge.icon} size={16} rounded={true} />
           </div>
         )}
 
-         {node.data?.badge.label && (
+        {/* Badge Title */}
+         {node.data?.badge.title && (
           <div style={{ display: 'flex', alignItems: 'center' }}>
-          {node.data.badge.label}
+          {node.data.badge.title}
           </div>
         )}
 

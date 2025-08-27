@@ -27,7 +27,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
   const [icon, setIcon] = useState('');
   const [flexLayoutId, setFlexLayoutId] = useState('');
   const [parentId, setParentId] = useState<string | null>(null);
-  const [badgeLabel, setBadgeLabel] = useState('');
+  const [badgeTitle, setbadgeTitle] = useState('');
   const [badgeIcon, setBadgeIcon] = useState('');
   const [badgeColor, setBadgeColor] = useState('');
   const [badgeBgColor, setBadgeBgColor] = useState('');
@@ -45,14 +45,14 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
     setFlexLayoutId((initial as any)?.flexLayoutId || '');
     const existingBadge = (initial as any)?.badge;
     if (existingBadge) {
-    setBadgeLabel(existingBadge.label || '');
+    setbadgeTitle(existingBadge.title || '');
     setBadgeIcon(existingBadge.icon || '');
     setBadgeColor(existingBadge.color || '');
     setBadgeBgColor(existingBadge.bgColor || '');
     setBadgeIconPreviewValue(existingBadge.icon || '');
       setShowBadgeOptions(true);
     } else {
-      setBadgeLabel('');
+      setbadgeTitle('');
       setBadgeIcon('');
       setBadgeColor('');
       setBadgeBgColor('');
@@ -119,7 +119,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       if (showBadgeOptions) {
         (item as any).badge = {
           id: uuidv4(),
-          label: badgeLabel ? badgeLabel.trim() : '',
+          title: badgeTitle ? badgeTitle.trim() : '',
           icon: badgeIcon || undefined,
           color: badgeColor || undefined,
           bgColor: badgeBgColor || undefined
@@ -213,7 +213,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                 <div className="card-body">
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="badge-label" style={{ display: 'block', marginBottom: 4 }}>Badge label</label>
-                    <input id="badge-label" value={badgeLabel} onChange={(e) => setBadgeLabel(e.target.value)} style={inputStyle} placeholder="e.g. 12" />
+                    <input id="badge-label" value={badgeTitle} onChange={(e) => setbadgeTitle(e.target.value)} style={inputStyle} placeholder="e.g. 12" />
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="badge-icon" style={{ display: 'block', marginBottom: 4 }}>Badge icon (optional)</label>

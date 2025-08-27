@@ -55,7 +55,8 @@ export const convertTreeNodesToSidebar = (nodes: TreeNode[]): SidebarConfig => {
       id: node.id,
       title: node.text,
       icon: node.icon,
-      type: node.data?.type || SidebarItemType.MenuItem
+      type: node.data?.type || SidebarItemType.MenuItem,
+      flexLayoutId: node.data?.flexLayoutId || node.id
     };
 
     // Add children if they exist
@@ -83,7 +84,7 @@ export const convertTreeNodesToSidebar = (nodes: TreeNode[]): SidebarConfig => {
   return {
     sidebarItems: rootNodes.map(node => buildHierarchy(node.id)),
     lastSelectedItemId: '',
-    creationDate: new Date(),
-    lastUpdateDate: new Date()
+    createdDate: new Date(),
+    lastModifiedDate: new Date()
   };
 };

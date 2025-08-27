@@ -1,11 +1,11 @@
-import { Badge } from './app';
+import { Badge, BaseAuditing } from './app';
 
-export interface SidebarConfig {
+export interface SidebarConfig extends BaseAuditing {
+  // id of the last selected item in the sidebar
   lastSelectedItemId: string | null;
   // all items use unified SidebarItem interface
   sidebarItems: SidebarItem[];
-  creationDate: Date | null;
-  lastUpdateDate: Date | null;
+
   viewMode?: SidebarViewMode;
   // optional footer items rendered at the bottom of the sidebar
   footerItems?: SidebarItem[];
@@ -23,18 +23,22 @@ export enum SidebarItemType {
   MenuItem = 'menu-item'
 }
 
-export interface SidebarItem {
+export interface SidebarItem extends BaseAuditing {
   id: string;
-  title: string;
-  icon?: string;
+  // Imply style and behavior of the item
   type: SidebarItemType;
 
-  // For Categories and MenuGroups
-  children?: SidebarItem[];
+  title: string;
+  icon?: string;
+  color?: string;
+  bgColor?: string;
+
+  // This is the reference of flexLayout configuration to be rendered when this item is selected
+  flexLayoutId: string;
+
+  // Indicates if the item is expanded to show its children (if any)
   expanded?: boolean;
 
-  // For MenuItems - flexLayoutId reference
-  flexLayoutId?: string;
-  // For MenuItems - optional badge display
   badge?: Badge;
+  children?: SidebarItem[];
 }

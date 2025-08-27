@@ -4,6 +4,7 @@ import { FlexLayoutTabConfig } from "./flexTab";
 export interface Bookmark extends BaseAuditing {
   id: string;
   title: string;
+  bgColor?: string;
   color?: string;
   icon?: string;
   url: string;
