@@ -9,13 +9,9 @@ import { useApplication } from '../../../contexts/ApplicationContext';
 export const SidebarManager: React.FC = () => {
   const [sidebarConfig, setSidebarConfig] = useState<SidebarConfig | undefined>(undefined);
   const [openedGroups, setOpenedGroups] = useState<Record<string, boolean>>({});
-  // visibility state is not needed here; SidebarPanel uses config.viewMode
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
-
-  // Local type alias used across this manager for sidebar tree nodes
-  type MenuNode = SidebarItem;
 
   useEffect(() => {
     try {
@@ -24,7 +20,7 @@ export const SidebarManager: React.FC = () => {
         setSidebarConfig(config);
 
         const initialOpen: Record<string, boolean> = {};
-        const collectOpen = (items?: MenuNode[]) => {
+  const collectOpen = (items?: SidebarItem[]) => {
           if (!items) return;
           for (const it of items) {
             if ('expanded' in it && it.expanded) initialOpen[it.id] = true;
@@ -35,7 +31,7 @@ export const SidebarManager: React.FC = () => {
         setOpenedGroups(initialOpen);
 
         if (config.lastSelectedItemId) {
-          const find = (items?: MenuNode[]): SidebarItem | undefined => {
+          const find = (items?: SidebarItem[]): SidebarItem | undefined => {
             if (!items) return undefined;
             for (const it of items) {
               if (it.id === config.lastSelectedItemId && !('children' in it)) return it as any;
@@ -56,7 +52,7 @@ export const SidebarManager: React.FC = () => {
   }, [setSelectedMenuItem]);
 
 
-  const updateExpandedForId = useCallback((items: MenuNode[] | undefined, groupId: string, expanded: boolean) => {
+  const updateExpandedForId = useCallback((items: SidebarItem[] | undefined, groupId: string, expanded: boolean) => {
     if (!items) return;
     for (const it of items) {
       if (it.id === groupId && 'expanded' in it) {
@@ -67,7 +63,7 @@ export const SidebarManager: React.FC = () => {
   }, []);
 
   const menuItemSelectionHandler = (id: string) => {
-    const findItem = (items?: MenuNode[]): SidebarItem | undefined => {
+  const findItem = (items?: SidebarItem[]): SidebarItem | undefined => {
       if (!items) return undefined;
       for (const it of items) {
         if (it.id === id) return it as any; // Return any item type, not just leaf nodes
@@ -233,7 +229,7 @@ export const SidebarManager: React.FC = () => {
         updated.sidebarItems.push(item);
       }
 
-      updated.lastUpdateDate = new Date();
+      updated.lastModifiedDate = new Date();
       SidebarService.saveConfig(updated);
       setSidebarConfig(updated);
       setShowCreateForm(false);
@@ -251,16 +247,16 @@ export const SidebarManager: React.FC = () => {
     if (!sidebarConfig) return;
 
     // Find and remove the source item
-    let sourceItem: MenuNode | null = null;
+  let sourceItem: SidebarItem | null = null;
 
-    const removeFromArray = (items: MenuNode[]): MenuNode[] => {
+  const removeFromArray = (items: SidebarItem[]): SidebarItem[] => {
       return items.filter(item => {
         if (item.id === sourceId) {
           sourceItem = item;
           return false;
         }
         if ('children' in item && item.children) {
-          const filteredChildren = removeFromArray(item.children as MenuNode[]);
+          const filteredChildren = removeFromArray(item.children);
           (item as any).children = filteredChildren;
         }
         return true;
@@ -268,14 +264,14 @@ export const SidebarManager: React.FC = () => {
     };
 
     const updated = { ...sidebarConfig } as SidebarConfig;
-    updated.sidebarItems = removeFromArray(updated.sidebarItems as MenuNode[]);
+  updated.sidebarItems = removeFromArray(updated.sidebarItems);
 
     if (!sourceItem) return; // Item not found
 
     // Insert the item using the precise position information
     if (position === 'inside' && parentId) {
       // Insert inside the specified parent at the given index
-      const insertIntoParent = (items: MenuNode[]): boolean => {
+  const insertIntoParent = (items: SidebarItem[]): boolean => {
         for (const item of items) {
           if (item.id === parentId) {
             if (!('children' in item)) {
@@ -288,13 +284,13 @@ export const SidebarManager: React.FC = () => {
             return true;
           }
           if ('children' in item && item.children) {
-            if (insertIntoParent(item.children as MenuNode[])) return true;
+            if (insertIntoParent(item.children)) return true;
           }
         }
         return false;
       };
 
-      if (!insertIntoParent(updated.sidebarItems as MenuNode[])) {
+  if (!insertIntoParent(updated.sidebarItems)) {
         // If parent not found, fall back to root level
         updated.sidebarItems = updated.sidebarItems || [];
         const insertIndex = targetIndex !== undefined ? Math.min(targetIndex, updated.sidebarItems.length) : updated.sidebarItems.length;
@@ -302,7 +298,7 @@ export const SidebarManager: React.FC = () => {
       }
     } else if ((position === 'before' || position === 'after') && parentId !== undefined) {
       // Insert before or after target within the specified parent
-      const insertRelativeToTarget = (items: MenuNode[]): boolean => {
+  const insertRelativeToTarget = (items: SidebarItem[]): boolean => {
         for (let i = 0; i < items.length; i++) {
           if (items[i].id === targetId) {
             const insertIndex = position === 'before' ? i : i + 1;
@@ -312,7 +308,7 @@ export const SidebarManager: React.FC = () => {
             return true;
           }
           if ('children' in items[i] && (items[i] as any).children) {
-            if (insertRelativeToTarget((items[i] as any).children as MenuNode[])) return true;
+            if (insertRelativeToTarget((items[i] as any).children)) return true;
           }
         }
         return false;
@@ -320,10 +316,10 @@ export const SidebarManager: React.FC = () => {
 
       if (parentId === null) {
         // Insert at root level
-        insertRelativeToTarget(updated.sidebarItems as MenuNode[]);
+  insertRelativeToTarget(updated.sidebarItems);
       } else {
         // Find the parent and insert within its children
-        const insertIntoParent = (items: MenuNode[]): boolean => {
+  const insertIntoParent = (items: SidebarItem[]): boolean => {
           for (const item of items) {
             if (item.id === parentId) {
               const children = (item as any).children || [];
@@ -331,16 +327,16 @@ export const SidebarManager: React.FC = () => {
               return true;
             }
             if ('children' in item && item.children) {
-              if (insertIntoParent(item.children as MenuNode[])) return true;
+              if (insertIntoParent(item.children)) return true;
             }
           }
           return false;
         };
-        insertIntoParent(updated.sidebarItems as MenuNode[]);
+  insertIntoParent(updated.sidebarItems);
       }
     } else if (parentId) {
       // Fallback: Insert into specified parent using targetIndex
-      const insertIntoSpecifiedParent = (items: MenuNode[]): boolean => {
+  const insertIntoSpecifiedParent = (items: SidebarItem[]): boolean => {
         for (const item of items) {
           if (item.id === parentId) {
             if (!('children' in item)) {
@@ -355,12 +351,12 @@ export const SidebarManager: React.FC = () => {
             return true;
           }
           if ('children' in item && item.children) {
-            if (insertIntoSpecifiedParent(item.children as MenuNode[])) return true;
+            if (insertIntoSpecifiedParent(item.children)) return true;
           }
         }
         return false;
       };
-      insertIntoSpecifiedParent(updated.sidebarItems as MenuNode[]);
+  insertIntoSpecifiedParent(updated.sidebarItems);
     } else {
       // Fallback: Insert at root level using targetIndex
       updated.sidebarItems = updated.sidebarItems || [];
@@ -370,7 +366,7 @@ export const SidebarManager: React.FC = () => {
       }
     }
 
-    updated.lastUpdateDate = new Date();
+    updated.lastModifiedDate = new Date();
     SidebarService.saveConfig(updated);
     setSidebarConfig(updated);
   };
