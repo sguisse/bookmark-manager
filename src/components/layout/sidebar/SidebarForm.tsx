@@ -118,69 +118,46 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
     const editing = mode === FormDisplayMode.Edit && !!sidebarItem?.id;
     const id = editing ? String(sidebarItem.id) : uuidv4();
 
-    if (formData.type === SidebarItemType.Category) {
-      const cat: SidebarItem = {
-        ...(editing ? (sidebarItem as SidebarItem) : {}),
-        id,
-        title: formData.title.trim(),
-        type: SidebarItemType.Category,
-        // ensure flexLayoutId is present because SidebarItem.flexLayoutId is required
-        flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id),
-        children: (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : []
-      };
-      // Auditing timestamps
-      const now = new Date();
-      if (!editing) {
-        (cat as any).createdDate = now;
-      }
-      (cat as any).lastModifiedDate = now;
-      onCreate(formData.parentId ?? null, cat);
-    } else if (formData.type === SidebarItemType.MenuGroup) {
-      const grp: SidebarItem = {
-        ...(editing ? (sidebarItem as SidebarItem) : {}),
-        id,
-        title: formData.title.trim(),
-        type: SidebarItemType.MenuGroup,
-        expanded: (editing && (sidebarItem as any).expanded) ? (sidebarItem as any).expanded : false,
-        // ensure flexLayoutId is present for consistency
-        flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id),
-        children: (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : []
-      };
-      const now = new Date();
-      if (!editing) {
-        (grp as any).createdDate = now;
-      }
-      (grp as any).lastModifiedDate = now;
-      onCreate(formData.parentId ?? null, grp);
-    } else {
-      const item: SidebarItem = {
-        ...(editing ? (sidebarItem as SidebarItem) : {}),
-        id,
-        title: formData.title.trim(),
-        type: SidebarItemType.MenuItem,
-        flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id)
-      } as SidebarItem;
-      if (formData.icon) (item as any).icon = formData.icon;
-      if (formData.showBadgeOptions && formData.badge) {
-        (item as any).badge = {
-          id: editing && (sidebarItem as any).badge ? (sidebarItem as any).badge.id : uuidv4(),
-          title: formData.badge.title ? formData.badge.title.trim() : '',
-          icon: formData.badge.icon || undefined,
-          color: formData.color || formData.badge.color || undefined,
-          bgColor: formData.bgColor || formData.badge.bgColor || undefined
-        } as any;
-      }
-      // set top-level item color/bgColor as well
-      if (formData.color) (item as any).color = formData.color;
-      if (formData.bgColor) (item as any).bgColor = formData.bgColor;
-      // auditing
-      const now = new Date();
-      if (!editing) {
-        (item as any).createdDate = now;
-      }
-      (item as any).lastModifiedDate = now;
-      onCreate(formData.parentId ?? null, item);
+    // Build a base item from existing (when editing) or new
+    const base: any = {
+      ...(editing ? (sidebarItem as SidebarItem) : {}),
+      id,
+      title: formData.title.trim(),
+      type: formData.type,
+      flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id)
+    };
+
+    // Type-specific minimal fields
+    if (formData.type === SidebarItemType.MenuGroup) {
+      base.expanded = (editing && (sidebarItem as any).expanded) ? (sidebarItem as any).expanded : false;
+      base.children = (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : [];
     }
+    if (formData.type === SidebarItemType.Category) {
+      base.children = (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : [];
+    }
+
+    // Icon and badge are only meaningful for MenuItem, but we can set them safely
+    if (formData.icon) base.icon = formData.icon;
+    if (formData.showBadgeOptions && formData.badge) {
+      base.badge = {
+        id: editing && (sidebarItem as any).badge ? (sidebarItem as any).badge.id : uuidv4(),
+        title: formData.badge.title ? formData.badge.title.trim() : '',
+        icon: formData.badge.icon || undefined,
+        color: formData.badge.color || undefined,
+        bgColor: formData.badge.bgColor || undefined
+      };
+    }
+
+    // set top-level item color/bgColor as well
+    if (formData.color) base.color = formData.color;
+    if (formData.bgColor) base.bgColor = formData.bgColor;
+
+    // Auditing timestamps
+    const now = new Date();
+    if (!editing) base.createdDate = now;
+    base.lastModifiedDate = now;
+
+    onCreate(formData.parentId ?? null, base as SidebarItem);
     onCancel();
   };
 

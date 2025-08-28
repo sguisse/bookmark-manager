@@ -124,7 +124,9 @@ export class SidebarService {
 
   // Save Sidebar configuration to local storage
   static saveConfig(config: SidebarConfig): void {
-    localStorage.setItem(SidebarService.STORAGE_KEY, JSON.stringify(config));
+    const json = JSON.stringify(config);
+    console.log(json)
+    localStorage.setItem(SidebarService.STORAGE_KEY, json);
   }
 
 }
