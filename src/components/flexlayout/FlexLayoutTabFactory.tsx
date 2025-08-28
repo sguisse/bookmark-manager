@@ -9,53 +9,36 @@ import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink } from 'lucide-react';
+import Image from '../common/image/Image';
 import { readableTextColor } from '../../services/Utils';
 
-// helper: detect if an icon string looks like an image src (http, data:, or file path with image extension)
-const isImageSrc = (val?: string) => {
-  if (!val) return false;
-  const hasImageExt = /\.(png|jpe?g|gif|svg|ico)(\?.*)?$/i.test(val);
-  const isDataImage = /^data:image\//i.test(val);
-  const isUrlLike = /^(https?:)?\/\//i.test(val) || val.startsWith('/');
-  return isDataImage || hasImageExt || isUrlLike;
-};
 
-const renderIconElement = (val: string | undefined, key = 'icon', pill = false) => {
+const renderIconElement = (val: string | undefined, key = 'icon') => {
   if (!val) return null;
-  if (isImageSrc(val)) {
-    // small image (favicon or thumbnail)
-    const size = pill ? 14 : 18;
-    return <img key={key} src={val} alt="" style={{ width: size, height: size, objectFit: 'cover', borderRadius: 4, marginRight: pill ? 6 : 8 }} />;
-  }
-  return <span key={key} style={{ marginRight: 8 }}>{val}</span>;
+  return <Image key={key} value={val} size={14} rounded style={{ marginRight: 6 }} />;
 };
 
 export const onRenderTab = (node: TabNode, renderValues: any) => {
   const cfg = node.getConfig();
-  const color = cfg?.color;
+  const title = cfg?.title;
   const icon = cfg?.icon;
-  const bgcolor = cfg?.bgcolor;
+  const color = cfg?.color || 'inherit';
+  const bgcolor = cfg?.bgcolor || 'inherit';
+  const markColor = cfg?.markColor;
 
   const elements: any[] = [];
 
+  if (icon) {
+    elements.push(renderIconElement(icon, 'icon'));
+  }
 
 
-  if (bgcolor) {
-    const text = icon || (String(node.getName ? node.getName() : node.getId()).charAt(0).toUpperCase());
     elements.push(
-      <span key="bgpill" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: 6, background: bgcolor, color: readableTextColor(bgcolor), fontSize: 12, marginRight: 8 }}>
-        {text}
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: 6, background: bgcolor, color: color, fontSize: 12, marginRight: 8 }}>
+        {title}
       </span>
     );
-  } else if (icon) {
-    elements.push(renderIconElement(icon, 'icon', !!bgcolor));
-  }
 
-  if (color) {
-    elements.push(
-      <span key="colordot" style={{ width: 10, height: 10, background: color, borderRadius: 3, display: 'inline-block', marginRight: 8 }} />
-    );
-  }
 
   if (elements.length > 0) {
     renderValues.leading = (
