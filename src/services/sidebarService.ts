@@ -83,7 +83,32 @@ export class SidebarService {
     const config  = localStorage.getItem(SidebarService.STORAGE_KEY);
     if (config) {
       try {
-        let parsedConfig = JSON.parse(config);
+        let parsedConfig: any = JSON.parse(config);
+
+        // Rehydrate date strings into Date objects for consistency
+        const reviveDates = (obj: any) => {
+          if (!obj || typeof obj !== 'object') return obj;
+          if (obj.createdDate && typeof obj.createdDate === 'string') obj.createdDate = new Date(obj.createdDate);
+          if (obj.lastModifiedDate && typeof obj.lastModifiedDate === 'string') obj.lastModifiedDate = new Date(obj.lastModifiedDate);
+          // For nested sidebar items
+          if (Array.isArray(obj.sidebarItems)) {
+            const walk = (items: any[]) => {
+              for (const it of items) {
+                if (it.createdDate && typeof it.createdDate === 'string') it.createdDate = new Date(it.createdDate);
+                if (it.lastModifiedDate && typeof it.lastModifiedDate === 'string') it.lastModifiedDate = new Date(it.lastModifiedDate);
+                if (it.children && Array.isArray(it.children)) walk(it.children);
+                if (it.badge && typeof it.badge === 'object') {
+                  if (it.badge.createdDate && typeof it.badge.createdDate === 'string') it.badge.createdDate = new Date(it.badge.createdDate);
+                  if (it.badge.lastModifiedDate && typeof it.badge.lastModifiedDate === 'string') it.badge.lastModifiedDate = new Date(it.badge.lastModifiedDate);
+                }
+              }
+            };
+            walk(obj.sidebarItems);
+          }
+
+        };
+
+        reviveDates(parsedConfig);
         return parsedConfig;
       } catch (error) {
         console.error("Failed to parse sidebar config:", error);

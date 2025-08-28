@@ -12,22 +12,30 @@
           "icon": "bookmark",
           "type": "menu-item",
           "flexLayoutId": "app-fusion-flexlayout-bookmarks",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
           "badge": {
             "id": "35867ffe-fc2d-45f8-8048-5c7f9d86a8c6",
-            "title": ""
+            "title": "",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
           }
         },
         {
-          "id": "groups",
+          "id": "tools",
           "title": "Tools",
           "icon": "hammer",
           "type": "menu-item",
-          "flexLayoutId": "app-fusion-flexlayout-groups",
+          "flexLayoutId": "app-fusion-flexlayout-tools",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
           "badge": {
             "id": "4435dd91-2786-4eb4-a2bb-3be40f4c13b0",
             "title": "",
             "color": "#fff700",
-            "bgColor": "#272b2f"
+            "bgColor": "#272b2f",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
           }
         }
       ],
@@ -61,7 +69,9 @@
               "id": "4ac5addb-a3ce-42ad-b06b-645ef14a2e21",
               "title": "Info-com'",
               "type": "menu-item",
-              "flexLayoutId": "4ac5addb-a3ce-42ad-b06b-645ef14a2e21"
+              "flexLayoutId": "4ac5addb-a3ce-42ad-b06b-645ef14a2e21",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
             }
           ],
           "expanded": false
@@ -70,44 +80,58 @@
           "id": "b8d4c3b5-e570-4c59-961a-7c724ad14da2",
           "title": "Architecture",
           "type": "menu-item",
-          "flexLayoutId": "b8d4c3b5-e570-4c59-961a-7c724ad14da2"
+          "flexLayoutId": "b8d4c3b5-e570-4c59-961a-7c724ad14da2",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
         },
         {
           "id": "0af03306-16b7-426d-a387-18f92e3deb7e",
           "title": "Tools",
           "icon": "hammer",
           "type": "menu-item",
-          "flexLayoutId": "0af03306-16b7-426d-a387-18f92e3deb7e"
+          "flexLayoutId": "0af03306-16b7-426d-a387-18f92e3deb7e",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
         },
         {
           "id": "76e71372-b15e-42d4-81f5-23704d8d3034",
           "title": "Features",
           "type": "menu-group",
           "flexLayoutId": "76e71372-b15e-42d4-81f5-23704d8d3034",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
           "children": [
             {
               "id": "58f8dc70-2d31-48bc-80d6-7de864c0321f",
               "title": "Stock",
               "type": "menu-group",
               "flexLayoutId": "58f8dc70-2d31-48bc-80d6-7de864c0321f",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
               "children": [
                 {
                   "id": "528cc9e5-2acc-47ce-8cbd-63a90c30f261",
                   "title": "Applications",
                   "type": "menu-group",
                   "flexLayoutId": "528cc9e5-2acc-47ce-8cbd-63a90c30f261",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
                   "children": [
                     {
                       "id": "91be19fa-1312-48ac-9007-eb6e481fc43d",
                       "title": "SMDI",
                       "type": "menu-item",
-                      "flexLayoutId": "91be19fa-1312-48ac-9007-eb6e481fc43d"
+                      "flexLayoutId": "91be19fa-1312-48ac-9007-eb6e481fc43d",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
                     },
                     {
                       "id": "7a1e6cae-9393-4f47-93cb-208a5537b6a2",
                       "title": "...",
                       "type": "menu-item",
-                      "flexLayoutId": "7a1e6cae-9393-4f47-93cb-208a5537b6a2"
+                      "flexLayoutId": "7a1e6cae-9393-4f47-93cb-208a5537b6a2",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
                     }
                   ],
                   "expanded": false
@@ -120,23 +144,31 @@
               "title": "Order-Delivery",
               "type": "menu-group",
               "flexLayoutId": "34cb6c96-c860-48c6-b7c8-26c38032138d",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
               "children": [
                 {
                   "id": "cbc572fd-78de-4ff3-b7f7-6adf022b3b34",
                   "title": "Applications",
                   "type": "menu-group",
                   "flexLayoutId": "cbc572fd-78de-4ff3-b7f7-6adf022b3b34",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
                   "children": [
                     {
                       "id": "9409f5db-ee9d-42a5-86af-ae4156c5230e",
                       "title": "flow-available-shipment",
                       "type": "menu-item",
                       "flexLayoutId": "9409f5db-ee9d-42a5-86af-ae4156c5230e",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
                       "badge": {
                         "id": "41f256fb-2100-4d8c-96ca-0e57a23e5da8",
                         "title": "",
                         "icon": "⬅️",
-                        "bgColor": "#000000"
+                        "bgColor": "#000000",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
                       }
                     },
                     {
@@ -144,9 +176,14 @@
                       "title": "flow-purchase-order",
                       "type": "menu-item",
                       "flexLayoutId": "d2faaeb9-8cb3-4fef-8154-8bd8f7500bc2",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
                       "badge": {
                         "id": "e7c39b71-0e2f-43ce-ae62-ee3e1a77056b",
-                        "title": "new"
+                        "title": "",
+                        "icon": "⬅️",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
                       }
                     }
                   ],
@@ -166,18 +203,24 @@
       "title": "Perso",
       "type": "category",
       "flexLayoutId": "0c5f275e-76d3-42de-8118-b48d40e678c3",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
       "children": [
         {
           "id": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53",
           "title": "Veille Techno",
           "type": "menu-item",
-          "flexLayoutId": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53"
+          "flexLayoutId": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
         },
         {
           "id": "d9f815cc-fa3f-4392-8862-1a29560a0401",
           "title": "Documentation",
           "type": "menu-group",
           "flexLayoutId": "d9f815cc-fa3f-4392-8862-1a29560a0401",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
           "expanded": false
         },
         {
@@ -185,14 +228,15 @@
           "title": "Tools",
           "type": "menu-group",
           "flexLayoutId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z",
           "expanded": false
         }
       ],
       "expanded": true
     }
   ],
-  "lastSelectedItemId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
+  "lastSelectedItemId": "4c46de12-0b72-4ddf-b1e8-45cfd124b1f9",
   "createdDate": "2025-08-27T18:23:00.228Z",
-  "lastModifiedDate": "2025-08-27T18:23:00.228Z",
-  "lastUpdateDate": "2025-08-28T04:24:13.894Z"
+  "lastModifiedDate": "2025-08-28T05:59:36.523Z"
 }

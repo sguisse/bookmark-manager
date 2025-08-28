@@ -128,6 +128,12 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
         flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id),
         children: (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : []
       };
+      // Auditing timestamps
+      const now = new Date();
+      if (!editing) {
+        (cat as any).createdDate = now;
+      }
+      (cat as any).lastModifiedDate = now;
       onCreate(formData.parentId ?? null, cat);
     } else if (formData.type === SidebarItemType.MenuGroup) {
       const grp: SidebarItem = {
@@ -140,6 +146,11 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
         flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id),
         children: (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : []
       };
+      const now = new Date();
+      if (!editing) {
+        (grp as any).createdDate = now;
+      }
+      (grp as any).lastModifiedDate = now;
       onCreate(formData.parentId ?? null, grp);
     } else {
       const item: SidebarItem = {
@@ -162,6 +173,12 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       // set top-level item color/bgColor as well
       if (formData.color) (item as any).color = formData.color;
       if (formData.bgColor) (item as any).bgColor = formData.bgColor;
+      // auditing
+      const now = new Date();
+      if (!editing) {
+        (item as any).createdDate = now;
+      }
+      (item as any).lastModifiedDate = now;
       onCreate(formData.parentId ?? null, item);
     }
     onCancel();
