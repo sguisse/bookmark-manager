@@ -168,17 +168,16 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
   };
 
   // Helper to update badge ensuring all fields are present (avoids partial / undefined)
-  const updateBadge = (partial: Partial<{ title: string; icon: string } | { title: string; icon: string; color?: string; bgColor?: string }>) => {
+  const updateBadge = (partial: Partial<{ title: string; icon: string; color?: string; bgColor?: string }>) => {
     setFormData(f => {
       const existing = f.badge ?? { title: '', icon: '', color: '', bgColor: '' };
       return {
         ...f,
         badge: {
-          title: (partial as any).title ?? existing.title,
-          icon: (partial as any).icon ?? existing.icon,
-          // keep badge color/bgColor unchanged
-          color: existing.color,
-          bgColor: existing.bgColor
+          title: partial.title ?? existing.title,
+          icon: partial.icon ?? existing.icon,
+          color: partial.color ?? existing.color,
+          bgColor: partial.bgColor ?? existing.bgColor
         },
         showBadgeOptions: true
       };
@@ -351,16 +350,48 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
 
                       <div>
                         <label htmlFor="badge-color" style={{ display: 'block', marginBottom: 4 }}>Text color</label>
-                        <input id="badge-color" type="color" value={formData.badge?.color || '#ffffff'}
-                               onChange={(e) => updateBadge({ color: e.target.value })}
-                               style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input
+                            id="badge-color"
+                            type="color"
+                            aria-label="Badge text color"
+                            value={formData.badge?.color || '#ffffff'}
+                            onChange={(e) => updateBadge({ color: e.target.value })}
+                            style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
+                          />
+                          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                            <input
+                              type="checkbox"
+                              checked={!formData.badge?.color}
+                              onChange={(e) => updateBadge({ color: e.target.checked ? '' : (formData.badge?.color || '#ffffff') })}
+                              aria-label="Default badge text color"
+                            />
+                            <span>Default</span>
+                          </label>
+                        </div>
                       </div>
 
                       <div>
                         <label htmlFor="badge-bgcolor" style={{ display: 'block', marginBottom: 4 }}>Background color</label>
-                        <input id="badge-bgcolor" type="color" value={formData.badge?.bgColor || '#1976d2'}
-                               onChange={(e) => updateBadge({ bgColor: e.target.value })}
-                               style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input
+                            id="badge-bgcolor"
+                            type="color"
+                            aria-label="Badge background color"
+                            value={formData.badge?.bgColor || '#1976d2'}
+                            onChange={(e) => updateBadge({ bgColor: e.target.value })}
+                            style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
+                          />
+                          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                            <input
+                              type="checkbox"
+                              checked={!formData.badge?.bgColor}
+                              onChange={(e) => updateBadge({ bgColor: e.target.checked ? '' : (formData.badge?.bgColor || '#1976d2') })}
+                              aria-label="Default badge background color"
+                            />
+                            <span>Default</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
