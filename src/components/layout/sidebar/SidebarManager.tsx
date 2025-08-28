@@ -199,7 +199,7 @@ export const SidebarManager: React.FC = () => {
       const updatedConfig = {
         ...sidebarConfig,
         sidebarItems: updateItem(sidebarConfig.sidebarItems),
-        lastUpdateDate: new Date()
+        lastModifiedDate: new Date()
       };
 
       SidebarService.saveConfig(updatedConfig);
@@ -396,7 +396,7 @@ export const SidebarManager: React.FC = () => {
           mode={editingItemId ? FormDisplayMode.Edit : FormDisplayMode.Create}
           visible={showCreateForm}
           config={sidebarConfig || null}
-          initial={editingItemId ? findItemById(editingItemId) : null}
+          sidebarItem={editingItemId ? findItemById(editingItemId) : null}
           onCancel={() => {
             setShowCreateForm(false);
             setEditingItemId(null);

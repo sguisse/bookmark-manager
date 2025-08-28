@@ -10,56 +10,46 @@ interface SidebarFormProps {
   mode?: FormDisplayMode;
   visible: boolean;
   config?: SidebarConfig | null;
-  initial?: Partial<SidebarItem> | null;
+  sidebarItem?: Partial<SidebarItem> | null;
   onCancel: () => void;
   onCreate: (parentId: string | null, item: SidebarItem) => void;
 }
 
 export default function SidebarForm(props: Readonly<SidebarFormProps>) {
-  const { mode = FormDisplayMode.Create, visible, config, initial, onCancel, onCreate } = props;
+  const { mode = FormDisplayMode.Create, visible, config, sidebarItem, onCancel, onCreate } = props;
   const { theme } = useTheme();
 
-  // If an initial item is provided, treat the form as Edit mode to avoid mismatch
-  const effectiveMode = initial ? FormDisplayMode.Edit : mode;
+  // Single form state for all fields (initialized from `sidebarItem` when provided)
+  type FormDataType = {
+    type: SidebarItemType;
+    title: string;
+    icon: string;
+    iconPreviewValue: string;
+    flexLayoutId: string;
+    parentId: string | null;
+    badge: { title: string; icon: string; color: string; bgColor: string } | null;
+    showBadgeOptions: boolean;
+  };
 
-  const [type, setType] = useState<SidebarItemType>(SidebarItemType.MenuItem);
-  const [title, setTitle] = useState('');
-  const [icon, setIcon] = useState('');
-  const [flexLayoutId, setFlexLayoutId] = useState('');
-  const [parentId, setParentId] = useState<string | null>(null);
-  const [badgeTitle, setbadgeTitle] = useState('');
-  const [badgeIcon, setBadgeIcon] = useState('');
-  const [badgeColor, setBadgeColor] = useState('');
-  const [badgeBgColor, setBadgeBgColor] = useState('');
-  const [showBadgeOptions, setShowBadgeOptions] = useState(false);
-  // store the preview text/value set on blur (could be image URL, emoji, or lucide icon name)
-  const [iconPreviewValue, setIconPreviewValue] = useState('');
-  const [badgeIconPreviewValue, setBadgeIconPreviewValue] = useState('');
+  const [formData, setFormData] = useState<FormDataType>(() => ({
+    type: (sidebarItem?.type as SidebarItemType) ?? SidebarItemType.MenuItem,
+    title: sidebarItem?.title ?? '',
+    icon: sidebarItem?.icon ?? '',
+    iconPreviewValue: sidebarItem?.icon ?? '',
+    flexLayoutId: ((sidebarItem as any)?.flexLayoutId) ?? '',
+    parentId: null,
+    badge: (sidebarItem as any)?.badge ? {
+      title: (sidebarItem as any).badge.title || '',
+      icon: (sidebarItem as any).badge.icon || '',
+      color: (sidebarItem as any).badge.color || '',
+      bgColor: (sidebarItem as any).badge.bgColor || ''
+    } : null,
+    showBadgeOptions: !!((sidebarItem as any)?.badge)
+  }));
 
   useEffect(() => {
-    // Prefill values when opening the form in edit mode
-    setType(initial?.type ?? SidebarItemType.MenuItem);
-    setTitle(initial?.title || '');
-    setIcon(initial?.icon || '');
-    setIconPreviewValue(initial?.icon || '');
-    setFlexLayoutId((initial as any)?.flexLayoutId || '');
-    const existingBadge = (initial as any)?.badge;
-    if (existingBadge) {
-    setbadgeTitle(existingBadge.title || '');
-    setBadgeIcon(existingBadge.icon || '');
-    setBadgeColor(existingBadge.color || '');
-    setBadgeBgColor(existingBadge.bgColor || '');
-    setBadgeIconPreviewValue(existingBadge.icon || '');
-      setShowBadgeOptions(true);
-    } else {
-      setbadgeTitle('');
-      setBadgeIcon('');
-      setBadgeColor('');
-      setBadgeBgColor('');
-      setShowBadgeOptions(false);
-    }
-
-    // Compute parentId by traversing the config to find the parent of the initial item
+    // Prefill values when opening the form in edit mode or when sidebarItem/config changes
+    const existingBadge = (sidebarItem as any)?.badge;
     const findParentId = (items: any[] | undefined, childId?: string): string | null => {
       if (!items || !childId) return null;
       for (const it of items) {
@@ -72,13 +62,24 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       return null;
     };
 
-    if (initial?.id && config) {
-      const pid = findParentId(config.sidebarItems as any[], initial.id);
-      setParentId(pid);
-    } else {
-      setParentId(null);
-    }
-  }, [initial, visible, config]);
+    const pid = (sidebarItem?.id && config) ? findParentId(config.sidebarItems as any[], sidebarItem.id) : null;
+
+    setFormData({
+      type: (sidebarItem?.type as SidebarItemType) ?? SidebarItemType.MenuItem,
+      title: sidebarItem?.title ?? '',
+      icon: sidebarItem?.icon ?? '',
+      iconPreviewValue: sidebarItem?.icon ?? '',
+      flexLayoutId: ((sidebarItem as any)?.flexLayoutId) ?? '',
+      parentId: pid,
+      badge: existingBadge ? {
+        title: existingBadge.title || '',
+        icon: existingBadge.icon || '',
+        color: existingBadge.color || '',
+        bgColor: existingBadge.bgColor || ''
+      } : null,
+      showBadgeOptions: !!existingBadge
+    });
+  }, [sidebarItem, visible, config]);
 
   const allNodes = useMemo(() => {
     const out: Array<{ id: string; title: string; type: SidebarItemType }> = [];
@@ -104,30 +105,68 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return; // title mandatory
+    if (!formData.title.trim()) return; // title mandatory
 
-    const id = uuidv4();
-    if (type === SidebarItemType.Category) {
-      const cat: SidebarItem = { id, title: title.trim(), type: SidebarItemType.Category, children: [] };
-      onCreate(parentId, cat);
-    } else if (type === SidebarItemType.MenuGroup) {
-      const grp: SidebarItem = { id, title: title.trim(), type: SidebarItemType.MenuGroup, expanded: false, children: [] };
-      onCreate(parentId, grp);
+    const editing = mode === FormDisplayMode.Edit && !!sidebarItem?.id;
+    const id = editing ? String(sidebarItem.id) : uuidv4();
+
+    if (formData.type === SidebarItemType.Category) {
+      const cat: SidebarItem = {
+        ...(editing ? (sidebarItem as SidebarItem) : {}),
+        id,
+        title: formData.title.trim(),
+        type: SidebarItemType.Category,
+        children: (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : []
+      };
+      onCreate(formData.parentId ?? null, cat);
+    } else if (formData.type === SidebarItemType.MenuGroup) {
+      const grp: SidebarItem = {
+        ...(editing ? (sidebarItem as SidebarItem) : {}),
+        id,
+        title: formData.title.trim(),
+        type: SidebarItemType.MenuGroup,
+        expanded: (editing && (sidebarItem as any).expanded) ? (sidebarItem as any).expanded : false,
+        children: (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : []
+      };
+      onCreate(formData.parentId ?? null, grp);
     } else {
-      const item: SidebarItem = { id, title: title.trim(), type: SidebarItemType.MenuItem, flexLayoutId: flexLayoutId || id };
-      if (icon) (item as any).icon = icon;
-      if (showBadgeOptions) {
+      const item: SidebarItem = {
+        ...(editing ? (sidebarItem as SidebarItem) : {}),
+        id,
+        title: formData.title.trim(),
+        type: SidebarItemType.MenuItem,
+        flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id)
+      } as SidebarItem;
+      if (formData.icon) (item as any).icon = formData.icon;
+      if (formData.showBadgeOptions && formData.badge) {
         (item as any).badge = {
-          id: uuidv4(),
-          title: badgeTitle ? badgeTitle.trim() : '',
-          icon: badgeIcon || undefined,
-          color: badgeColor || undefined,
-          bgColor: badgeBgColor || undefined
-        };
+          id: editing && (sidebarItem as any).badge ? (sidebarItem as any).badge.id : uuidv4(),
+          title: formData.badge.title ? formData.badge.title.trim() : '',
+          icon: formData.badge.icon || undefined,
+          color: formData.badge.color || undefined,
+          bgColor: formData.badge.bgColor || undefined
+        } as any;
       }
-      onCreate(parentId, item);
+      onCreate(formData.parentId ?? null, item);
     }
     onCancel();
+  };
+
+  // Helper to update badge ensuring all fields are present (avoids partial / undefined)
+  const updateBadge = (partial: Partial<{ title: string; icon: string; color: string; bgColor: string }>) => {
+    setFormData(f => {
+      const existing = f.badge ?? { title: '', icon: '', color: '', bgColor: '' };
+      return {
+        ...f,
+        badge: {
+          title: partial.title ?? existing.title,
+          icon: partial.icon ?? existing.icon,
+          color: partial.color ?? existing.color,
+          bgColor: partial.bgColor ?? existing.bgColor
+        },
+        showBadgeOptions: true
+      };
+    });
   };
 
   if (!visible) return null;
@@ -144,7 +183,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       />
 
       <dialog open style={{ background: theme.colors.surface, padding: 16, borderRadius: 8, minWidth: 360, boxShadow: '0 8px 32px rgba(0,0,0,0.12)', position: 'relative', zIndex: 1, border: `1px solid ${theme.colors.border}` }}>
-  <h3 style={{ marginBottom: '10px' }}>{effectiveMode === FormDisplayMode.Create ? 'Create Sidebar Item' : 'Edit Sidebar Item'}</h3>
+  <h3 style={{ marginBottom: '10px' }}>{mode === FormDisplayMode.Create ? 'Create Sidebar Item' : 'Edit Sidebar Item'}</h3>
         <form onSubmit={handleSubmit}>
           {/* Menu configuration block (CoreUI-like card) */}
           <div className="card mb-4" style={{ borderColor: theme.colors.border }}>
@@ -154,7 +193,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
             <div className="card-body">
               <div style={{ marginBottom: 8 }}>
                 <label htmlFor="sf-type" style={{ display: 'block', marginBottom: 4 }}>Type</label>
-                <select id="sf-type" value={type} onChange={(e) => setType(e.target.value as SidebarItemType)} style={inputStyle}>
+                <select id="sf-type" value={formData.type} onChange={(e) => setFormData(f => ({ ...f, type: e.target.value as SidebarItemType }))} style={inputStyle}>
                   <option value={SidebarItemType.MenuItem}>Menu Item</option>
                   <option value={SidebarItemType.MenuGroup}>Menu Group</option>
                   <option value={SidebarItemType.Category}>Category</option>
@@ -163,7 +202,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
 
               <div style={{ marginBottom: 8 }}>
                 <label htmlFor="sf-parent" style={{ display: 'block', marginBottom: 4 }}>Parent</label>
-                <select id="sf-parent" value={parentId || ''} onChange={(e) => setParentId(e.target.value || null)} style={inputStyle}>
+                <select id="sf-parent" value={formData.parentId || ''} onChange={(e) => setFormData(f => ({ ...f, parentId: e.target.value || null }))} style={inputStyle}>
                   <option value="">(root)</option>
                   {allNodes.filter(n => n.type === SidebarItemType.Category || n.type === SidebarItemType.MenuGroup).map(n => (
                     <option key={n.id} value={n.id}>{n.title} ({n.type})</option>
@@ -173,22 +212,22 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
 
               <div style={{ marginBottom: 8 }}>
                 <label htmlFor="sf-title" style={{ display: 'block', marginBottom: 4 }}>Title</label>
-                <input id="sf-title" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} autoFocus />
+                <input id="sf-title" value={formData.title} onChange={(e) => setFormData(f => ({ ...f, title: e.target.value }))} style={inputStyle} autoFocus />
               </div>
 
               {/* fields conditional by type */}
-              {type !== SidebarItemType.Category && (
+              {formData.type !== SidebarItemType.Category && (
                 <>
                   <div style={{ marginBottom: 8 }}>
-                    <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Image value={iconPreviewValue} size={20} rounded style={{ display: 'inline-block' }} />
-                      <input id="sf-icon" value={icon} onChange={(e) => setIcon(e.target.value)} onBlur={() => setIconPreviewValue(icon)} style={inputStyle} placeholder="camera or https://..." />
+                      <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Image value={formData.iconPreviewValue} size={20} rounded style={{ display: 'inline-block' }} />
+                        <input id="sf-icon" value={formData.icon} onChange={(e) => setFormData(f => ({ ...f, icon: e.target.value }))} onBlur={() => setFormData(f => ({ ...f, iconPreviewValue: f.icon }))} style={inputStyle} placeholder="camera or https://..." />
+                      </div>
                     </div>
-                  </div>
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="sf-flex" style={{ display: 'block', marginBottom: 4 }}>Flex layout id (optional)</label>
-                    <input id="sf-flex" value={flexLayoutId} onChange={(e) => setFlexLayoutId(e.target.value)} style={inputStyle} placeholder="layout id or leave empty to generate" />
+                    <input id="sf-flex" value={formData.flexLayoutId} onChange={(e) => setFormData(f => ({ ...f, flexLayoutId: e.target.value }))} style={inputStyle} placeholder="layout id or leave empty to generate" />
                   </div>
                 </>
               )}
@@ -202,34 +241,34 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                 <strong>Badge</strong>
                 <button
                   type="button"
-                  onClick={() => setShowBadgeOptions(s => !s)}
-                  aria-expanded={showBadgeOptions}
+                  onClick={() => setFormData(f => ({ ...f, showBadgeOptions: !f.showBadgeOptions }))}
+                  aria-expanded={formData.showBadgeOptions}
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                 >
-                  {showBadgeOptions ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  {formData.showBadgeOptions ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </button>
               </div>
-              {showBadgeOptions && (
+              {formData.showBadgeOptions && (
                 <div className="card-body">
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="badge-label" style={{ display: 'block', marginBottom: 4 }}>Badge label</label>
-                    <input id="badge-label" value={badgeTitle} onChange={(e) => setbadgeTitle(e.target.value)} style={inputStyle} placeholder="e.g. 12" />
+                    <input id="badge-label" value={formData.badge?.title || ''} onChange={(e) => updateBadge({ title: e.target.value })} style={inputStyle} placeholder="e.g. 12" />
                   </div>
                   <div style={{ marginBottom: 8 }}>
                     <label htmlFor="badge-icon" style={{ display: 'block', marginBottom: 4 }}>Badge icon (optional)</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Image value={badgeIconPreviewValue} size={20} rounded style={{ display: 'inline-block' }} />
-                      <input id="badge-icon" value={badgeIcon} onChange={(e) => setBadgeIcon(e.target.value)} onBlur={() => setBadgeIconPreviewValue(badgeIcon)} style={inputStyle} placeholder="camera or https://..." />
+                      <Image value={formData.badge?.icon || ''} size={20} rounded style={{ display: 'inline-block' }} />
+                      <input id="badge-icon" value={formData.badge?.icon || ''} onChange={(e) => updateBadge({ icon: e.target.value })} onBlur={() => updateBadge({ icon: formData.badge?.icon || '' })} style={inputStyle} placeholder="camera or https://..." />
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <div style={{ flex: 1 }}>
                       <label htmlFor="badge-color" style={{ display: 'block', marginBottom: 4 }}>Text color</label>
-                      <input id="badge-color" type="color" value={badgeColor || '#ffffff'} onChange={(e) => setBadgeColor(e.target.value)} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                      <input id="badge-color" type="color" value={formData.badge?.color || '#ffffff'} onChange={(e) => updateBadge({ color: e.target.value })} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <label htmlFor="badge-bgcolor" style={{ display: 'block', marginBottom: 4 }}>Background color</label>
-                      <input id="badge-bgcolor" type="color" value={badgeBgColor || '#1976d2'} onChange={(e) => setBadgeBgColor(e.target.value)} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                      <input id="badge-bgcolor" type="color" value={formData.badge?.bgColor || '#1976d2'} onChange={(e) => updateBadge({ bgColor: e.target.value })} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
                     </div>
                   </div>
                 </div>
@@ -241,7 +280,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
             <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: 'transparent' }}>Cancel</button>
-            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, background: theme.colors.primary, color: '#fff' }}>{effectiveMode === FormDisplayMode.Create ? 'Create' : 'Save'}</button>
+            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, background: theme.colors.primary, color: '#fff' }}>{mode === FormDisplayMode.Create ? 'Create' : 'Save'}</button>
           </div>
         </form>
       </dialog>
