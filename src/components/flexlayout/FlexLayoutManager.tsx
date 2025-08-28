@@ -456,7 +456,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
     return () => window.removeEventListener('app:header:dropped-bookmarks', handler as EventListener);
   }, [selectedMenuItem]);
 
-  const { factory, onRenderTabSet, onRenderTab: boundOnRenderTab } = (createFlexLayoutFactory as any)(handleChildConfigChange, openTabEditor);
+  const { factory, onRenderTabSet, onRenderTab } = (createFlexLayoutFactory as any)(handleChildConfigChange, openTabEditor);
 
   // Theme flexlayout definition
   const { isDarkMode } = useTheme();
@@ -474,7 +474,7 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
             model={model}
             factory={factory}
             onAction={onAction}
-            onRenderTab={boundOnRenderTab || defaultOnRenderTab}
+            onRenderTab={onRenderTab}
             onRenderTabSet={onRenderTabSet}
           />
           {(editingNodeId || createTargetNodeId) && (

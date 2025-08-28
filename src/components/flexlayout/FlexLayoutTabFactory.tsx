@@ -10,47 +10,13 @@ import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink } from 'lucide-react';
 import Image from '../common/image/Image';
+import { FormDisplayMode } from '../../types/app';
 
 
 const renderIconElement = (val: string | undefined, key = 'icon') => {
   if (!val) return null;
   return <Image key={key} value={val} size={14} rounded style={{ marginRight: 6 }} />;
 };
-
-export const onRenderTab = (node: TabNode, renderValues: any) => {
-  const cfg = node.getConfig();
-  const title = cfg?.title;
-  const icon = cfg?.icon;
-  const color = cfg?.color ?? 'inherit';
-  const bgColor = cfg?.bgColor ?? 'inherit';
-  const markColor = cfg?.markColor;
-
-  const elements: any[] = [];
-
-  if (icon) {
-    elements.push(renderIconElement(icon, 'icon'));
-  }
-
-
-    elements.push(
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: 6, background: bgColor, color: color, fontSize: 12, marginRight: 8 }}>
-        {title}
-      </span>
-    );
-
-
-  if (elements.length > 0) {
-    renderValues.leading = (
-      <div style={{ display: 'inline-flex', alignItems: 'center' }}>
-        {elements}
-        {renderValues.leading}
-      </div>
-    );
-  }
-};
-
-// create a bound onRenderTabSet using the provided openTabEditor callback
-import { FormDisplayMode } from '../../types/app';
 
 const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplayMode) => void) => {
   return (tabSetNode: (TabSetNode | BorderNode), renderValues: ITabSetRenderValues) => {
@@ -194,7 +160,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
   const onRenderTabSet = buildOnRenderTabSet(openTabEditor);
 
   // create a bound onRenderTab that can call openTabEditor when the leading element is clicked
-  const boundOnRenderTab = (node: TabNode, renderValues: any) => {
+  const onRenderTab  = (node: TabNode, renderValues: any) => {
     const cfg = node.getConfig();
     const color = cfg?.color;
     const bgColor = cfg?.bgColor;
@@ -274,7 +240,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     );
   };
 
-  return { factory, onRenderTabSet, onRenderTab: boundOnRenderTab };
+  return { factory, onRenderTabSet, onRenderTab };
 };
 
 export default createFlexLayoutFactory;
