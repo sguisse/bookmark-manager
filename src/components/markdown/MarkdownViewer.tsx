@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import Markdown from 'react-markdown'
+import MDEditor from '@uiw/react-md-editor';
 
 // Presentational: consult-only view
 export function MarkdownConsultView(props: Readonly<{ content: string }>) {
@@ -12,10 +12,10 @@ export function MarkdownConsultView(props: Readonly<{ content: string }>) {
   return (
     <div style={{ height: '100%', display: 'flex', padding: '5px', flexDirection: 'column' }}>
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-        {Markdown ? (
+        {MDEditor ? (
           // render parsed markdown; ensure renderer container can grow
           <div style={{ height: '100%' }}>
-            <Markdown>{content}</Markdown>
+            <MDEditor.Markdown source={content} />
           </div>
         ) : (
           // fallback: show raw markdown text
