@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TreeView, useTree, RenderNodeOptions } from '../../common/treeview';
 import { TreeNode } from '../../common/treeview/types';
-import { convertSidebarToTreeNodes, convertTreeNodesToSidebar } from './sidebarAdapter';
+import { convertSidebarToTreeNodes, convertTreeNodesToSidebar } from './sidebarTreeAdapter';
 import { SidebarConfig, SidebarItemType } from '../../../types/sidebar';
 import Image from '../../common/image/Image';
 import { ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
