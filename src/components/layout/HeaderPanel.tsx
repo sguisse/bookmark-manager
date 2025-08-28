@@ -35,6 +35,8 @@ export default function HeaderPanel(_props: Readonly<HeaderPanelProps>) {
           }
         }}
         onDrop={(e) => {
+          console.log('Dropped data:', e.dataTransfer?.getData('text/plain'));
+
           const raw = (e.dataTransfer?.getData('application/x-bookmarks-folder') || e.dataTransfer?.getData('text/plain') || '').trim();
           if (!raw) return;
           let payload: { title?: string; urls?: string[] } = { title: raw, urls: [] };

@@ -4,6 +4,7 @@
       "id": "main-cat",
       "title": "Main",
       "type": "category",
+      "flexLayoutId": "main-cat",
       "children": [
         {
           "id": "bookmarks",
@@ -30,18 +31,19 @@
           }
         }
       ],
-      "expanded": true,
-      "flexLayoutId": "main-cat"
+      "expanded": true
     },
     {
       "id": "53e24801-ec5b-4658-8254-499e87f52b7a",
       "title": "Decathlon",
       "type": "category",
+      "flexLayoutId": "53e24801-ec5b-4658-8254-499e87f52b7a",
       "children": [
         {
           "id": "a4759f72-91d4-4d5a-b595-0ec16aa5ab04",
           "title": "Management",
           "type": "menu-group",
+          "flexLayoutId": "a4759f72-91d4-4d5a-b595-0ec16aa5ab04",
           "children": [
             {
               "id": "87e4733f-0e06-4cdf-9baf-e9c26bdceddc",
@@ -62,8 +64,7 @@
               "flexLayoutId": "4ac5addb-a3ce-42ad-b06b-645ef14a2e21"
             }
           ],
-          "expanded": true,
-          "flexLayoutId": "a4759f72-91d4-4d5a-b595-0ec16aa5ab04"
+          "expanded": false
         },
         {
           "id": "b8d4c3b5-e570-4c59-961a-7c724ad14da2",
@@ -72,19 +73,29 @@
           "flexLayoutId": "b8d4c3b5-e570-4c59-961a-7c724ad14da2"
         },
         {
+          "id": "0af03306-16b7-426d-a387-18f92e3deb7e",
+          "title": "Tools",
+          "icon": "hammer",
+          "type": "menu-item",
+          "flexLayoutId": "0af03306-16b7-426d-a387-18f92e3deb7e"
+        },
+        {
           "id": "76e71372-b15e-42d4-81f5-23704d8d3034",
           "title": "Features",
           "type": "menu-group",
+          "flexLayoutId": "76e71372-b15e-42d4-81f5-23704d8d3034",
           "children": [
             {
               "id": "58f8dc70-2d31-48bc-80d6-7de864c0321f",
               "title": "Stock",
               "type": "menu-group",
+              "flexLayoutId": "58f8dc70-2d31-48bc-80d6-7de864c0321f",
               "children": [
                 {
                   "id": "528cc9e5-2acc-47ce-8cbd-63a90c30f261",
                   "title": "Applications",
                   "type": "menu-group",
+                  "flexLayoutId": "528cc9e5-2acc-47ce-8cbd-63a90c30f261",
                   "children": [
                     {
                       "id": "91be19fa-1312-48ac-9007-eb6e481fc43d",
@@ -99,22 +110,22 @@
                       "flexLayoutId": "7a1e6cae-9393-4f47-93cb-208a5537b6a2"
                     }
                   ],
-                  "expanded": true,
-                  "flexLayoutId": "528cc9e5-2acc-47ce-8cbd-63a90c30f261"
+                  "expanded": false
                 }
               ],
-              "expanded": true,
-              "flexLayoutId": "58f8dc70-2d31-48bc-80d6-7de864c0321f"
+              "expanded": false
             },
             {
               "id": "34cb6c96-c860-48c6-b7c8-26c38032138d",
               "title": "Order-Delivery",
               "type": "menu-group",
+              "flexLayoutId": "34cb6c96-c860-48c6-b7c8-26c38032138d",
               "children": [
                 {
                   "id": "cbc572fd-78de-4ff3-b7f7-6adf022b3b34",
                   "title": "Applications",
                   "type": "menu-group",
+                  "flexLayoutId": "cbc572fd-78de-4ff3-b7f7-6adf022b3b34",
                   "children": [
                     {
                       "id": "9409f5db-ee9d-42a5-86af-ae4156c5230e",
@@ -122,7 +133,7 @@
                       "type": "menu-item",
                       "flexLayoutId": "9409f5db-ee9d-42a5-86af-ae4156c5230e",
                       "badge": {
-                        "id": "93d6c99f-aeda-4373-ad49-a6678d066bb9",
+                        "id": "41f256fb-2100-4d8c-96ca-0e57a23e5da8",
                         "title": "",
                         "icon": "⬅️",
                         "bgColor": "#000000"
@@ -139,25 +150,22 @@
                       }
                     }
                   ],
-                  "expanded": true,
-                  "flexLayoutId": "cbc572fd-78de-4ff3-b7f7-6adf022b3b34"
+                  "expanded": true
                 }
               ],
-              "expanded": true,
-              "flexLayoutId": "34cb6c96-c860-48c6-b7c8-26c38032138d"
+              "expanded": true
             }
           ],
-          "expanded": true,
-          "flexLayoutId": "76e71372-b15e-42d4-81f5-23704d8d3034"
+          "expanded": true
         }
       ],
-      "expanded": true,
-      "flexLayoutId": "53e24801-ec5b-4658-8254-499e87f52b7a"
+      "expanded": true
     },
     {
       "id": "0c5f275e-76d3-42de-8118-b48d40e678c3",
       "title": "Perso",
       "type": "category",
+      "flexLayoutId": "0c5f275e-76d3-42de-8118-b48d40e678c3",
       "children": [
         {
           "id": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53",
@@ -169,22 +177,22 @@
           "id": "d9f815cc-fa3f-4392-8862-1a29560a0401",
           "title": "Documentation",
           "type": "menu-group",
-          "expanded": false,
-          "flexLayoutId": "d9f815cc-fa3f-4392-8862-1a29560a0401"
+          "flexLayoutId": "d9f815cc-fa3f-4392-8862-1a29560a0401",
+          "expanded": false
         },
         {
           "id": "491f115f-bade-48eb-99f5-32ca4f6c6241",
           "title": "Tools",
           "type": "menu-group",
-          "expanded": false,
-          "flexLayoutId": "491f115f-bade-48eb-99f5-32ca4f6c6241"
+          "flexLayoutId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
+          "expanded": false
         }
       ],
-      "expanded": true,
-      "flexLayoutId": "0c5f275e-76d3-42de-8118-b48d40e678c3"
+      "expanded": true
     }
   ],
-  "lastSelectedItemId": "0c5f275e-76d3-42de-8118-b48d40e678c3",
-  "creationDate": "2025-08-27T17:56:30.938Z",
-  "lastUpdateDate": "2025-08-27T18:08:30.643Z"
+  "lastSelectedItemId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
+  "createdDate": "2025-08-27T18:23:00.228Z",
+  "lastModifiedDate": "2025-08-27T18:23:00.228Z",
+  "lastUpdateDate": "2025-08-28T04:24:13.894Z"
 }

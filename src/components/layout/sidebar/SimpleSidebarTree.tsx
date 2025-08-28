@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TreeView, useTree, RenderNodeOptions } from '../../common/treeview';
 import { TreeNode } from '../../common/treeview/types';
 import { convertSidebarToTreeNodes, convertTreeNodesToSidebar } from './sidebarAdapter';
@@ -22,6 +22,41 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
   onDeleteItem
 }) => {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  // timer ref used to delay showing hover actions
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // start delayed hover
+  const handleNodeMouseEnter = (nodeId: string) => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    hoverTimerRef.current = setTimeout(() => {
+      setHoveredNodeId(nodeId);
+      hoverTimerRef.current = null;
+    }, 1000); // 1s delay
+  };
+
+  // cancel delayed hover or hide immediately when leaving
+  const handleNodeMouseLeave = (nodeId: string) => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    if (hoveredNodeId === nodeId) {
+      setHoveredNodeId(null);
+    }
+  };
 
   // Convert sidebar config to tree nodes
   const initialNodes = sidebarConfig ? convertSidebarToTreeNodes(sidebarConfig) : [];
@@ -181,8 +216,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
           margin: '0px 0',
           borderRadius: '4px'
         }}
-        onMouseEnter={() => setHoveredNodeId(node.id)}
-        onMouseLeave={() => setHoveredNodeId(null)}
+        onMouseEnter={() => handleNodeMouseEnter(node.id)}
+        onMouseLeave={() => handleNodeMouseLeave(node.id)}
       >
         {/* Expand/collapse button */}
         {hasChildren && (
