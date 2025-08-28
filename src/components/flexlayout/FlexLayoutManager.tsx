@@ -3,7 +3,7 @@ import { FlexLayoutConfig, FlexLayoutService } from '../../services/flexLayoutSe
 import { useApplication } from '../../contexts/ApplicationContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Layout, Model } from 'flexlayout-react';
-import createFlexLayoutFactory, { onRenderTab as defaultOnRenderTab } from './FlexLayoutTabFactory';
+import createFlexLayoutFactory from './FlexLayoutTabFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { FormDisplayMode } from '../../types/app';
 import FlexLayoutTabForm from './FlexLayoutTabForm';
@@ -252,10 +252,6 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
       window.removeEventListener('flexlayout:tab:save', handleSave as EventListener);
     };
   }, [updateTabConfigAndSave]);
-
-  // use externalized renderers and factory for tab components
-  // onRenderTab and onRenderTabSet are imported from FlexLayoutTabFactory
-  // factory created below with openTabEditor
 
   // modal state for editing a tab's config
   const [editingNodeId, setEditingNodeId] = useState<string | null>(null);

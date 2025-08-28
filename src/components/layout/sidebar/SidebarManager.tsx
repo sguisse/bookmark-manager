@@ -20,7 +20,7 @@ export const SidebarManager: React.FC = () => {
         setSidebarConfig(config);
 
         const initialOpen: Record<string, boolean> = {};
-  const collectOpen = (items?: SidebarItem[]) => {
+        const collectOpen = (items?: SidebarItem[]) => {
           if (!items) return;
           for (const it of items) {
             if ('expanded' in it && it.expanded) initialOpen[it.id] = true;
@@ -34,7 +34,7 @@ export const SidebarManager: React.FC = () => {
           const find = (items?: SidebarItem[]): SidebarItem | undefined => {
             if (!items) return undefined;
             for (const it of items) {
-              if (it.id === config.lastSelectedItemId && !('children' in it)) return it as any;
+              if (it.id === config.lastSelectedItemId) return it as any;
               if ('children' in it && it.children) {
                 const f = find(it.children as any);
                 if (f) return f;
@@ -84,6 +84,7 @@ export const SidebarManager: React.FC = () => {
       setSelectedMenuItem(itemWithFlexLayout);
     }
     if (sidebarConfig) {
+      console.log("Save lastSelectedItemId : ", id);
       const updated = { ...sidebarConfig, lastSelectedItemId: id, lastUpdateDate: new Date() } as unknown as SidebarConfig;
       SidebarService.saveConfig(updated);
       setSidebarConfig(updated);
