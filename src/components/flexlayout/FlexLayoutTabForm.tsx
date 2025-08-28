@@ -26,7 +26,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     id: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.id || ''),
     title: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.title || ''),
     color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
-  bgcolor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || '#ffffff'),
+    bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgColor || '')) || '#ffffff'),
     icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
     component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component
   }));
@@ -36,8 +36,8 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     const newForm: FlexLayoutTabFormData = {
       id: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.id || ''),
       title: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.title || ''),
-  color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
-  bgcolor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || '#ffffff'),
+      color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
+      bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgColor || '')) || '#ffffff'),
       icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
       component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component
     };
@@ -49,7 +49,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
       console.warn('[FlexLayoutTabForm] debug logging failed', err);
     }
     setFormData(newForm);
-  }, [flexLayoutTab?.id, flexLayoutTab?.title, flexLayoutTab?.component, flexLayoutTab?.color, flexLayoutTab?.bgcolor, mode]);
+  }, [flexLayoutTab?.id, flexLayoutTab?.title, flexLayoutTab?.component, flexLayoutTab?.color, flexLayoutTab?.bgColor, mode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +57,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
       id: flexLayoutTab?.id || '',
       title: formData.title || undefined,
       color: formData.color || undefined,
-      bgcolor: formData.bgcolor || undefined,
+      bgColor: formData.bgColor || undefined,
       icon: formData.icon || undefined,
       component: (formData.component as FlexLayoutTabComponent) || undefined
     };
@@ -97,7 +97,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
             </div>
             <div>
               <label htmlFor="flex-bgcolor" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Background</label>
-              <input id="flex-bgcolor" type="color" value={formData.bgcolor || normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || '#ffffff'} onChange={(e) => setFormData(d => ({ ...d, bgcolor: e.target.value }))} style={{ width: 80, height: 36, border: 'none', padding: 0 }} />
+              <input id="flex-bgcolor" type="color" value={formData.bgColor || normalizeColorForInput(String(flexLayoutTab?.bgColor || '')) || '#ffffff'} onChange={(e) => setFormData(d => ({ ...d, bgColor: e.target.value }))} style={{ width: 80, height: 36, border: 'none', padding: 0 }} />
             </div>
             <div style={{ flex: 1 }}>
               <label htmlFor="flex-icon" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Icon</label>

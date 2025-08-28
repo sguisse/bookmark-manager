@@ -21,8 +21,8 @@ export const onRenderTab = (node: TabNode, renderValues: any) => {
   const cfg = node.getConfig();
   const title = cfg?.title;
   const icon = cfg?.icon;
-  const color = cfg?.color || 'inherit';
-  const bgColor = cfg?.bgColor || 'inherit';
+  const color = cfg?.color ?? 'inherit';
+  const bgColor = cfg?.bgColor ?? 'inherit';
   const markColor = cfg?.markColor;
 
   const elements: any[] = [];

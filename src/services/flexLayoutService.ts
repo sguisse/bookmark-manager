@@ -133,7 +133,7 @@ export class FlexLayoutService {
                   id: "b17563f4-d8c3-4c88-9bbc-54302807c6e7",
                   component: "Bookmarks",
                   "title": "Bookmarks tab",
-                  "bgcolor": "#2d76eb",
+                  "bgColor": "#2d76eb",
                   "createdDate": "2025-08-21T00:00:00.000Z",
                   "createdBy": "user-1",
                   "lastModifiedDate": "2025-08-22T10:00:00.000Z",
