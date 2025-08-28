@@ -226,10 +226,13 @@
           "type": "menu-group",
           "flexLayoutId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
           "createdDate": "2025-08-27T18:23:00.228Z",
-          "lastModifiedDate": "2025-08-28T06:24:53.490Z",
+          "lastModifiedDate": "2025-08-28T06:37:35.988Z",
           "expanded": false,
           "children": [],
-          "icon": "hammer"
+          "icon": "hammer",
+          "tags": [
+            "Tools"
+          ]
         }
       ],
       "expanded": true
@@ -237,6 +240,6 @@
   ],
   "lastSelectedItemId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
   "createdDate": "2025-08-27T18:23:00.228Z",
-  "lastModifiedDate": "2025-08-28T06:24:53.490Z",
-  "lastUpdateDate": "2025-08-28T06:24:50.824Z"
+  "lastModifiedDate": "2025-08-28T06:37:35.988Z",
+  "lastUpdateDate": "2025-08-28T06:36:40.996Z"
 }

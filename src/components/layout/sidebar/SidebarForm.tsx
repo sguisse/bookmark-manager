@@ -16,32 +16,42 @@ interface SidebarFormProps {
   onCreate: (parentId: string | null, item: SidebarItem) => void;
 }
 
+interface SidebarFormData {
+  type: SidebarItemType;
+  title: string;
+  icon: string;
+  iconPreviewValue: string;
+
+  color: string;
+  bgColor: string;
+
+  tags: string; // comma separated tags for input
+  flexLayoutId: string;
+  parentId: string | null;
+  badge: {
+      title: string;
+      icon: string;
+      color: string;
+      bgColor: string } | null;
+
+  showBadgeOptions: boolean;
+}
+
 export default function SidebarForm(props: Readonly<SidebarFormProps>) {
   const { mode = FormDisplayMode.Create, visible, config, sidebarItem, onCancel, onCreate } = props;
   const { theme } = useTheme();
 
-  // Single form state for all fields (initialized from `sidebarItem` when provided)
-  type FormDataType = {
-    type: SidebarItemType;
-    title: string;
-    icon: string;
-    iconPreviewValue: string;
-    flexLayoutId: string;
-    parentId: string | null;
-    badge: { title: string; icon: string; color: string; bgColor: string } | null;
-    color: string;
-    bgColor: string;
-    showBadgeOptions: boolean;
-  };
 
-  const [formData, setFormData] = useState<FormDataType>(() => ({
+
+  const [formData, setFormData] = useState<SidebarFormData>(() => ({
     type: (sidebarItem?.type as SidebarItemType) ?? SidebarItemType.MenuItem,
     title: sidebarItem?.title ?? '',
     icon: sidebarItem?.icon ?? '',
     iconPreviewValue: sidebarItem?.icon ?? '',
-    color: ((sidebarItem as any)?.color) ?? '',
-    bgColor: ((sidebarItem as any)?.bgColor) ?? '',
+    color: sidebarItem?.color ?? '',
+    bgColor: sidebarItem?.bgColor ?? '',
     flexLayoutId: ((sidebarItem as any)?.flexLayoutId) ?? '',
+    tags: (sidebarItem as any)?.tags ? (sidebarItem as any).tags.join(', ') : '',
     parentId: null,
     badge: (sidebarItem as any)?.badge ? {
       title: (sidebarItem as any).badge.title || '',
@@ -77,6 +87,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       color: sidebarItem?.color || '',
       bgColor: sidebarItem?.bgColor || '',
       flexLayoutId: sidebarItem?.flexLayoutId ?? '',
+      tags: (sidebarItem as any)?.tags ? (sidebarItem as any).tags.join(', ') : '',
       parentId: pid,
       badge: existingBadge ? {
         title: existingBadge.title || '',
@@ -124,20 +135,23 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       id,
       title: formData.title.trim(),
       type: formData.type,
+      icon: formData.icon || undefined,
+      color: formData.color || undefined,
+      bgColor: formData.bgColor || undefined,
       flexLayoutId: formData.flexLayoutId || (editing ? ((sidebarItem as any).flexLayoutId || id) : id)
     };
 
-    // Type-specific minimal fields
-    if (formData.type === SidebarItemType.MenuGroup) {
-      base.expanded = (editing && (sidebarItem as any).expanded) ? (sidebarItem as any).expanded : false;
-      base.children = (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : [];
-    }
-    if (formData.type === SidebarItemType.Category) {
-      base.children = (editing && (sidebarItem as any).children) ? (sidebarItem as any).children : [];
+    // Tags: convert comma-separated input into string[] or remove if empty
+    if (formData.tags && formData.tags.trim()) {
+      const tagsArr = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+      if (tagsArr.length) base.tags = tagsArr;
+      else delete base.tags;
+    } else {
+      // user cleared tags -> ensure tags removed from item
+      delete base.tags;
     }
 
-    // Icon and badge are only meaningful for MenuItem, but we can set them safely
-    if (formData.icon) base.icon = formData.icon;
+    // Badge mapping
     if (formData.showBadgeOptions && formData.badge) {
       base.badge = {
         id: editing && (sidebarItem as any).badge ? (sidebarItem as any).badge.id : uuidv4(),
@@ -147,10 +161,6 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
         bgColor: formData.badge.bgColor || undefined
       };
     }
-
-    // set top-level item color/bgColor as well
-    if (formData.color) base.color = formData.color;
-    if (formData.bgColor) base.bgColor = formData.bgColor;
 
     // Auditing timestamps
     const now = new Date();
@@ -304,6 +314,11 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                           <input id="sf-flex" value={formData.flexLayoutId} onChange={(e) => setFormData(f => ({ ...f, flexLayoutId: e.target.value }))} style={inputStyle} placeholder="layout id or leave empty to generate" />
                         </div>
 
+                        <div>
+                          <label htmlFor="sf-tags" style={{ display: 'block', marginBottom: 4 }}>Tags (optional)</label>
+                          <input id="sf-tags" value={formData.tags} onChange={(e) => setFormData(f => ({ ...f, tags: e.target.value }))} style={inputStyle} placeholder="comma separated tags e.g. work, personal" />
+                        </div>
+
                   </div>
                 </div>
               </div>
@@ -411,7 +426,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
           {/* Buttons */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
             <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: 'transparent' }}>Cancel</button>
-            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, background: theme.colors.primary, color: '#fff' }}>{mode === FormDisplayMode.Create ? 'Create' : 'Save'}</button>
+            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, background: theme.colors.primary, color: '#fff' }}>Save</button>
           </div>
 
         </form>

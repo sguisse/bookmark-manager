@@ -39,6 +39,8 @@ export interface SidebarItem extends BaseAuditing {
   // Indicates if the item is expanded to show its children (if any)
   expanded?: boolean;
 
+  tags?: string[];
   badge?: Badge;
+
   children?: SidebarItem[];
 }

@@ -257,7 +257,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
         <span
           style={{
             flex: 1,
-            color: isSelected ? '#1976d2' : 'inherit'
+            color: isSelected ? '#1976d2' : node.data.color,
+            background: node.data.bgColor ?? 'inherit',
           }}
         >
           {node.text}
@@ -273,8 +274,8 @@ export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
               justifyContent: 'center',
               padding: '2px 6px',
               borderRadius: '999px',
-              background: node.data.badge.title ? (node.data.badge.bgColor || '#3399ff') : 'transparent',
-              color: (node.data.badge.title || node.data.badge.icon )? (node.data.badge.color || '#fff') : 'transparent',
+              background: node.data.badge.title ? (node.data.badge.bgColor || '#3399ff') : 'inherit',
+              color: (node.data.badge.title || node.data.badge.icon )? (node.data.badge.color || '#fff') : 'inherit',
               fontSize: '10px',
               fontWeight: 'bold',
               height: '16px',

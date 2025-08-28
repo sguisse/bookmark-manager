@@ -17,6 +17,10 @@ export const convertSidebarToTreeNodes = (sidebarConfig: SidebarConfig): TreeNod
       data: {
         type: item.type,
         badge: item.badge,
+        // include colors and tags so the tree renderer can use them
+        color: item.color,
+        bgColor: item.bgColor,
+        tags: item.tags,
         flexLayoutId: item.flexLayoutId,
         expanded: item.expanded
       }
@@ -58,6 +62,11 @@ export const convertTreeNodesToSidebar = (nodes: TreeNode[]): SidebarConfig => {
       type: node.data?.type || SidebarItemType.MenuItem,
       flexLayoutId: node.data?.flexLayoutId || node.id
     };
+
+    // restore colors/tags if present
+    if (node.data?.color) item.color = node.data.color;
+    if (node.data?.bgColor) item.bgColor = node.data.bgColor;
+    if (node.data?.tags) item.tags = node.data.tags;
 
     // Add children if they exist
     if (children.length > 0) {
