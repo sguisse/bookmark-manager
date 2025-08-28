@@ -3,6 +3,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { FlexLayoutTabComponent, FlexLayoutTabFormData, FlexLayoutTabConfig } from '../../types/flexTab';
 import { FormDisplayMode } from '../../types/app';
 import { formatDate, normalizeColorForInput } from '../../services/Utils';
+import Image from '../common/image/Image';
 
 interface FlexLayoutTabFormProps {
   flexLayoutTab: Partial<FlexLayoutTabConfig>;
@@ -21,6 +22,12 @@ const componentsPair = (Object.keys(FlexLayoutTabComponent) as Array<keyof typeo
 export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps>) {
   const { flexLayoutTab, mode = FormDisplayMode.Edit, onSave, onCancel } = props;
   const { theme } = useTheme();
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: 8,
+    borderRadius: 6,
+    border: `1px solid ${theme.colors.border}`,
+  };
 
   const [formData, setFormData] = useState<FlexLayoutTabFormData>(() => ({
     id: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.id || ''),
@@ -52,7 +59,11 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     }
 
     setFormData(newForm);
+    // sync icon preview value with the form data
+    setIconPreviewValue(newForm.icon || '');
   }, [flexLayoutTab?.id, flexLayoutTab?.title, flexLayoutTab?.component, flexLayoutTab?.color, flexLayoutTab?.bgColor, mode]);
+
+  const [iconPreviewValue, setIconPreviewValue] = useState<string>(() => (mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || '')));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,13 +178,17 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
 
             <div>
               <label htmlFor="flex-icon" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Icon</label>
-              <input
-                id="flex-icon"
-                value={formData.icon}
-                onChange={(e) => setFormData(d => ({ ...d, icon: e.target.value }))}
-                placeholder="emoji or text"
-                style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Image value={iconPreviewValue} size={20} rounded style={{ display: 'inline-block' }} />
+                <input
+                  id="flex-icon"
+                  value={formData.icon}
+                  onChange={(e) => setFormData(d => ({ ...d, icon: e.target.value }))}
+                  onBlur={() => setIconPreviewValue(formData.icon || '')}
+                  placeholder="emoji or text"
+                  style={inputStyle}
+                />
+              </div>
             </div>
           </div>
 
