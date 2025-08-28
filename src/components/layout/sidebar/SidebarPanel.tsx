@@ -2,7 +2,7 @@ import React from 'react';
 import Image from '../../common/image/Image';
 import { SidebarConfig, SidebarItem } from '../../../types/sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { SimpleSidebarTree } from '../../common/treeview';
+import { SidebarTreeRenderer } from './SidebarTreeRenderer';
 
 export interface SidebarPanelProps {
   sidebarConfig?: SidebarConfig;
@@ -88,7 +88,7 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
       />
 
       <div className="sidebar-content">
-        <SimpleSidebarTree
+        <SidebarTreeRenderer
           sidebarConfig={sidebarConfig}
           onSelectItem={handleSelectItem}
           onSidebarChange={onSidebarChange}

@@ -6,7 +6,7 @@ import { SidebarConfig, SidebarItemType } from '../../../types/sidebar';
 import Image from '../../common/image/Image';
 import { ChevronDown, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 
-interface SimpleSidebarTreeProps {
+interface SidebarTreeRendererProps {
   sidebarConfig?: SidebarConfig;
   onSidebarChange?: (newConfig: SidebarConfig) => void;
   onSelectItem?: (nodeId: string) => void;
@@ -14,7 +14,7 @@ interface SimpleSidebarTreeProps {
   onDeleteItem?: (nodeId: string) => void;
 }
 
-export const SimpleSidebarTree: React.FC<SimpleSidebarTreeProps> = ({
+export const SidebarTreeRenderer: React.FC<SidebarTreeRendererProps> = ({
   sidebarConfig,
   onSidebarChange,
   onSelectItem,
