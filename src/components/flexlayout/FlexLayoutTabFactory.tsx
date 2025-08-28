@@ -10,7 +10,6 @@ import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink } from 'lucide-react';
 import Image from '../common/image/Image';
-import { readableTextColor } from '../../services/Utils';
 
 
 const renderIconElement = (val: string | undefined, key = 'icon') => {
@@ -23,7 +22,7 @@ export const onRenderTab = (node: TabNode, renderValues: any) => {
   const title = cfg?.title;
   const icon = cfg?.icon;
   const color = cfg?.color || 'inherit';
-  const bgcolor = cfg?.bgcolor || 'inherit';
+  const bgColor = cfg?.bgColor || 'inherit';
   const markColor = cfg?.markColor;
 
   const elements: any[] = [];
@@ -34,7 +33,7 @@ export const onRenderTab = (node: TabNode, renderValues: any) => {
 
 
     elements.push(
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: 6, background: bgcolor, color: color, fontSize: 12, marginRight: 8 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: 6, background: bgColor, color: color, fontSize: 12, marginRight: 8 }}>
         {title}
       </span>
     );
@@ -198,9 +197,11 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
   const boundOnRenderTab = (node: TabNode, renderValues: any) => {
     const cfg = node.getConfig();
     const color = cfg?.color;
+    const bgColor = cfg?.bgColor;
+    const markColor = cfg?.markColor;
     const icon = cfg?.icon;
     const title = cfg?.title;
-    const bgcolor = cfg?.bgcolor;
+
 
     const leadingElements: any[] = [];
     const contentElements: any[] = [];
@@ -208,16 +209,16 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
 
     if (icon) {
       // reuse module-scope helper to render emojis/text or image URLs/data URLs
-      const el = renderIconElement(icon, 'icon', !!bgcolor);
+      const el = renderIconElement(icon, 'icon');
       if (el) leadingElements.push(el);
     }
 
     if (title) {
-      contentElements.push(<span key="title" style={{ marginRight: 0, color: color }}>{title}</span>);
+      contentElements.push(<span key="title" style={{ marginRight: 0, color: color, background: bgColor }}>{title} {bgColor} sgu</span>);
     }
 
-    if (bgcolor) {
-      contentElements.push(<span key="colordot" style={{ width: 10, height: 10, background: bgcolor, borderRadius: 3, display: 'inline-block', marginLeft: 8 }} />);
+    if (markColor) {
+      contentElements.push(<span key="colordot" style={{ width: 10, height: 10, background: markColor, borderRadius: 3, display: 'inline-block', marginLeft: 8 }} />);
     }
 
     if (leadingElements.length > 0) {
