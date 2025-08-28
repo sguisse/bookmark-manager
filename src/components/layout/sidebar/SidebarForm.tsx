@@ -29,6 +29,8 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
     flexLayoutId: string;
     parentId: string | null;
     badge: { title: string; icon: string; color: string; bgColor: string } | null;
+    color: string;
+    bgColor: string;
     showBadgeOptions: boolean;
   };
 
@@ -37,6 +39,8 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
     title: sidebarItem?.title ?? '',
     icon: sidebarItem?.icon ?? '',
     iconPreviewValue: sidebarItem?.icon ?? '',
+    color: ((sidebarItem as any)?.color) ?? '',
+    bgColor: ((sidebarItem as any)?.bgColor) ?? '',
     flexLayoutId: ((sidebarItem as any)?.flexLayoutId) ?? '',
     parentId: null,
     badge: (sidebarItem as any)?.badge ? {
@@ -70,7 +74,9 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
       title: sidebarItem?.title ?? '',
       icon: sidebarItem?.icon ?? '',
       iconPreviewValue: sidebarItem?.icon ?? '',
-      flexLayoutId: ((sidebarItem as any)?.flexLayoutId) ?? '',
+      color: sidebarItem?.color || '',
+      bgColor: sidebarItem?.bgColor || '',
+      flexLayoutId: sidebarItem?.flexLayoutId ?? '',
       parentId: pid,
       badge: existingBadge ? {
         title: existingBadge.title || '',
@@ -78,6 +84,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
         color: existingBadge.color || '',
         bgColor: existingBadge.bgColor || ''
       } : null,
+
       showBadgeOptions: !!existingBadge
     });
   }, [sidebarItem, visible, config]);
@@ -148,26 +155,30 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
           id: editing && (sidebarItem as any).badge ? (sidebarItem as any).badge.id : uuidv4(),
           title: formData.badge.title ? formData.badge.title.trim() : '',
           icon: formData.badge.icon || undefined,
-          color: formData.badge.color || undefined,
-          bgColor: formData.badge.bgColor || undefined
+          color: formData.color || formData.badge.color || undefined,
+          bgColor: formData.bgColor || formData.badge.bgColor || undefined
         } as any;
       }
+      // set top-level item color/bgColor as well
+      if (formData.color) (item as any).color = formData.color;
+      if (formData.bgColor) (item as any).bgColor = formData.bgColor;
       onCreate(formData.parentId ?? null, item);
     }
     onCancel();
   };
 
   // Helper to update badge ensuring all fields are present (avoids partial / undefined)
-  const updateBadge = (partial: Partial<{ title: string; icon: string; color: string; bgColor: string }>) => {
+  const updateBadge = (partial: Partial<{ title: string; icon: string } | { title: string; icon: string; color?: string; bgColor?: string }>) => {
     setFormData(f => {
       const existing = f.badge ?? { title: '', icon: '', color: '', bgColor: '' };
       return {
         ...f,
         badge: {
-          title: partial.title ?? existing.title,
-          icon: partial.icon ?? existing.icon,
-          color: partial.color ?? existing.color,
-          bgColor: partial.bgColor ?? existing.bgColor
+          title: (partial as any).title ?? existing.title,
+          icon: (partial as any).icon ?? existing.icon,
+          // keep badge color/bgColor unchanged
+          color: existing.color,
+          bgColor: existing.bgColor
         },
         showBadgeOptions: true
       };
@@ -199,94 +210,157 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* layout two columns: left = menu config, right = badge config */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={{ gridColumn: '1 / 2' }}>
+          {/* layout: stacked blocks; each block uses an inner 2-column grid for its fields */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+            <div>
               {/* Menu configuration block (CoreUI-like card) */}
               <div className="card mb-4" style={{ borderColor: theme.colors.border }}>
-                <div className="card-header">
-                  <strong>Menu configuration</strong>
-                </div>
+                <div
+                    className="card-header"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { const el = document.getElementById('sf-type') as HTMLSelectElement | null; if (el) el.focus(); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const el = document.getElementById('sf-type') as HTMLSelectElement | null; if (el) el.focus(); } }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <strong>Menu configuration</strong>
+                  </div>
                 <div className="card-body">
-                  <div style={{ marginBottom: 8 }}>
-                    <label htmlFor="sf-type" style={{ display: 'block', marginBottom: 4 }}>Type</label>
-                    <select id="sf-type" value={formData.type} onChange={(e) => setFormData(f => ({ ...f, type: e.target.value as SidebarItemType }))} style={inputStyle}>
-                      <option value={SidebarItemType.MenuItem}>Menu Item</option>
-                      <option value={SidebarItemType.MenuGroup}>Menu Group</option>
-                      <option value={SidebarItemType.Category}>Category</option>
-                    </select>
-                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div>
+                      <label htmlFor="sf-type" style={{ display: 'block', marginBottom: 4 }}>Type</label>
+                      <select id="sf-type" value={formData.type} onChange={(e) => setFormData(f => ({ ...f, type: e.target.value as SidebarItemType }))} style={inputStyle}>
+                        <option value={SidebarItemType.MenuItem}>Menu Item</option>
+                        <option value={SidebarItemType.MenuGroup}>Menu Group</option>
+                        <option value={SidebarItemType.Category}>Category</option>
+                      </select>
+                    </div>
 
-                  <div style={{ marginBottom: 8 }}>
-                    <label htmlFor="sf-parent" style={{ display: 'block', marginBottom: 4 }}>Parent</label>
-                    <select id="sf-parent" value={formData.parentId || ''} onChange={(e) => setFormData(f => ({ ...f, parentId: e.target.value || null }))} style={inputStyle}>
-                      <option value="">(root)</option>
-                      {allNodes.filter(n => n.type === SidebarItemType.Category || n.type === SidebarItemType.MenuGroup).map(n => (
-                        <option key={n.id} value={n.id}>{n.title} ({n.type})</option>
-                      ))}
-                    </select>
-                  </div>
+                    <div>
+                      <label htmlFor="sf-parent" style={{ display: 'block', marginBottom: 4 }}>Parent</label>
+                      <select id="sf-parent" value={formData.parentId || ''} onChange={(e) => setFormData(f => ({ ...f, parentId: e.target.value || null }))} style={inputStyle}>
+                        <option value="">(root)</option>
+                        {allNodes.filter(n => n.type === SidebarItemType.Category || n.type === SidebarItemType.MenuGroup).map(n => (
+                          <option key={n.id} value={n.id}>{n.title} ({n.type})</option>
+                        ))}
+                      </select>
+                    </div>
 
-                  <div style={{ marginBottom: 8 }}>
-                    <label htmlFor="sf-title" style={{ display: 'block', marginBottom: 4 }}>Title</label>
-                    <input id="sf-title" value={formData.title} onChange={(e) => setFormData(f => ({ ...f, title: e.target.value }))} style={inputStyle} autoFocus />
-                  </div>
+                    <div>
+                      <label htmlFor="sf-title" style={{ display: 'block', marginBottom: 4 }}>Title</label>
+                      <input id="sf-title" value={formData.title} onChange={(e) => setFormData(f => ({ ...f, title: e.target.value }))} style={inputStyle} autoFocus />
+                    </div>
 
-                  {/* fields conditional by type */}
-                  {formData.type !== SidebarItemType.Category && (
-                    <>
-                      <div style={{ marginBottom: 8 }}>
+                        <div>
                           <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <Image value={formData.iconPreviewValue} size={20} rounded style={{ display: 'inline-block' }} />
                             <input id="sf-icon" value={formData.icon} onChange={(e) => setFormData(f => ({ ...f, icon: e.target.value }))} onBlur={() => setFormData(f => ({ ...f, iconPreviewValue: f.icon }))} style={inputStyle} placeholder="camera or https://..." />
                           </div>
                         </div>
-                      <div style={{ marginBottom: 8 }}>
-                        <label htmlFor="sf-flex" style={{ display: 'block', marginBottom: 4 }}>Flex layout id (optional)</label>
-                        <input id="sf-flex" value={formData.flexLayoutId} onChange={(e) => setFormData(f => ({ ...f, flexLayoutId: e.target.value }))} style={inputStyle} placeholder="layout id or leave empty to generate" />
+
+                         <div>
+                        <label htmlFor="color" style={{ display: 'block', marginBottom: 4 }}>Text color</label>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          {/* color input requires a valid hex value; use a sensible fallback for the picker but keep formData.color empty to represent transparent */}
+                          <input
+                            id="color"
+                            type="color"
+                            aria-label="Text color"
+                            value={formData.color}
+                            onChange={(e) => setFormData(f => ({ ...f, color: e.target.value }))}
+                            style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
+                          />
+                          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                            <input
+                              type="checkbox"
+                              checked={!formData.color}
+                              onChange={(e) => setFormData(f => ({ ...f, color: e.target.checked ? '' : formData.color }))}
+                              aria-label="Default Text color"
+                            />
+                            <span>Default</span>
+                          </label>
+                        </div>
                       </div>
-                    </>
-                  )}
+
+                      <div>
+                        <label htmlFor="bgcolor" style={{ display: 'block', marginBottom: 4 }}>Background color</label>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input
+                            id="bgcolor"
+                            type="color"
+                            aria-label="Background color"
+                            value={formData.bgColor}
+                            onChange={(e) => setFormData(f => ({ ...f, bgColor: e.target.value }))}
+                            style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
+                          />
+                          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                            <input
+                              type="checkbox"
+                              checked={!formData.bgColor}
+                              onChange={(e) => setFormData(f => ({ ...f, bgColor: e.target.checked ? '' : formData.bgColor }))}
+                              aria-label="Default background color"
+                            />
+                            <span>Default</span>
+                          </label>
+                        </div>
+                      </div>
+
+                        <div>
+                          <label htmlFor="sf-flex" style={{ display: 'block', marginBottom: 4 }}>Flex layout id (optional)</label>
+                          <input id="sf-flex" value={formData.flexLayoutId} onChange={(e) => setFormData(f => ({ ...f, flexLayoutId: e.target.value }))} style={inputStyle} placeholder="layout id or leave empty to generate" />
+                        </div>
+
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div style={{ gridColumn: '2 / 3' }}>
+            <div>
               {/* Badge block with chevron */}
               <div className="card mb-4" style={{ borderColor: theme.colors.border, marginTop: '0' }}>
-                <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <strong>Badge</strong>
-                  <button
-                    type="button"
-                    onClick={() => setFormData(f => ({ ...f, showBadgeOptions: !f.showBadgeOptions }))}
+                <div
+                    className="card-header"
+                    role="button"
+                    tabIndex={0}
                     aria-expanded={formData.showBadgeOptions}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    onClick={() => setFormData(f => ({ ...f, showBadgeOptions: !f.showBadgeOptions }))}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFormData(f => ({ ...f, showBadgeOptions: !f.showBadgeOptions })); } }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
                   >
-                    {formData.showBadgeOptions ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  </button>
-                </div>
+                    <strong>Badge</strong>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {formData.showBadgeOptions ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </div>
+                  </div>
                 {formData.showBadgeOptions && (
                   <div className="card-body">
-                    <div style={{ marginBottom: 8 }}>
-                      <label htmlFor="badge-label" style={{ display: 'block', marginBottom: 4 }}>Badge label</label>
-                      <input id="badge-label" value={formData.badge?.title || ''} onChange={(e) => updateBadge({ title: e.target.value })} style={inputStyle} placeholder="e.g. 12" />
-                    </div>
-                    <div style={{ marginBottom: 8 }}>
-                      <label htmlFor="badge-icon" style={{ display: 'block', marginBottom: 4 }}>Badge icon (optional)</label>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Image value={formData.badge?.icon || ''} size={20} rounded style={{ display: 'inline-block' }} />
-                        <input id="badge-icon" value={formData.badge?.icon || ''} onChange={(e) => updateBadge({ icon: e.target.value })} onBlur={() => updateBadge({ icon: formData.badge?.icon || '' })} style={inputStyle} placeholder="camera or https://..." />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div>
+                        <label htmlFor="badge-label" style={{ display: 'block', marginBottom: 4 }}>Badge label</label>
+                        <input id="badge-label" value={formData.badge?.title || ''} onChange={(e) => updateBadge({ title: e.target.value })} style={inputStyle} placeholder="e.g. 12" />
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
+
+                      <div>
+                        <label htmlFor="badge-icon" style={{ display: 'block', marginBottom: 4 }}>Badge icon (optional)</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Image value={formData.badge?.icon || ''} size={20} rounded style={{ display: 'inline-block' }} />
+                          <input id="badge-icon" value={formData.badge?.icon || ''} onChange={(e) => updateBadge({ icon: e.target.value })} onBlur={() => updateBadge({ icon: formData.badge?.icon || '' })} style={inputStyle} placeholder="camera or https://..." />
+                        </div>
+                      </div>
+
+                      <div>
                         <label htmlFor="badge-color" style={{ display: 'block', marginBottom: 4 }}>Text color</label>
-                        <input id="badge-color" type="color" value={formData.badge?.color || '#ffffff'} onChange={(e) => updateBadge({ color: e.target.value })} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                        <input id="badge-color" type="color" value={formData.badge?.color || '#ffffff'}
+                               onChange={(e) => updateBadge({ color: e.target.value })}
+                               style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
                       </div>
-                      <div style={{ flex: 1 }}>
+
+                      <div>
                         <label htmlFor="badge-bgcolor" style={{ display: 'block', marginBottom: 4 }}>Background color</label>
-                        <input id="badge-bgcolor" type="color" value={formData.badge?.bgColor || '#1976d2'} onChange={(e) => updateBadge({ bgColor: e.target.value })} style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                        <input id="badge-bgcolor" type="color" value={formData.badge?.bgColor || '#1976d2'}
+                               onChange={(e) => updateBadge({ bgColor: e.target.value })}
+                               style={{ width: '100%', height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
                       </div>
                     </div>
                   </div>
@@ -295,12 +369,6 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
             </div>
           </div>
 
-
-
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
-            <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: 'transparent' }}>Cancel</button>
-            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, background: theme.colors.primary, color: '#fff' }}>{mode === FormDisplayMode.Create ? 'Create' : 'Save'}</button>
-          </div>
           {/* Created / Updated timestamps (edit-only) shown as the last row in two columns */}
           {mode === FormDisplayMode.Edit && sidebarItem && (
             <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -314,6 +382,13 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
               </div>
             </div>
           )}
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+            <button type="button" onClick={onCancel} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: 'transparent' }}>Cancel</button>
+            <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, background: theme.colors.primary, color: '#fff' }}>{mode === FormDisplayMode.Create ? 'Create' : 'Save'}</button>
+          </div>
+
         </form>
       </dialog>
     </div>
