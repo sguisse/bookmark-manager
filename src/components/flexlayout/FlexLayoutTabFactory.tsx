@@ -214,7 +214,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     }
 
     if (title) {
-      contentElements.push(<span key="title" style={{ marginRight: 0, color: color, background: bgColor }}>{title} {bgColor} sgu</span>);
+      contentElements.push(<span key="title" style={{ marginRight: 0, color: color, background: bgColor }}>{title} {bgColor}</span>);
     }
 
     if (markColor) {
