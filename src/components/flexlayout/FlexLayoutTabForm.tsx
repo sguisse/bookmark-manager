@@ -26,7 +26,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     id: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.id || ''),
     title: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.title || ''),
     color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
-    bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgColor || '')) || '#ffffff'),
+  bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.bgcolor ?? flexLayoutTab?.bgColor) || '')) || '#ffffff'),
     icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
     component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component
   }));
@@ -36,8 +36,9 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     const newForm: FlexLayoutTabFormData = {
       id: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.id || ''),
       title: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.title || ''),
-      color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
-      bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgColor || '')) || '#ffffff'),
+  color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
+  bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.bgcolor ?? flexLayoutTab?.bgColor) || '')) || '#ffffff'),
+  markColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.markColor ?? flexLayoutTab?.markColor) || '')) || '#000000'),
       icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
       component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component
     };
@@ -56,8 +57,9 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     const update: FlexLayoutTabFormData = {
       id: flexLayoutTab?.id || '',
       title: formData.title || undefined,
-      color: formData.color || undefined,
-      bgColor: formData.bgColor || undefined,
+  color: formData.color || undefined,
+  bgColor: formData.bgColor || undefined,
+  markColor: formData.markColor || undefined,
       icon: formData.icon || undefined,
       component: (formData.component as FlexLayoutTabComponent) || undefined
     };
@@ -84,38 +86,89 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <label htmlFor="flex-title" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Title</label>
-            <input id="flex-title" value={formData.title} onChange={(e) => setFormData(d => ({ ...d, title: e.target.value }))} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
-          </div>
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
 
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div>
-              <label htmlFor="flex-color" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Color</label>
-              <input id="flex-color" type="color" value={formData.color || normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'} onChange={(e) => setFormData(d => ({ ...d, color: e.target.value }))} style={{ width: 80, height: 36, border: 'none', padding: 0 }} />
+            {/* TabComponent (span both columns) */}
+            <div style={{ display: 'grid', flexDirection: 'row' }}>
+              <label htmlFor="flex-component" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Tab Component</label>
+              <select id="flex-component" value={formData.component ? String(formData.component) : String(flexLayoutTab?.component || '')} onChange={(e) => setFormData(d => ({ ...d, component: e.target.value as FlexLayoutTabComponent }))} disabled={mode === FormDisplayMode.Edit} aria-disabled={mode === FormDisplayMode.Edit} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, width: '100%', opacity: mode === FormDisplayMode.Edit ? 0.6 : 1 }}>
+                <option value="">(choose)</option>
+                {componentsPair.map((c: { value: string; label: string }) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
             </div>
-            <div>
-              <label htmlFor="flex-bgcolor" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Background</label>
-              <input id="flex-bgcolor" type="color" value={formData.bgColor || normalizeColorForInput(String(flexLayoutTab?.bgColor || '')) || '#ffffff'} onChange={(e) => setFormData(d => ({ ...d, bgColor: e.target.value }))} style={{ width: 80, height: 36, border: 'none', padding: 0 }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label htmlFor="flex-icon" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Icon</label>
-              <input id="flex-icon" value={formData.icon} onChange={(e) => setFormData(d => ({ ...d, icon: e.target.value }))} placeholder="emoji or text" style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
-            </div>
-          </div>
 
-          <div>
-            <label htmlFor="flex-component" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Tab Component</label>
-            <select id="flex-component" value={formData.component ? String(formData.component) : String(flexLayoutTab?.component || '')} onChange={(e) => setFormData(d => ({ ...d, component: e.target.value as FlexLayoutTabComponent }))} disabled={mode === FormDisplayMode.Edit} aria-disabled={mode === FormDisplayMode.Edit} style={{ padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, width: '100%', opacity: mode === FormDisplayMode.Edit ? 0.6 : 1 }}>
-              <option value="">(choose)</option>
-              {componentsPair.map((c: { value: string; label: string }) => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
+            <div style={{ display: 'grid', flexDirection: 'row', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {/* Title */}
+              <div>
+                <label htmlFor="flex-title" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Title</label>
+                <input id="flex-title" value={formData.title} onChange={(e) => setFormData(d => ({ ...d, title: e.target.value }))} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+              </div>
+
+              <div>
+                <label htmlFor="flex-icon" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Icon</label>
+                <input id="flex-icon" value={formData.icon} onChange={(e) => setFormData(d => ({ ...d, icon: e.target.value }))} placeholder="emoji or text" style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+              </div>
+            </div>
+
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label htmlFor="color" style={{ display: 'block', marginBottom: 4 }}>Text color</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    id="color"
+                    type="color"
+                    aria-label="Text color"
+                    value={formData.color || '#000000'}
+                    onChange={(e) => setFormData(f => ({ ...f, color: e.target.value }))}
+                    style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
+                  />
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                    <input
+                      type="checkbox"
+                      checked={!formData.color}
+                      onChange={(e) => setFormData(f => ({ ...f, color: e.target.checked ? '' : formData.color }))}
+                      aria-label="Default Text color"
+                    />
+                    <span>Default</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="bgColor" style={{ display: 'block', marginBottom: 4 }}>Background</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input id="bgColor" type="color" aria-label="Background color" value={formData.bgColor || '#ffffff'} onChange={(e) => setFormData(f => ({ ...f, bgColor: e.target.value }))} style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                    <input type="checkbox" checked={!formData.bgColor} onChange={(e) => setFormData(f => ({ ...f, bgColor: e.target.checked ? '' : formData.bgColor }))} aria-label="Default Background color" />
+                    <span>Default</span>
+                  </label>
+                </div>
+              </div>
+              </div>
+
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+
+              <div>
+                <label htmlFor="markColor" style={{ display: 'block', marginBottom: 4 }}>Mark color</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input id="markColor" type="color" aria-label="Mark color" value={formData.markColor || '#000000'} onChange={(e) => setFormData(f => ({ ...f, markColor: e.target.value }))} style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }} />
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                    <input type="checkbox" checked={!formData.markColor} onChange={(e) => setFormData(f => ({ ...f, markColor: e.target.checked ? '' : formData.markColor }))} aria-label="Default Mark color" />
+                    <span>Default</span>
+                  </label>
+                </div>
+              </div>
+
+          </div>
           </div>
 
           {/* Dates (readonly) */}
           { (flexLayoutTab?.createdDate || flexLayoutTab?.lastModifiedDate) && (
-          <div style={{ marginBottom: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label htmlFor="flex-created" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Created</label>
               <input id="flex-created" readOnly value={formatDate(flexLayoutTab?.createdDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
@@ -124,12 +177,14 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
               <label htmlFor="flex-updated" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Updated</label>
               <input id="flex-updated" readOnly value={formatDate(flexLayoutTab?.lastModifiedDate as any)} style={{ width: '100%', padding: 8, borderRadius: 6, border: `1px solid ${theme.colors.border}`, backgroundColor: theme.colors.surface, cursor: 'default' }} />
             </div>
-          </div>
+            </div>
         )}
 
+         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button type="button" onClick={() => { onCancel && onCancel(); }} style={{ padding: '0.5rem 1rem', borderRadius: 6, border: `1px solid ${theme.colors.border}`, background: theme.colors.surface }}>Cancel</button>
             <button type="submit" style={{ padding: '0.5rem 1rem', borderRadius: 6, border: 'none', background: theme.colors.primary, color: '#fff' }}>Save</button>
+          </div>
           </div>
         </form>
       </div>
