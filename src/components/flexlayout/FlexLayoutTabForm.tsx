@@ -26,7 +26,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     id: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.id || ''),
     title: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.title || ''),
     color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
-    bgcolor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || ''),
+  bgcolor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || '#ffffff'),
     icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
     component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component
   }));
@@ -36,8 +36,8 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     const newForm: FlexLayoutTabFormData = {
       id: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.id || ''),
       title: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.title || ''),
-      color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
-      bgcolor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || ''),
+  color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || '#3b82f6'),
+  bgcolor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || '#ffffff'),
       icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
       component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component
     };
@@ -97,7 +97,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
             </div>
             <div>
               <label htmlFor="flex-bgcolor" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Background</label>
-              <input id="flex-bgcolor" type="color" value={formData.bgcolor || normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || ''} onChange={(e) => setFormData(d => ({ ...d, bgcolor: e.target.value }))} style={{ width: 80, height: 36, border: 'none', padding: 0 }} />
+              <input id="flex-bgcolor" type="color" value={formData.bgcolor || normalizeColorForInput(String(flexLayoutTab?.bgcolor || '')) || '#ffffff'} onChange={(e) => setFormData(d => ({ ...d, bgcolor: e.target.value }))} style={{ width: 80, height: 36, border: 'none', padding: 0 }} />
             </div>
             <div style={{ flex: 1 }}>
               <label htmlFor="flex-icon" style={{ display: 'block', marginBottom: 6, color: theme.colors.text.primary }}>Icon</label>

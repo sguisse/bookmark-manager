@@ -270,7 +270,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                             id="color"
                             type="color"
                             aria-label="Text color"
-                            value={formData.color}
+                            value={formData.color || '#000000'}
                             onChange={(e) => setFormData(f => ({ ...f, color: e.target.value }))}
                             style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
                           />
@@ -293,7 +293,7 @@ export default function SidebarForm(props: Readonly<SidebarFormProps>) {
                             id="bgcolor"
                             type="color"
                             aria-label="Background color"
-                            value={formData.bgColor}
+                            value={formData.bgColor || '#ffffff'}
                             onChange={(e) => setFormData(f => ({ ...f, bgColor: e.target.value }))}
                             style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
                           />
