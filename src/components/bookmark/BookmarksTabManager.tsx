@@ -30,7 +30,7 @@ interface DraggableBookmarkRowProps {
   onToggleCollapsed: (bookmarkId: string) => void;
   onDragStart: (bookmark: Bookmark) => void;
   onDragEnd: () => void;
-  onDragOver: (index: number, position: 'before' | 'after') => void;
+  onDragOver: (index: number, position: 'before' | 'after', event?: React.DragEvent) => void;
   onDrop: (targetIndex: number, position: 'before' | 'after', event: DragEvent | React.DragEvent) => void;
   onDragOverIndexChange: (index: number | null) => void;
 }
@@ -126,6 +126,7 @@ function DraggableBookmarkRow({
       onDragEnd={onDragEnd}
       onDragOver={(e) => {
         e.preventDefault();
+        e.stopPropagation();
 
         // Check if this might be an external URL drop
         const hasUrlTypes = e.dataTransfer.types.includes('text/uri-list') ||
@@ -138,11 +139,13 @@ function DraggableBookmarkRow({
         const mouseY = e.clientY - rect.top;
         const elementHeight = rect.height;
         const position = mouseY < elementHeight / 2 ? 'before' : 'after';
-        onDragOver(index, position);
+        onDragOver(index, position, e);
       }}
       onDrop={(e: React.DragEvent) => {
         e.preventDefault();
-        console.log('[DraggableBookmarkRow] Drop event received at index:', index);
+        e.stopPropagation();
+        console.log('[DraggableBookmarkRow] ===== DROP EVENT RECEIVED =====');
+        console.log('[DraggableBookmarkRow] Drop event received at index:', index, 'position:', currentDropPosition);
         onDrop(index, currentDropPosition, e);
       }}
       onDragLeave={(e) => {
@@ -518,6 +521,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   // Enhanced drag and drop functions for cross-tab support
   const handleDragStart = (bookmark: Bookmark) => {
     console.log('[BookmarksTabManager] Starting drag for bookmark:', bookmark.title, 'in node:', nodeId);
+    console.log('[BookmarksTabManager] Setting draggedBookmark state to:', bookmark);
+    console.log('[BookmarksTabManager] This should fix the drag-drop issue by delaying state cleanup');
 
     // Set local drag state
     setDraggedBookmark(bookmark);
@@ -531,24 +536,38 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
   const handleDragEnd = () => {
     console.log('[BookmarksTabManager] Ending drag in node:', nodeId);
+    console.log('[BookmarksTabManager] draggedBookmark at dragEnd:', draggedBookmark?.title);
 
-    // Clear local drag state
-    setDraggedBookmark(null);
-    setDragOverIndex(null);
-    setDropPosition('after');
+    // Delay clearing the drag state to allow drop events to complete
+    setTimeout(() => {
+      console.log('[BookmarksTabManager] Clearing drag state after timeout');
 
-    // Clear cross-tab drag state
-    setCrossTabDragOverIndex(null);
-    setCrossTabDropPosition('after');
+      // Clear local drag state
+      setDraggedBookmark(null);
+      setDragOverIndex(null);
+      setDropPosition('after');
 
-    // Clear empty container drag state
-    setIsDragOverEmptyContainer(false);
+      // Clear cross-tab drag state
+      setCrossTabDragOverIndex(null);
+      setCrossTabDropPosition('after');
 
-    // Clear global drag state
-    endDrag();
+      // Clear empty container drag state
+      setIsDragOverEmptyContainer(false);
+
+      // Clear global drag state
+      endDrag();
+    }, 100);
   };
 
-  const handleDragOver = (index: number, position: 'before' | 'after') => {
+  const handleDragOver = (index: number, position: 'before' | 'after', event?: React.DragEvent) => {
+    console.log('[BookmarksTabManager] handleDragOver called:', { index, position, nodeId, draggedBookmark: draggedBookmark?.title });
+
+    // CRITICAL: Must prevent default to allow drop
+    if (event) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+    }
+
     if (!nodeId) return;
 
     // Check if this is a cross-tab drag
@@ -560,14 +579,22 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       setIsDragOverEmptyContainer(false);
     } else if (draggedBookmark) {
       // Internal drag within same tab
+      console.log('[BookmarksTabManager] Internal drag over at index:', index, 'position:', position);
       setDragOverIndex(index);
       setDropPosition(position);
+    } else {
+      console.log('[BookmarksTabManager] No draggedBookmark found for internal drag');
     }
   };
   // Updated to handle external application drops (e.g. URLs dragged from Chrome).
   const handleDrop = (index: number, position: 'before' | 'after', event: React.DragEvent | DragEvent) => {
     event.preventDefault();
     event.stopPropagation();
+
+    console.log('[BookmarksTabManager] ===== HANDLE DROP CALLED =====');
+    console.log('[BookmarksTabManager] handleDrop called with:', { index, position, nodeId, draggedBookmark: draggedBookmark?.title });
+    console.log('[BookmarksTabManager] isExternalDrag result:', isExternalDrag(nodeId || ''));
+    console.log('[BookmarksTabManager] draggedBookmark exists:', !!draggedBookmark);
 
     // Get the dataTransfer from either React or native event
     const dataTransfer = 'dataTransfer' in event ? event.dataTransfer : (event as any).dataTransfer;
@@ -612,6 +639,44 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
         setIsBookmarkFormOpen(true);
         return;
+    }
+
+    // Handle internal drop first (same tab reordering)
+    if (draggedBookmark && !isExternalDrag(nodeId || '')) {
+      console.log('[BookmarksTabManager] Handling internal drop (same tab reordering)');
+
+      const draggedIndex = bookmarks.findIndex(b => b.id === draggedBookmark.id);
+      if (draggedIndex === -1) {
+        console.log('[BookmarksTabManager] Dragged bookmark not found in current bookmarks');
+        return;
+      }
+
+      const newBookmarks = [...bookmarks];
+
+      // Remove dragged item
+      const [draggedItem] = newBookmarks.splice(draggedIndex, 1);
+
+      // Calculate new insertion index
+      let insertIndex: number;
+      if (draggedIndex < index) {
+        insertIndex = position === 'before' ? index - 1 : index;
+      } else {
+        insertIndex = position === 'before' ? index : index + 1;
+      }
+
+      console.log('[BookmarksTabManager] Moving item from index', draggedIndex, 'to index', insertIndex);
+
+      // Insert at new position
+      newBookmarks.splice(insertIndex, 0, draggedItem);
+
+      if (onConfigChange) {
+        onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
+      }
+
+      setDraggedBookmark(null);
+      setDragOverIndex(null);
+      setDropPosition('after');
+      return;
     }
 
     // Check if this is a cross-tab drop
@@ -663,35 +728,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       return;
     }
 
-    // Handle internal drop (same tab reordering)
-    if (!draggedBookmark) return;
-
-    const draggedIndex = bookmarks.findIndex(b => b.id === draggedBookmark.id);
-    if (draggedIndex === -1) return;
-
-    const newBookmarks = [...bookmarks];
-
-    // Remove dragged item
-    const [draggedItem] = newBookmarks.splice(draggedIndex, 1);
-
-    // Calculate new insertion index
-    let insertIndex: number;
-    if (draggedIndex < index) {
-      insertIndex = position === 'before' ? index - 1 : index;
-    } else {
-      insertIndex = position === 'before' ? index : index + 1;
-    }
-
-    // Insert at new position
-    newBookmarks.splice(insertIndex, 0, draggedItem);
-
-    if (onConfigChange) {
-      onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
-    }
-
-    setDraggedBookmark(null);
-    setDragOverIndex(null);
-    setDropPosition('after');
+    // If we reach here, it means no valid drop scenario was handled
+    console.log('[BookmarksTabManager] Drop cancelled - no valid drop scenario matched');
   };
 
 
