@@ -341,7 +341,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   };
 
   // Helper to fetch title and favicon from URL
-  const fetchUrlMetadata = async (url: string): Promise<{ title: string; favicon?: string }> => {
+  const fetchUrlMetadata = async (url: string): Promise<{ title: string; favicon?: string; description?: string; keywords?: string }> => {
     try {
       console.log('Fetching metadata for URL:', url);
 
@@ -371,6 +371,17 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         title = doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.trim() ||
                new URL(url).hostname;
       }
+
+      // Extract description
+      let description = doc.querySelector('description')?.textContent?.trim() || '';
+      if (!description) {
+        // Fallback to og:description or empty
+        description = doc.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim() || '';
+      }
+
+      // Extract keywords
+      let keywords = doc.querySelector('meta[name="keywords"]')?.getAttribute('content')?.trim() || '';
+
 
       // Extract favicon
       let faviconUrl = '';
@@ -433,7 +444,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       }
 
       console.log('Extracted metadata:', { title, favicon: faviconBase64 ? 'base64 data' : 'none' });
-      return { title, favicon: faviconBase64 || undefined };
+      return { title, favicon: faviconBase64 || undefined, description, keywords };
 
     } catch (err) {
       console.warn('Failed to fetch URL metadata:', err);
@@ -578,8 +589,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
               id: '',
               title: metadata.title,
               url: externalUrl,
-              description: '',
-              tags: [],
+              description: metadata.description || '',
+              tags: metadata.keywords ? metadata.keywords.split(/[,\s]+/).filter(Boolean) : [],
               collapsed: true,
               icon: metadata.favicon,
               createdDate: new Date(),
@@ -905,8 +916,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
                   id: '',
                   title: metadata.title,
                   url,
-                  description: '',
-                  tags: [],
+                  description: metadata.description || '',
+                  tags: metadata.keywords ? metadata.keywords.split(/[,\s]+/).filter(Boolean) : [],
                   collapsed: true,
                   icon: metadata.favicon,
                   createdDate: new Date(),
