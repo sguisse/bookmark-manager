@@ -31,7 +31,7 @@ interface DraggableBookmarkRowProps {
   onDragStart: (bookmark: Bookmark) => void;
   onDragEnd: () => void;
   onDragOver: (index: number, position: 'before' | 'after') => void;
-  onDrop: (targetIndex: number, position: 'before' | 'after', event?: DragEvent | React.DragEvent) => void;
+  onDrop: (targetIndex: number, position: 'before' | 'after', event: DragEvent | React.DragEvent) => void;
   onDragOverIndexChange: (index: number | null) => void;
 }
 
@@ -302,6 +302,150 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     return url || null;
   };
 
+  // Helper to convert image URL to base64 data URL
+  const convertImageToBase64 = async (imageUrl: string): Promise<string | null> => {
+    try {
+      const response = await fetch(imageUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; Bookmark Manager)'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to fetch favicon:', response.status, response.statusText);
+        return null;
+      }
+
+      const blob = await response.blob();
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          // Ensure it's a proper data URL format
+          if (result && result.startsWith('data:')) {
+            resolve(result);
+          } else {
+            reject(new Error('Invalid data URL format'));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+    } catch (err) {
+      console.warn('Failed to convert image to base64:', err);
+      return null;
+    }
+  };
+
+  // Helper to fetch title and favicon from URL
+  const fetchUrlMetadata = async (url: string): Promise<{ title: string; favicon?: string }> => {
+    try {
+      console.log('Fetching metadata for URL:', url);
+
+      // Use a CORS proxy or direct fetch (depending on CORS policy)
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; Bookmark Manager)'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Failed to fetch URL:', response.status, response.statusText);
+        return { title: new URL(url).hostname };
+      }
+
+      const html = await response.text();
+
+      // Parse HTML to extract title and favicon
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Extract title
+      let title = doc.querySelector('title')?.textContent?.trim() || '';
+      if (!title) {
+        // Fallback to og:title or hostname
+        title = doc.querySelector('meta[property="og:title"]')?.getAttribute('content')?.trim() ||
+               new URL(url).hostname;
+      }
+
+      // Extract favicon
+      let faviconUrl = '';
+
+      // Try different favicon selectors in order of preference
+      const faviconSelectors = [
+        'link[rel="icon"]',
+        'link[rel="shortcut icon"]',
+        'link[rel="apple-touch-icon"]',
+        'meta[property="og:image"]'
+      ];
+
+      for (const selector of faviconSelectors) {
+        const element = doc.querySelector(selector);
+        if (element) {
+          faviconUrl = element.getAttribute('href') || element.getAttribute('content') || '';
+          if (faviconUrl) break;
+        }
+      }
+
+      // Make favicon URL absolute if it's relative
+      if (faviconUrl && !faviconUrl.startsWith('http') && !faviconUrl.startsWith('data:')) {
+        try {
+          const baseUrl = new URL(url);
+          if (faviconUrl.startsWith('//')) {
+            faviconUrl = baseUrl.protocol + faviconUrl;
+          } else if (faviconUrl.startsWith('/')) {
+            faviconUrl = baseUrl.origin + faviconUrl;
+          } else {
+            faviconUrl = new URL(faviconUrl, url).href;
+          }
+        } catch (err) {
+          console.warn('Failed to resolve favicon URL:', err);
+          faviconUrl = '';
+        }
+      }
+
+      // Fallback to default favicon path if none found
+      if (!faviconUrl) {
+        try {
+          const baseUrl = new URL(url);
+          faviconUrl = `${baseUrl.origin}/favicon.ico`;
+        } catch (err) {
+          console.warn('Failed to construct default favicon URL:', err);
+        }
+      }
+
+      // Convert favicon to base64 data URL
+      let faviconBase64 = '';
+      if (faviconUrl && !faviconUrl.startsWith('data:')) {
+        console.log('Converting favicon to base64:', faviconUrl);
+        const base64Result = await convertImageToBase64(faviconUrl);
+        if (base64Result) {
+          faviconBase64 = base64Result;
+          console.log('Successfully converted favicon to base64');
+        }
+      } else if (faviconUrl.startsWith('data:')) {
+        // Already a data URL
+        faviconBase64 = faviconUrl;
+      }
+
+      console.log('Extracted metadata:', { title, favicon: faviconBase64 ? 'base64 data' : 'none' });
+      return { title, favicon: faviconBase64 || undefined };
+
+    } catch (err) {
+      console.warn('Failed to fetch URL metadata:', err);
+      // Fallback to hostname as title
+      try {
+        return { title: new URL(url).hostname };
+      } catch {
+        return { title: url };
+      }
+    }
+  };
+
   const handleEdit = (bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
     setIsBookmarkFormOpen(true);
@@ -409,115 +553,135 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       setDropPosition(position);
     }
   };
-  // Updated to optionally accept the original drag event so we can inspect
-  // external application drops (e.g. URLs dragged from Chrome).
-        const handleDrop = (index: number, position: 'before' | 'after') => (event: React.DragEvent) => {
-            event.preventDefault();
-            event.stopPropagation();
+  // Updated to handle external application drops (e.g. URLs dragged from Chrome).
+  const handleDrop = (index: number, position: 'before' | 'after', event: React.DragEvent | DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
 
-            // Log transferred content for debugging
-            console.log('Row drop - DataTransfer types:', Array.from(event.dataTransfer.types));
-            console.log('Row drop - DataTransfer items:', event.dataTransfer.items ? Array.from(event.dataTransfer.items) : 'Not supported');
+    // Get the dataTransfer from either React or native event
+    const dataTransfer = 'dataTransfer' in event ? event.dataTransfer : (event as any).dataTransfer;
 
-            // First check for external URL drop
-            const externalUrl = extractUrlFromDataTransfer(event.dataTransfer);
-            if (externalUrl) {
-                console.log('Row drop - External URL detected:', externalUrl);
-                const actualIndex = position === 'before' ? index : index + 1;
-                setPendingExternalDropIndex(actualIndex);
-                setIsBookmarkFormOpen(true);
-                setEditingBookmark({
-                    id: '',
-                    title: '',
-                    url: externalUrl,
-                    description: '',
-                    tags: [],
-                    collapsed: true,
-                    createdDate: new Date(),
-                    lastModifiedDate: new Date()
-                });
-                return;
-            }
+    // Log transferred content for debugging
+    console.log('Row drop - DataTransfer types:', Array.from(dataTransfer.types));
+    console.log('Row drop - DataTransfer items:', dataTransfer.items ? Array.from(dataTransfer.items) : 'Not supported');
 
-            // Check if this is a cross-tab drop
-            if (nodeId && isExternalDrag(nodeId) && dragState.draggedBookmark && dragState.sourceNodeId) {
-              console.log('[BookmarksTabManager] Handling cross-tab drop');
+    // First check for external URL drop
+    const externalUrl = extractUrlFromDataTransfer(dataTransfer);
+    if (externalUrl) {
+        console.log('Row drop - External URL detected:', externalUrl);
+        const actualIndex = position === 'before' ? index : index + 1;
+        setPendingExternalDropIndex(actualIndex);
 
-              // Use the stored cross-tab drag state for accurate positioning
-              const finalIndex = crossTabDragOverIndex ?? index;
-              const finalPosition = crossTabDragOverIndex !== null ? crossTabDropPosition : position;
+        // Fetch URL metadata asynchronously
+        fetchUrlMetadata(externalUrl).then(metadata => {
+          setEditingBookmark({
+              id: '',
+              title: metadata.title,
+              url: externalUrl,
+              description: '',
+              tags: [],
+              collapsed: true,
+              icon: metadata.favicon,
+              createdDate: new Date(),
+              lastModifiedDate: new Date()
+          });
+        }).catch(err => {
+          console.warn('Failed to fetch metadata, using defaults:', err);
+          setEditingBookmark({
+              id: '',
+              title: '',
+              url: externalUrl,
+              description: '',
+              tags: [],
+              collapsed: true,
+              createdDate: new Date(),
+              lastModifiedDate: new Date()
+          });
+        });
 
-              console.log('[BookmarksTabManager] Cross-tab drop - using stored state - index:', finalIndex, 'position:', finalPosition);
+        setIsBookmarkFormOpen(true);
+        return;
+    }
 
-              // Calculate insertion index
-              let insertIndex = finalPosition === 'before' ? finalIndex : finalIndex + 1;
+    // Check if this is a cross-tab drop
+    if (nodeId && isExternalDrag(nodeId) && dragState.draggedBookmark && dragState.sourceNodeId) {
+      console.log('[BookmarksTabManager] Handling cross-tab drop');
 
-              // Create a copy of the bookmark for the new tab
-              const newBookmark = {
-                ...dragState.draggedBookmark,
-                id: uuidv4(), // Generate new ID to avoid conflicts
-                createdDate: new Date(),
-                lastModifiedDate: new Date()
-              };
+      // Use the stored cross-tab drag state for accurate positioning
+      const finalIndex = crossTabDragOverIndex ?? index;
+      const finalPosition = crossTabDragOverIndex !== null ? crossTabDropPosition : position;
 
-              // Insert the bookmark at the target position
-              const newBookmarks = [...bookmarks];
-              newBookmarks.splice(insertIndex, 0, newBookmark);
+      console.log('[BookmarksTabManager] Cross-tab drop - using stored state - index:', finalIndex, 'position:', finalPosition);
 
-              // Update the config with the new bookmark
-              if (onConfigChange) {
-                onConfigChange({
-                  ...(config || {} as BookmarksTabConfig),
-                  bookmarks: newBookmarks
-                });
-              }
+      // Calculate insertion index
+      let insertIndex = finalPosition === 'before' ? finalIndex : finalIndex + 1;
 
-              // Request removal from source tab using the service
-              crossTabBookmarkService.requestMove(
-                dragState.draggedBookmark,
-                dragState.sourceNodeId,
-                nodeId,
-                finalIndex,
-                finalPosition
-              );
+      // Create a copy of the bookmark for the new tab
+      const newBookmark = {
+        ...dragState.draggedBookmark,
+        id: uuidv4(), // Generate new ID to avoid conflicts
+        createdDate: new Date(),
+        lastModifiedDate: new Date()
+      };
 
-              // Clear states
-              setCrossTabDragOverIndex(null);
-              setCrossTabDropPosition('after');
-              endDrag();
-              return;
-            }
+      // Insert the bookmark at the target position
+      const newBookmarks = [...bookmarks];
+      newBookmarks.splice(insertIndex, 0, newBookmark);
 
-            // Handle internal drop (same tab reordering)
-            if (!draggedBookmark) return;
+      // Update the config with the new bookmark
+      if (onConfigChange) {
+        onConfigChange({
+          ...(config || {} as BookmarksTabConfig),
+          bookmarks: newBookmarks
+        });
+      }
 
-            const draggedIndex = bookmarks.findIndex(b => b.id === draggedBookmark.id);
-            if (draggedIndex === -1) return;
+      // Request removal from source tab using the service
+      crossTabBookmarkService.requestMove(
+        dragState.draggedBookmark,
+        dragState.sourceNodeId,
+        nodeId,
+        finalIndex,
+        finalPosition
+      );
 
-            const newBookmarks = [...bookmarks];
+      // Clear states
+      setCrossTabDragOverIndex(null);
+      setCrossTabDropPosition('after');
+      endDrag();
+      return;
+    }
 
-            // Remove dragged item
-            const [draggedItem] = newBookmarks.splice(draggedIndex, 1);
+    // Handle internal drop (same tab reordering)
+    if (!draggedBookmark) return;
 
-            // Calculate new insertion index
-            let insertIndex: number;
-            if (draggedIndex < index) {
-              insertIndex = position === 'before' ? index - 1 : index;
-            } else {
-              insertIndex = position === 'before' ? index : index + 1;
-            }
+    const draggedIndex = bookmarks.findIndex(b => b.id === draggedBookmark.id);
+    if (draggedIndex === -1) return;
 
-            // Insert at new position
-            newBookmarks.splice(insertIndex, 0, draggedItem);
+    const newBookmarks = [...bookmarks];
 
-            if (onConfigChange) {
-              onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
-            }
+    // Remove dragged item
+    const [draggedItem] = newBookmarks.splice(draggedIndex, 1);
 
-            setDraggedBookmark(null);
-            setDragOverIndex(null);
-            setDropPosition('after');
-        };
+    // Calculate new insertion index
+    let insertIndex: number;
+    if (draggedIndex < index) {
+      insertIndex = position === 'before' ? index - 1 : index;
+    } else {
+      insertIndex = position === 'before' ? index : index + 1;
+    }
+
+    // Insert at new position
+    newBookmarks.splice(insertIndex, 0, draggedItem);
+
+    if (onConfigChange) {
+      onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
+    }
+
+    setDraggedBookmark(null);
+    setDragOverIndex(null);
+    setDropPosition('after');
+  };
 
 
   const handleSubmit = (data: BookmarkFormData) => {
@@ -535,7 +699,9 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       id: uuidv4(),
       title: data.title || '',
       url: data.url || '',
-      description: data.description,
+      icon: data.icon || '',
+      color: data.color || '',
+      description: data.description || '',
       tags: data.tags || [],
       collapsed: true,
       createdDate: new Date(),
@@ -726,14 +892,41 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
             if (url) {
               console.log('Container drop - External URL detected:', url);
               e.preventDefault();
-              const prefill = { url } as Partial<Bookmark>;
-              setEditingBookmark(prefill as Bookmark | null);
-              setIsBookmarkFormOpen(true);
+
               // default insertion index: end of list or use stored cross-tab position
               const insertIndex = crossTabDragOverIndex !== null
                 ? (crossTabDropPosition === 'before' ? crossTabDragOverIndex : crossTabDragOverIndex + 1)
                 : bookmarks.length;
               setPendingExternalDropIndex(insertIndex);
+
+              // Fetch URL metadata asynchronously
+              fetchUrlMetadata(url).then(metadata => {
+                setEditingBookmark({
+                  id: '',
+                  title: metadata.title,
+                  url,
+                  description: '',
+                  tags: [],
+                  collapsed: true,
+                  icon: metadata.favicon,
+                  createdDate: new Date(),
+                  lastModifiedDate: new Date()
+                });
+              }).catch(err => {
+                console.warn('Failed to fetch metadata, using defaults:', err);
+                setEditingBookmark({
+                  id: '',
+                  title: '',
+                  url,
+                  description: '',
+                  tags: [],
+                  collapsed: true,
+                  createdDate: new Date(),
+                  lastModifiedDate: new Date()
+                });
+              });
+
+              setIsBookmarkFormOpen(true);
               return;
             }
           }

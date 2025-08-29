@@ -25,25 +25,23 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
   const { bookmark, mode = FormDisplayMode.Edit, onSave, onCancel } = props;
   const { theme } = useTheme();
   const [formData, setFormData] = useState(() => ({
-    title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
+    title: bookmark?.title || '', // could be prefilled in creation mode (DnD)
+    icon: bookmark?.icon || '', // could be prefilled in creation mode (DnD)
+    url: bookmark?.url || '', // could be prefilled in creation mode (DnD)
     color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
-    icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
-    url: bookmark?.url || '', // could be prefilled in creation mode
-    description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
-    tags: mode === FormDisplayMode.Create ? '' : (bookmark?.tags?.join(', ') || '')
+    description: bookmark?.description || '',
+    tags: bookmark?.tags?.join(', ') || ''
   }));
-
-  // use the explicit mode prop (caller controls create vs edit)
 
   // sync initial values only when the bookmark id changes to avoid clobbering user edits
   useEffect(() => {
     setFormData({
-      title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
+      title: bookmark?.title || '', // could be prefilled in creation mode (DnD)
+      icon: bookmark?.icon || '', // could be prefilled in creation mode (DnD)
+      url: bookmark?.url || '', // could be prefilled in creation mode (DnD)
       color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
-      icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
-      url: bookmark?.url || '',
-      description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
-      tags: mode === FormDisplayMode.Create ? '' : (bookmark?.tags?.join(', ') || '')
+      description: bookmark?.description || '',
+      tags: bookmark?.tags?.join(', ') || ''
     });
   }, [bookmark?.id, mode]);
 
