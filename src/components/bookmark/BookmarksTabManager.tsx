@@ -169,7 +169,20 @@ function DraggableBookmarkRow({
       }}
     >
       {/* Drop preview before */}
-      {isDraggedOver && currentDropPosition === 'before' && currentDraggedBookmark && (
+      {/* Debug: isDraggedOver={isDraggedOver}, currentDropPosition={currentDropPosition}, dragOverIndex={dragOverIndex}, index={index} */}
+      {(() => {
+        console.log(`[DraggableBookmarkRow ${index}] Preview condition check:`, {
+          isDraggedOver,
+          currentDropPosition,
+          dragOverIndex,
+          index,
+          crossTabDragOverIndex,
+          dropPosition,
+          crossTabDropPosition
+        });
+        return null;
+      })()}
+      {isDraggedOver && currentDropPosition === 'before' && (
         <div
           style={{
             position: 'relative',
@@ -192,11 +205,14 @@ function DraggableBookmarkRow({
           }}>
             <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '16px', opacity: 0.7 }}>
-                {globalDraggedBookmark ? '�' : '�📄'}
+                {currentDraggedBookmark ? (globalDraggedBookmark ? '🔗' : '📄') : '🌐'}
               </span>
             </div>
-            <span>{currentDraggedBookmark.title}</span>
+            <span>
+              {currentDraggedBookmark ? currentDraggedBookmark.title : 'External item'}
+            </span>
             {globalDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from other tab)</span>}
+            {!currentDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from external source)</span>}
           </div>
         </div>
       )}
@@ -220,7 +236,7 @@ function DraggableBookmarkRow({
       </div>
 
       {/* Drop preview after */}
-      {isDraggedOver && currentDropPosition === 'after' && currentDraggedBookmark && (
+      {isDraggedOver && currentDropPosition === 'after' && (
         <div
           style={{
             position: 'relative',
@@ -243,11 +259,14 @@ function DraggableBookmarkRow({
           }}>
             <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '16px', opacity: 0.7 }}>
-                {globalDraggedBookmark ? '🔄' : '📄'}
+                {currentDraggedBookmark ? (globalDraggedBookmark ? '�' : '📄') : '🌐'}
               </span>
             </div>
-            <span>{currentDraggedBookmark.title}</span>
+            <span>
+              {currentDraggedBookmark ? currentDraggedBookmark.title : 'External item'}
+            </span>
             {globalDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from other tab)</span>}
+            {!currentDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from external source)</span>}
           </div>
         </div>
       )}
@@ -583,7 +602,10 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       setDragOverIndex(index);
       setDropPosition(position);
     } else {
-      console.log('[BookmarksTabManager] No draggedBookmark found for internal drag');
+      // External application drag (e.g., URLs from browsers)
+      console.log('[BookmarksTabManager] External application drag over at index:', index, 'position:', position);
+      setDragOverIndex(index);
+      setDropPosition(position);
     }
   };
   // Updated to handle external application drops (e.g. URLs dragged from Chrome).
