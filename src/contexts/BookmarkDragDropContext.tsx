@@ -5,12 +5,14 @@ interface DragDropState {
   draggedBookmark: Bookmark | null;
   sourceNodeId: string | null;
   sourceIndex: number | null;
+  selectedIds?: string[] | null;
+  selectedBookmarks?: Bookmark[] | null;
   isDraggingAcrossTabs: boolean;
 }
 
 interface BookmarkDragDropContextType {
   dragState: DragDropState;
-  startDrag: (bookmark: Bookmark, sourceNodeId: string, sourceIndex: number) => void;
+  startDrag: (bookmark: Bookmark, sourceNodeId: string, sourceIndex: number, selectedIds?: string[], selectedBookmarks?: Bookmark[]) => void;
   endDrag: () => void;
   isExternalDrag: (nodeId: string) => boolean;
   canAcceptDrop: (targetNodeId: string) => boolean;
@@ -31,10 +33,11 @@ export const BookmarkDragDropProvider: React.FC<{ children: React.ReactNode }> =
     draggedBookmark: null,
     sourceNodeId: null,
     sourceIndex: null,
+    selectedIds: null,
     isDraggingAcrossTabs: false
   });
 
-  const startDrag = useCallback((bookmark: Bookmark, sourceNodeId: string, sourceIndex: number) => {
+  const startDrag = useCallback((bookmark: Bookmark, sourceNodeId: string, sourceIndex: number, selectedIds?: string[], selectedBookmarks?: Bookmark[]) => {
     console.log('[DragDropContext] Starting drag:', {
       bookmarkId: bookmark.id,
       title: bookmark.title,
@@ -46,6 +49,8 @@ export const BookmarkDragDropProvider: React.FC<{ children: React.ReactNode }> =
       draggedBookmark: bookmark,
       sourceNodeId,
       sourceIndex,
+  selectedIds: selectedIds && selectedIds.length > 0 ? selectedIds : null,
+  selectedBookmarks: selectedBookmarks && selectedBookmarks.length > 0 ? selectedBookmarks : null,
       isDraggingAcrossTabs: false
     });
   }, []);
