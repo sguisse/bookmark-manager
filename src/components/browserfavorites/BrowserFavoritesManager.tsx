@@ -322,12 +322,20 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   return (
     <div className="browser-favorites">
 
-            <BrowserFavoritesForm
-              browserFavorites={currentFavorites}
-              mode={formMode}
-              onSave={handleFormSave}
-              onCancel={handleFormCancel}
-            />
+      <BrowserFavoritesForm
+        browserFavorites={currentFavorites}
+        mode={formMode}
+        onSave={handleFormSave}
+        onCancel={handleFormCancel}
+      />
+
+      <div className="bf-file-uploaded" style={{ marginTop: '16px' }}>
+        {currentFavorites?.filePath && (
+          <div className="bf-file-info">
+            <strong>Loaded File:</strong> {currentFavorites.filePath}
+          </div>
+        )}
+      </div>
 
       <div className="bf-tree" role="tree" style={{ marginTop: '16px' }}>
         {tree.length === 0 ? (

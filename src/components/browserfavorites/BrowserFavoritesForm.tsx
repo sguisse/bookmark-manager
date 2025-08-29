@@ -88,7 +88,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
     }
   };
 
-  const handleFilePathValidation = async (filePath: string) => {
+  const handleFilePathValidation = async (filePath: string, hasFileObject = false) => {
     const trimmedPath = filePath.trim();
 
     if (!trimmedPath) {
@@ -108,6 +108,12 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
         // For local files, validate the path format
         if (trimmedPath.length < 5) {
           setErrors(prev => ({ ...prev, filePath: 'File path is too short' }));
+          return false;
+        }
+
+        // If this is just a path without file object, inform user to use browse button
+        if (!hasFileObject && !selectedFile) {
+          setErrors(prev => ({ ...prev, filePath: 'Please use the Browse button to select and load the bookmark file' }));
           return false;
         }
 
@@ -141,8 +147,13 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
     if (file) {
       handleChange('filePath', file.name);
       setSelectedFile(file);
-      // Validate the selected file
-      handleFilePathValidation(file.name);
+      // Validate the selected file and submit the form to load the bookmarks
+      handleFilePathValidation(file.name, true).then((isValid) => {
+        if (isValid) {
+          const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+          handleSubmit(fakeEvent);
+        }
+      });
     }
   };
 
@@ -170,28 +181,22 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
       <form onSubmit={handleSubmit}>
         {/* File Selection block with chevron */}
         <div className="card mb-4" style={{ borderColor: theme.colors.border, marginTop: '0' }}>
-          <button
-            type="button"
+
+          <div
             className="card-header"
-            aria-expanded={formData.showFileSelection}
+            role="button"
+            tabIndex={0}
             onClick={() => setFormData(f => ({ ...f, showFileSelection: !f.showFileSelection }))}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              background: 'transparent',
-              border: 'none',
-              width: '100%',
-              textAlign: 'left',
-              padding: '12px 16px'
-            }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFormData(f => ({ ...f, showFileSelection: !f.showFileSelection })); } }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
           >
-            <strong>File Selection</strong>
+            <strong>Favoris selection</strong>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {formData.showFileSelection ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </div>
-          </button>
+          </div>
+
+
           {formData.showFileSelection && (
             <div className="card-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
@@ -206,7 +211,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                     }}
                     htmlFor="browser-favorites-filepath"
                   >
-                    Select a Chrome bookmarks HTML file or enter the file path *
+                    HTML File
                   </label>
 
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>
@@ -218,15 +223,17 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          handleFilePathValidation(formData.filePath).then(() => {
-                            handleSubmit(e);
+                          handleFilePathValidation(formData.filePath, !!selectedFile).then((isValid) => {
+                            if (isValid) {
+                              handleSubmit(e);
+                            }
                           });
                         }
                       }}
                       onBlur={() => {
                         if (formData.filePath.trim()) {
-                          handleFilePathValidation(formData.filePath).then((isValid) => {
-                            if (isValid) {
+                          handleFilePathValidation(formData.filePath, !!selectedFile).then((isValid) => {
+                            if (isValid && selectedFile) {
                               const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
                               handleSubmit(fakeEvent);
                             }
@@ -234,7 +241,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                         }
                       }}
                       style={errors.filePath ? errorInputStyle : { ...inputStyle, flex: 1 }}
-                      placeholder="Enter file path or select file"
+                      placeholder="Use Browse button to load bookmarks"
                       autoFocus
                     />
                     <button
@@ -365,7 +372,11 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                         fontSize: theme.fonts.sizes.small,
                         color: theme.colors.text.secondary
                       }}>
-                        {browserFavorites.nodesOpened.join(' > ')}
+                        {browserFavorites.nodesOpened.map((node, index) => (
+                          <div key={`${node}-${index}`} style={{ marginBottom: index < browserFavorites.nodesOpened.length - 1 ? '0.25rem' : '0' }}>
+                            {node}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
