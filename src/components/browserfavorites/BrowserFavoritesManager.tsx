@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { BrowserBookmarkNode } from '../../services/BrowserFavoritesParser';
 import { parseChromeBookmarksHtml } from '../../services/BrowserFavoritesParser';
-import { BrowserFavorites as BrowserFavoritesType, BrowserFavoritesFormData } from '../../types/browser';
+import { BrowserFavorites, BrowserFavoritesFormData } from '../../types/browser';
 import { FormDisplayMode } from '../../types/app';
 import BrowserFavoritesForm from './BrowserFavoritesForm';
 
@@ -204,10 +204,10 @@ const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (
   );
 };
 
-export const BrowserFavorites: React.FC<Props> = () => {
+export const BrowserFavoritesManager: React.FC<Props> = () => {
   const [tree, setTree] = useState<BrowserBookmarkNode[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [currentFavorites, setCurrentFavorites] = useState<BrowserFavoritesType | null>(null);
+  const [currentFavorites, setCurrentFavorites] = useState<BrowserFavorites | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(true); // Expanded by default
   const [formMode, setFormMode] = useState<FormDisplayMode>(FormDisplayMode.Create);
 
@@ -284,7 +284,7 @@ export const BrowserFavorites: React.FC<Props> = () => {
   const handleFormSave = (formData: BrowserFavoritesFormData, file?: File) => {
     if (formMode === FormDisplayMode.Create) {
       // Create new browser favorites
-      const newFavorites: BrowserFavoritesType = {
+      const newFavorites: BrowserFavorites = {
         id: `bf-${Date.now()}`,
         filePath: formData.filePath,
         nodesOpened: [],
@@ -299,7 +299,7 @@ export const BrowserFavorites: React.FC<Props> = () => {
       }
     } else if (formMode === FormDisplayMode.Edit && currentFavorites) {
       // Update existing browser favorites
-      const updatedFavorites: BrowserFavoritesType = {
+      const updatedFavorites: BrowserFavorites = {
         ...currentFavorites,
         filePath: formData.filePath,
         lastModifiedDate: new Date()
@@ -334,101 +334,17 @@ export const BrowserFavorites: React.FC<Props> = () => {
     setIsFormOpen(true);
   };
 
-  // ...existing code...
-
   return (
     <div className="browser-favorites">
-      {/* Browser Favorites Form Collapsible Section */}
-      <div style={{ marginBottom: '1rem', border: '1px solid #ccc', borderRadius: '6px' }}>
-        <button
-          type="button"
-          onClick={toggleForm}
-          style={{
-            width: '100%',
-            padding: '1rem',
-            border: 'none',
-            borderRadius: '6px 6px 0 0',
-            backgroundColor: '#f8f9fa',
-            color: '#333',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '1rem',
-            fontWeight: 500
-          }}
-        >
-          <span>Browser Favorites Configuration</span>
-          <span style={{ transform: isFormOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
-            ▶
-          </span>
-        </button>
 
-        {isFormOpen && (
-          <div style={{ padding: '1rem', borderTop: '1px solid #eee' }}>
             <BrowserFavoritesForm
               browserFavorites={formMode === FormDisplayMode.Edit ? currentFavorites : null}
               mode={formMode}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
             />
-          </div>
-        )}
-      </div>
 
-      <div className="bf-controls">
-        {currentFavorites ? (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
-            <span style={{ fontSize: '0.9rem', color: '#666' }}>
-              Current file: {currentFavorites.filePath}
-            </span>
-            <button
-              type="button"
-              onClick={openEditForm}
-              style={{
-                padding: '0.5rem 1rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                backgroundColor: '#f5f5f5',
-                cursor: 'pointer'
-              }}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={openCreateForm}
-              style={{
-                padding: '0.5rem 1rem',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                backgroundColor: '#f5f5f5',
-                cursor: 'pointer'
-              }}
-            >
-              Load New File
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={openCreateForm}
-            style={{
-              padding: '0.75rem 1.5rem',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              cursor: 'pointer',
-              marginBottom: '1rem'
-            }}
-          >
-            Import Chrome Bookmarks HTML
-          </button>
-        )}
-      </div>
-
-      <div className="bf-tree" role="tree">
+      <div className="bf-tree" role="tree" style={{ marginTop: '16px' }}>
         {tree.length === 0 ? (
           <div className="bf-empty">No bookmarks loaded. Import a Chrome bookmarks HTML file.</div>
         ) : (
@@ -441,4 +357,4 @@ export const BrowserFavorites: React.FC<Props> = () => {
   );
 };
 
-export default BrowserFavorites;
+export default BrowserFavoritesManager;

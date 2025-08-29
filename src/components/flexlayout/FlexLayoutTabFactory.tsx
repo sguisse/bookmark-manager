@@ -3,7 +3,7 @@ import { BorderNode, ITabSetRenderValues, TabNode, TabSetNode } from 'flexlayout
 import BookmarksTabManager from '../bookmark/BookmarksTabManager';
 import MarkdownTabManager from '../markdown/MarkdownTabManager';
 import WebTabManager from '../web/WebTabManager';
-import BrowserFavorites from '../browserfavorites/BrowserFavorites';
+import BrowserFavorites from '../browserfavorites/BrowserFavoritesManager';
 import { FlexLayoutTabConfig } from '../../types/flexTab';
 import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
