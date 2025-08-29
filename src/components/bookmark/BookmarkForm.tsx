@@ -125,7 +125,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     <div>
       <h2
         style={{
-          margin: '0 0 1.5rem 0',
+          margin: '0 0 0.8rem 0',
           fontSize: theme.fonts.sizes.large,
           fontWeight: 600,
           color: theme.colors.text.primary
@@ -135,74 +135,84 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
       </h2>
   {/* show id after the popup title (Edit mode) as a readonly field */}
   {mode === FormDisplayMode.Edit && bookmark && (
-        <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>
+        <div style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
           <label htmlFor="bookmark-id" style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }}>ID</label>
           <input id="bookmark-id" type="text" readOnly value={bookmark.id} style={{ ...inputStyle, width: '100%', backgroundColor: theme.colors.surface ?? theme.colors.background, cursor: 'default' }} />
         </div>
       )}
       <form onSubmit={handleSubmit}>
-        {/* Title Field */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-title">Title *</label>
-          <input id="bookmark-title" type="text" value={formData.title} onChange={(e) => handleChange('title', e.target.value)} style={errors.title ? errorInputStyle : inputStyle} placeholder="Enter bookmark title" autoFocus />
-          {errors.title && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.title}</div>)}
-        </div>
+        {/* Two-column responsive grid layout */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 200px',
+          rowGap: '0rem',
+          columnGap: '1rem',
+          marginBottom: '1rem'
+        }}>
+          {/* Title Field - spans full width */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-title">Title *</label>
+            <input id="bookmark-title" type="text" value={formData.title} onChange={(e) => handleChange('title', e.target.value)} style={errors.title ? errorInputStyle : inputStyle} placeholder="Enter bookmark title" autoFocus />
+            {errors.title && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.title}</div>)}
+          </div>
 
-        {/* Color Field */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-color">Color</label>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {/* color input requires a valid hex value; use a sensible fallback for the picker but keep formData.color empty to represent default */}
-            <input
-              id="bookmark-color"
-              type="color"
-              aria-label="Bookmark color"
-              value={formData.color || ''}
-              onChange={(e) => handleChange('color', e.target.value)}
-              style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
-            />
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: theme.fonts.sizes.small, color: theme.colors.text.primary }}>
+          {/* Color Field - left column */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-color">Color</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              {/* color input requires a valid hex value; use a sensible fallback for the picker but keep formData.color empty to represent default */}
               <input
-                type="checkbox"
-                checked={!formData.color}
-                onChange={(e) => handleChange('color', e.target.checked ? '' : (formData.color || ''))}
-                aria-label="Default bookmark color"
+                id="bookmark-color"
+                type="color"
+                aria-label="Bookmark color"
+                value={formData.color || ''}
+                onChange={(e) => handleChange('color', e.target.value)}
+                style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
               />
-              <span>Default</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Icon Field with preview */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-icon">Icon</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 6, border: `1px solid ${theme.colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.colors.background, overflow: 'hidden' }}>
-              <IconPreview src={formData.icon} errored={iconError} onError={() => setIconError(true)} />
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: theme.fonts.sizes.small, color: theme.colors.text.primary }}>
+                <input
+                  type="checkbox"
+                  checked={!formData.color}
+                  onChange={(e) => handleChange('color', e.target.checked ? '' : (formData.color || ''))}
+                  aria-label="Default bookmark color"
+                />
+                <span>Default</span>
+              </label>
             </div>
-
-            <input id="bookmark-icon" type="text" value={formData.icon} onChange={(e) => handleChange('icon', e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 0 }} placeholder="emoji (e.g. 🔖) or https://example.com/icon.png" />
           </div>
-        </div>
 
-        {/* URL Field */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-url">URL *</label>
-          <input id="bookmark-url" type="url" value={formData.url} onChange={(e) => handleChange('url', e.target.value)} style={errors.url ? errorInputStyle : inputStyle} placeholder="https://example.com" />
-          {errors.url && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.url}</div>)}
-        </div>
 
-        {/* Description Field */}
-        <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-description">Description</label>
-          <textarea id="bookmark-description" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Optional description" rows={3} />
-        </div>
+          {/* URL Field - spans full width */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-url">URL *</label>
+            <input id="bookmark-url" type="url" value={formData.url} onChange={(e) => handleChange('url', e.target.value)} style={errors.url ? errorInputStyle : inputStyle} placeholder="https://example.com" />
+            {errors.url && (<div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.error }}>{errors.url}</div>)}
+          </div>
 
-        {/* Tags Field */}
-        <div style={{ marginBottom: '2rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-tags">Tags</label>
-          <input id="bookmark-tags" type="text" value={formData.tags} onChange={(e) => handleChange('tags', e.target.value)} style={inputStyle} placeholder="Enter tags separated by commas" />
-          <div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.text.secondary }}>Separate multiple tags with commas (e.g., work, documentation, reference)</div>
+          {/* Icon Field with preview - right column */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-icon">Icon</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 6, border: `1px solid ${theme.colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.colors.background, overflow: 'hidden' }}>
+                <IconPreview src={formData.icon} errored={iconError} onError={() => setIconError(true)} />
+              </div>
+
+              <input id="bookmark-icon" type="text" value={formData.icon} onChange={(e) => handleChange('icon', e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 100 }} placeholder="emoji or URL" />
+            </div>
+          </div>
+
+          {/* Description Field - spans full width */}
+          <div style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-description">Description</label>
+            <textarea id="bookmark-description" value={formData.description} onChange={(e) => handleChange('description', e.target.value)} style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} placeholder="Optional description" rows={3} />
+          </div>
+
+          {/* Tags Field - spans full width */}
+          <div style={{ gridColumn: '1 / -1', marginBottom: '0.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-tags">Tags</label>
+            <input id="bookmark-tags" type="text" value={formData.tags} onChange={(e) => handleChange('tags', e.target.value)} style={inputStyle} placeholder="Enter tags separated by commas" />
+            <div style={{ marginTop: '0.25rem', fontSize: theme.fonts.sizes.small, color: theme.colors.text.secondary }}>Separate multiple tags with commas (e.g., work, documentation, reference)</div>
+          </div>
         </div>
 
   {/* show created/updated timestamps when editing existing bookmark as two readonly fields */}
