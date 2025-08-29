@@ -208,8 +208,7 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   const [tree, setTree] = useState<BrowserBookmarkNode[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [currentFavorites, setCurrentFavorites] = useState<BrowserFavorites | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState(true); // Expanded by default
-  const [formMode, setFormMode] = useState<FormDisplayMode>(FormDisplayMode.Create);
+  const formMode = FormDisplayMode.Edit; // Always in edit mode since form is always visible
 
   // Helper function to build hierarchical path for a node
   const buildNodePath = (nodeId: string, nodes: BrowserBookmarkNode[]): string[] => {
@@ -282,8 +281,21 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   };
 
   const handleFormSave = (formData: BrowserFavoritesFormData, file?: File) => {
-    if (formMode === FormDisplayMode.Create) {
-      // Create new browser favorites
+    if (currentFavorites) {
+      // Update existing browser favorites
+      const updatedFavorites: BrowserFavorites = {
+        ...currentFavorites,
+        filePath: formData.filePath,
+        lastModifiedDate: new Date()
+      };
+      setCurrentFavorites(updatedFavorites);
+
+      // If a new file was provided, load it
+      if (file) {
+        loadBookmarksFile(file, formData.filePath);
+      }
+    } else {
+      // Create new browser favorites (when none exists yet)
       const newFavorites: BrowserFavorites = {
         id: `bf-${Date.now()}`,
         filePath: formData.filePath,
@@ -297,19 +309,6 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
       if (file) {
         loadBookmarksFile(file, formData.filePath);
       }
-    } else if (formMode === FormDisplayMode.Edit && currentFavorites) {
-      // Update existing browser favorites
-      const updatedFavorites: BrowserFavorites = {
-        ...currentFavorites,
-        filePath: formData.filePath,
-        lastModifiedDate: new Date()
-      };
-      setCurrentFavorites(updatedFavorites);
-
-      // If a new file was provided, load it
-      if (file) {
-        loadBookmarksFile(file, formData.filePath);
-      }
     }
     // Keep the form open after saving for potential further use
     // setIsFormOpen(false); // Commented out to keep form open
@@ -320,25 +319,11 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
     // User can manually collapse it using the toggle button if desired
   };
 
-  const toggleForm = () => {
-    setIsFormOpen(!isFormOpen);
-  };
-
-  const openCreateForm = () => {
-    setFormMode(FormDisplayMode.Create);
-    setIsFormOpen(true);
-  };
-
-  const openEditForm = () => {
-    setFormMode(FormDisplayMode.Edit);
-    setIsFormOpen(true);
-  };
-
   return (
     <div className="browser-favorites">
 
             <BrowserFavoritesForm
-              browserFavorites={formMode === FormDisplayMode.Edit ? currentFavorites : null}
+              browserFavorites={currentFavorites}
               mode={formMode}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
