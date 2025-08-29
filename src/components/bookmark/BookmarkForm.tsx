@@ -28,7 +28,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
     color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
     icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
-    url: mode === FormDisplayMode.Create ? '' : (bookmark?.url || ''),
+    url: bookmark?.url || '', // could be prefilled in creation mode
     description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
     tags: mode === FormDisplayMode.Create ? '' : (bookmark?.tags?.join(', ') || '')
   }));
@@ -41,7 +41,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
       title: mode === FormDisplayMode.Create ? '' : (bookmark?.title || ''),
       color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
       icon: mode === FormDisplayMode.Create ? '' : (bookmark?.icon || ''),
-      url: mode === FormDisplayMode.Create ? '' : (bookmark?.url || ''),
+      url: bookmark?.url || '',
       description: mode === FormDisplayMode.Create ? '' : (bookmark?.description || ''),
       tags: mode === FormDisplayMode.Create ? '' : (bookmark?.tags?.join(', ') || '')
     });

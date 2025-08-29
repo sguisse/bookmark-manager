@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import BookmarkForm from './BookmarkForm';
 import { Bookmark, BookmarkFormData, BookmarksTabConfig } from '../../types/bookmark';
+import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
 import { useBookmarkDragDrop } from '../../contexts/BookmarkDragDropContext';
 import { crossTabBookmarkService } from '../../services/CrossTabBookmarkService';
@@ -30,7 +31,7 @@ interface DraggableBookmarkRowProps {
   onDragStart: (bookmark: Bookmark) => void;
   onDragEnd: () => void;
   onDragOver: (index: number, position: 'before' | 'after') => void;
-  onDrop: (targetIndex: number, position: 'before' | 'after') => void;
+  onDrop: (targetIndex: number, position: 'before' | 'after', event?: DragEvent | React.DragEvent) => void;
   onDragOverIndexChange: (index: number | null) => void;
 }
 
@@ -125,17 +126,24 @@ function DraggableBookmarkRow({
       onDragEnd={onDragEnd}
       onDragOver={(e) => {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
+
+        // Check if this might be an external URL drop
+        const hasUrlTypes = e.dataTransfer.types.includes('text/uri-list') ||
+                           e.dataTransfer.types.includes('text/plain');
+
+        // Set appropriate drop effect
+        e.dataTransfer.dropEffect = hasUrlTypes ? 'copy' : 'move';
+
         const rect = e.currentTarget.getBoundingClientRect();
         const mouseY = e.clientY - rect.top;
         const elementHeight = rect.height;
         const position = mouseY < elementHeight / 2 ? 'before' : 'after';
         onDragOver(index, position);
       }}
-      onDrop={(e) => {
+      onDrop={(e: React.DragEvent) => {
         e.preventDefault();
         console.log('[DraggableBookmarkRow] Drop event received at index:', index);
-        onDrop(index, currentDropPosition);
+        onDrop(index, currentDropPosition, e);
       }}
       onDragLeave={(e) => {
         // Only clear if leaving the element boundary, not child elements
@@ -264,8 +272,35 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const [crossTabDragOverIndex, setCrossTabDragOverIndex] = useState<number | null>(null);
   const [crossTabDropPosition, setCrossTabDropPosition] = useState<'before' | 'after'>('after');
 
+  // When an external drop (from other apps) is received we open the create form
+  // and remember the intended insertion point so the new bookmark is inserted
+  // at the drop location when the user confirms.
+  const [pendingExternalDropIndex, setPendingExternalDropIndex] = useState<number | null>(null);
+
   // State for tracking drag over empty container
   const [isDragOverEmptyContainer, setIsDragOverEmptyContainer] = useState(false);
+
+  // Helper to extract a URL string from a DataTransfer object (if any)
+  const extractUrlFromDataTransfer = (dt: DataTransfer | null | undefined): string | null => {
+    if (!dt) return null;
+    let url = '';
+    try {
+      if ((dt as any).getData) url = (dt as any).getData('text/uri-list') || '';
+    } catch (err) {
+      console.debug('No text/uri-list available on DataTransfer', err);
+    }
+    if (!url && (dt as any).getData) {
+      const plain = (dt as any).getData('text/plain') || '';
+      const trimmed = (plain || '').trim();
+      try {
+        if (trimmed) new URL(trimmed);
+        url = trimmed;
+      } catch (err) {
+        console.debug('DataTransfer text/plain is not a valid URL', err);
+      }
+    }
+    return url || null;
+  };
 
   const handleEdit = (bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
@@ -374,91 +409,120 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       setDropPosition(position);
     }
   };
+  // Updated to optionally accept the original drag event so we can inspect
+  // external application drops (e.g. URLs dragged from Chrome).
+        const handleDrop = (index: number, position: 'before' | 'after') => (event: React.DragEvent) => {
+            event.preventDefault();
+            event.stopPropagation();
 
-  const handleDrop = (targetIndex: number, position: 'before' | 'after') => {
-    if (!nodeId || !onConfigChange) return;
+            // Log transferred content for debugging
+            console.log('Row drop - DataTransfer types:', Array.from(event.dataTransfer.types));
+            console.log('Row drop - DataTransfer items:', event.dataTransfer.items ? Array.from(event.dataTransfer.items) : 'Not supported');
 
-    console.log('[BookmarksTabManager] Drop event at index:', targetIndex, 'position:', position, 'in node:', nodeId);
+            // First check for external URL drop
+            const externalUrl = extractUrlFromDataTransfer(event.dataTransfer);
+            if (externalUrl) {
+                console.log('Row drop - External URL detected:', externalUrl);
+                const actualIndex = position === 'before' ? index : index + 1;
+                setPendingExternalDropIndex(actualIndex);
+                setIsBookmarkFormOpen(true);
+                setEditingBookmark({
+                    id: '',
+                    title: '',
+                    url: externalUrl,
+                    description: '',
+                    tags: [],
+                    collapsed: true,
+                    createdDate: new Date(),
+                    lastModifiedDate: new Date()
+                });
+                return;
+            }
 
-    // Check if this is a cross-tab drop
-    if (isExternalDrag(nodeId) && dragState.draggedBookmark && dragState.sourceNodeId) {
-      console.log('[BookmarksTabManager] Handling cross-tab drop');
+            // Check if this is a cross-tab drop
+            if (nodeId && isExternalDrag(nodeId) && dragState.draggedBookmark && dragState.sourceNodeId) {
+              console.log('[BookmarksTabManager] Handling cross-tab drop');
 
-      // Use the stored cross-tab drag state for accurate positioning
-      const finalIndex = crossTabDragOverIndex ?? targetIndex;
-      const finalPosition = crossTabDragOverIndex !== null ? crossTabDropPosition : position;
+              // Use the stored cross-tab drag state for accurate positioning
+              const finalIndex = crossTabDragOverIndex ?? index;
+              const finalPosition = crossTabDragOverIndex !== null ? crossTabDropPosition : position;
 
-      console.log('[BookmarksTabManager] Cross-tab drop - using stored state - index:', finalIndex, 'position:', finalPosition);
+              console.log('[BookmarksTabManager] Cross-tab drop - using stored state - index:', finalIndex, 'position:', finalPosition);
 
-      // Calculate insertion index
-      let insertIndex = finalPosition === 'before' ? finalIndex : finalIndex + 1;
+              // Calculate insertion index
+              let insertIndex = finalPosition === 'before' ? finalIndex : finalIndex + 1;
 
-      // Create a copy of the bookmark for the new tab
-      const newBookmark = {
-        ...dragState.draggedBookmark,
-        id: uuidv4(), // Generate new ID to avoid conflicts
-        createdDate: new Date(),
-        lastModifiedDate: new Date()
-      };
+              // Create a copy of the bookmark for the new tab
+              const newBookmark = {
+                ...dragState.draggedBookmark,
+                id: uuidv4(), // Generate new ID to avoid conflicts
+                createdDate: new Date(),
+                lastModifiedDate: new Date()
+              };
 
-      // Insert the bookmark at the target position
-      const newBookmarks = [...bookmarks];
-      newBookmarks.splice(insertIndex, 0, newBookmark);
+              // Insert the bookmark at the target position
+              const newBookmarks = [...bookmarks];
+              newBookmarks.splice(insertIndex, 0, newBookmark);
 
-      // Update the config with the new bookmark
-      onConfigChange({
-        ...(config || {} as BookmarksTabConfig),
-        bookmarks: newBookmarks
-      });
+              // Update the config with the new bookmark
+              if (onConfigChange) {
+                onConfigChange({
+                  ...(config || {} as BookmarksTabConfig),
+                  bookmarks: newBookmarks
+                });
+              }
 
-      // Request removal from source tab using the service
-      crossTabBookmarkService.requestMove(
-        dragState.draggedBookmark,
-        dragState.sourceNodeId,
-        nodeId,
-        finalIndex,
-        finalPosition
-      );
+              // Request removal from source tab using the service
+              crossTabBookmarkService.requestMove(
+                dragState.draggedBookmark,
+                dragState.sourceNodeId,
+                nodeId,
+                finalIndex,
+                finalPosition
+              );
 
-      // Clear states
-      setCrossTabDragOverIndex(null);
-      setCrossTabDropPosition('after');
-      endDrag();
-      return;
-    }
+              // Clear states
+              setCrossTabDragOverIndex(null);
+              setCrossTabDropPosition('after');
+              endDrag();
+              return;
+            }
 
-    // Handle internal drop (same tab reordering)
-    if (!draggedBookmark) return;
+            // Handle internal drop (same tab reordering)
+            if (!draggedBookmark) return;
 
-    const draggedIndex = bookmarks.findIndex(b => b.id === draggedBookmark.id);
-    if (draggedIndex === -1) return;
+            const draggedIndex = bookmarks.findIndex(b => b.id === draggedBookmark.id);
+            if (draggedIndex === -1) return;
 
-    const newBookmarks = [...bookmarks];
+            const newBookmarks = [...bookmarks];
 
-    // Remove dragged item
-    const [draggedItem] = newBookmarks.splice(draggedIndex, 1);
+            // Remove dragged item
+            const [draggedItem] = newBookmarks.splice(draggedIndex, 1);
 
-    // Calculate new insertion index
-    let insertIndex: number;
-    if (draggedIndex < targetIndex) {
-      insertIndex = position === 'before' ? targetIndex - 1 : targetIndex;
-    } else {
-      insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
-    }
+            // Calculate new insertion index
+            let insertIndex: number;
+            if (draggedIndex < index) {
+              insertIndex = position === 'before' ? index - 1 : index;
+            } else {
+              insertIndex = position === 'before' ? index : index + 1;
+            }
 
-    // Insert at new position
-    newBookmarks.splice(insertIndex, 0, draggedItem);
+            // Insert at new position
+            newBookmarks.splice(insertIndex, 0, draggedItem);
 
-    onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
+            if (onConfigChange) {
+              onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
+            }
 
-    setDraggedBookmark(null);
-    setDragOverIndex(null);
-    setDropPosition('after');
-  };
+            setDraggedBookmark(null);
+            setDragOverIndex(null);
+            setDropPosition('after');
+        };
+
 
   const handleSubmit = (data: BookmarkFormData) => {
-    // if editingBookmark is set, update existing
-    if (editingBookmark) {
+    // if editingBookmark is set and has an id, update existing
+    if (editingBookmark?.id) {
       const updated = bookmarks.map(b => b.id === editingBookmark.id ? { ...b, ...data } : b);
       onConfigChange && onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updated });
       setEditingBookmark(null);
@@ -466,47 +530,45 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       return;
     }
 
-    // create new
+    // create new - insert at remembered pendingInsertIndex if present
     const newBookmark: Bookmark = {
       id: uuidv4(),
       title: data.title || '',
       url: data.url || '',
       description: data.description,
       tags: data.tags || [],
-      collapsed: true, // Set collapsed by default
+      collapsed: true,
       createdDate: new Date(),
       lastModifiedDate: new Date()
     };
 
-    const updated = [...bookmarks, newBookmark];
-    onConfigChange && onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updated });
+    const newBookmarks = [...bookmarks];
+    if (pendingExternalDropIndex !== null && pendingExternalDropIndex >= 0 && pendingExternalDropIndex <= newBookmarks.length) {
+      newBookmarks.splice(pendingExternalDropIndex, 0, newBookmark);
+    } else {
+      newBookmarks.push(newBookmark);
+    }
+
+    onConfigChange && onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
     setIsBookmarkFormOpen(false);
     setEditingBookmark(null);
+    setPendingExternalDropIndex(null);
   };
 
-  // Listen for toolbar events dispatched from FlexLayoutManager for this node
-  useEffect(() => {
-    // Sync local state with config when it changes
-    if (config?.viewMode && config.viewMode !== tableRowViewMode) {
-      setTableRowViewMode(config.viewMode);
-    }
-  }, [config?.viewMode, tableRowViewMode]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      try {
-        const ce = e as CustomEvent<{ nodeId: string }>;
-        if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
-          // open add-bookmark form
-          setEditingBookmark(null);
-          setIsBookmarkFormOpen(true);
-        }
-      } catch (err) {
-        console.warn('toolbar event handler error', err);
+  const handler = (e: Event) => {
+    try {
+      const ce = e as CustomEvent<{ nodeId: string }>;
+      if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
+        // open add-bookmark form
+        setEditingBookmark(null);
+        setIsBookmarkFormOpen(true);
       }
-    };
+    } catch (err) {
+      console.warn('toolbar event handler error', err);
+    }
+  };
 
-    const toggleAllTableRowsViewHandler = (e: Event) => {
+  const toggleAllTableRowsViewHandler = (e: Event) => {
       try {
         const ce = e as CustomEvent<{ nodeId: string }>;
         if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
@@ -538,8 +600,17 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       }
     };
 
-    window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-    window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleAllTableRowsViewHandler as EventListener);
+    // Listen for toolbar events dispatched from FlexLayoutManager for this node
+    useEffect(() => {
+      // Sync local state with config when it changes
+      if (config?.viewMode && config.viewMode !== tableRowViewMode) {
+        setTableRowViewMode(config.viewMode);
+      }
+    }, [config?.viewMode, tableRowViewMode]);
+
+    useEffect(() => {
+      window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
+      window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleAllTableRowsViewHandler as EventListener);
 
     const openAllHandler = (e: Event) => {
       try {
@@ -600,6 +671,14 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
             setIsDragOverEmptyContainer(true);
           }
         }
+
+        // Also prevent default for external URL drops (from browser, etc.)
+        const hasUrlTypes = e.dataTransfer.types.includes('text/uri-list') ||
+                           e.dataTransfer.types.includes('text/plain');
+        if (hasUrlTypes) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        }
       }}
       onDragLeave={(e) => {
         // Clear empty container drag state when leaving the container
@@ -617,7 +696,52 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         }
       }}
       onDrop={(e) => {
-        // Handle drops on empty areas (append to end)
+        // Log transferred content for debugging
+        console.log('Container drop - DataTransfer types:', Array.from(e.dataTransfer.types));
+        console.log('Container drop - DataTransfer items:', e.dataTransfer.items ? Array.from(e.dataTransfer.items) : 'Not supported');
+
+        // Inspect external drops (URLs) first. If we detect a URL, open the
+        // Bookmark form in Create mode and prefill the URL. This covers
+        // drops from external apps (browser address bar / other apps).
+        try {
+          const dt = (e as any)?.dataTransfer;
+          if (dt) {
+            let url = '';
+            try {
+              if (dt.getData) url = dt.getData('text/uri-list') || '';
+            } catch (err) {
+              console.log('Container drop - Failed to get URI list:', err);
+            }
+            if (!url && dt.getData) {
+              const plain = dt.getData('text/plain') || '';
+              const trimmed = (plain || '').trim();
+              try {
+                if (trimmed) new URL(trimmed);
+                url = trimmed;
+              } catch (err) {
+                console.log('Container drop - Failed to validate plain text URL:', err);
+              }
+            }
+
+            if (url) {
+              console.log('Container drop - External URL detected:', url);
+              e.preventDefault();
+              const prefill = { url } as Partial<Bookmark>;
+              setEditingBookmark(prefill as Bookmark | null);
+              setIsBookmarkFormOpen(true);
+              // default insertion index: end of list or use stored cross-tab position
+              const insertIndex = crossTabDragOverIndex !== null
+                ? (crossTabDropPosition === 'before' ? crossTabDragOverIndex : crossTabDragOverIndex + 1)
+                : bookmarks.length;
+              setPendingExternalDropIndex(insertIndex);
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('Container drop inspection failed', err);
+        }
+
+        // Handle drops on empty areas (append to end) for cross-tab bookmarks
         if (isExternalDrag(nodeId || '') && dragState.draggedBookmark && onConfigChange) {
           e.preventDefault();
           console.log('[BookmarksTabManager] Handling drop on tab container');
@@ -748,6 +872,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
           <div className="modal-content">
             <BookmarkForm
               bookmark={editingBookmark}
+              mode={editingBookmark?.id ? FormDisplayMode.Edit : FormDisplayMode.Create}
               onSave={(d) => handleSubmit(d)}
               onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }}
             />

@@ -1,17 +1,13 @@
 import React from 'react';
 import Image from '../../common/image/Image';
-import { SidebarConfig, SidebarItem } from '../../../types/sidebar';
+import { SidebarConfig } from '../../../types/sidebar';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { SidebarTreeRenderer } from './SidebarTreeRenderer';
 
 export interface SidebarPanelProps {
   sidebarConfig?: SidebarConfig;
-  openedGroups?: Record<string, boolean>;
-  selectedMenuItem?: SidebarItem | null;
-  onToggleGroup?: (id: string) => void;
   onSelectItem: (nodeId: string) => void;
   onAddBookmark: () => void;
-  onAddGroup: (groupId?: string | null) => void;
   onSidebarChange?: (newConfig: SidebarConfig) => void;
   onMoveItem?: (sourceId: string, targetId: string | null, position?: 'before' | 'after' | 'inside', parentId?: string | null, targetIndex?: number) => void;
   onEditItem?: (nodeId: string) => void;
@@ -20,12 +16,8 @@ export interface SidebarPanelProps {
 
 export const SidebarPanel: React.FC<SidebarPanelProps> = ({
   sidebarConfig,
-  openedGroups,
-  selectedMenuItem,
-  onToggleGroup,
   onSelectItem,
   onAddBookmark,
-  onAddGroup,
   onSidebarChange,
   onMoveItem,
   onEditItem,

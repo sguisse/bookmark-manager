@@ -8,7 +8,6 @@ import { useApplication } from '../../../contexts/ApplicationContext';
 
 export const SidebarManager: React.FC = () => {
   const [sidebarConfig, setSidebarConfig] = useState<SidebarConfig | undefined>(undefined);
-  const [openedGroups, setOpenedGroups] = useState<Record<string, boolean>>({});
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const { setSelectedMenuItem, selectedMenuItem } = useApplication();
@@ -28,7 +27,6 @@ export const SidebarManager: React.FC = () => {
           }
         };
         collectOpen(config.sidebarItems as any);
-        setOpenedGroups(initialOpen);
 
         if (config.lastSelectedItemId) {
           const find = (items?: SidebarItem[]): SidebarItem | undefined => {
@@ -89,19 +87,6 @@ export const SidebarManager: React.FC = () => {
       SidebarService.saveConfig(updated);
       setSidebarConfig(updated);
     }
-  };
-
-  const toggleGroup = (id: string) => {
-    setOpenedGroups(prev => {
-      const next = { ...prev, [id]: !prev[id] };
-      if (sidebarConfig) {
-        const updatedConfig = { ...sidebarConfig } as SidebarConfig;
-        updateExpandedForId(updatedConfig.sidebarItems as any, id, next[id]);
-        SidebarService.saveConfig(updatedConfig);
-        setSidebarConfig(updatedConfig);
-      }
-      return next;
-    });
   };
 
   const handleSidebarChange = (newConfig: SidebarConfig) => {
@@ -377,12 +362,8 @@ export const SidebarManager: React.FC = () => {
     <>
       <SidebarPanel
         sidebarConfig={sidebarConfig}
-        openedGroups={openedGroups}
-        selectedMenuItem={selectedMenuItem}
-        onToggleGroup={toggleGroup}
         onSelectItem={menuItemSelectionHandler}
         onAddBookmark={handleCreateClick}
-        onAddGroup={handleCreateClick}
         onSidebarChange={handleSidebarChange}
         onMoveItem={moveItem}
         onEditItem={handleEditItem}
