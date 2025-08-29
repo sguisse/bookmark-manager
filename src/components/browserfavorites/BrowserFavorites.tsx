@@ -1,6 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import type { BrowserBookmarkNode } from '../../services/BrowserFavoritesParser';
 import { parseChromeBookmarksHtml } from '../../services/BrowserFavoritesParser';
+import { BrowserFavorites as BrowserFavoritesType, BrowserFavoritesFormData } from '../../types/browser';
+import { FormDisplayMode } from '../../types/app';
+import BrowserFavoritesForm from './BrowserFavoritesForm';
 
 import '../../styles/index.css';
 
@@ -204,13 +207,53 @@ const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (
 export const BrowserFavorites: React.FC<Props> = () => {
   const [tree, setTree] = useState<BrowserBookmarkNode[]>([]);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [currentFavorites, setCurrentFavorites] = useState<BrowserFavoritesType | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(true); // Expanded by default
+  const [formMode, setFormMode] = useState<FormDisplayMode>(FormDisplayMode.Create);
 
-  // ...existing code...
+  // Helper function to build hierarchical path for a node
+  const buildNodePath = (nodeId: string, nodes: BrowserBookmarkNode[]): string[] => {
+    const findNodePath = (currentNodes: BrowserBookmarkNode[], targetId: string, path: string[] = []): string[] | null => {
+      for (const node of currentNodes) {
+        const currentPath = [...path, node.title || node.id];
 
-  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    if (!f) return;
+        if (node.id === targetId) {
+          return currentPath;
+        }
+
+        if (node.children) {
+          const result = findNodePath(node.children, targetId, currentPath);
+          if (result) return result;
+        }
+      }
+      return null;
+    };
+
+    return findNodePath(nodes, nodeId) || [nodeId];
+  };
+
+  // Helper function to get the path of opened nodes as hierarchical strings
+  const getNodesOpenedPath = (): string[] => {
+    const openedNodeIds = Object.keys(expanded).filter(id => expanded[id]);
+    return openedNodeIds.map(nodeId => {
+      const path = buildNodePath(nodeId, tree);
+      return path.join(' > ');
+    });
+  };
+
+  // Update the current favorites state when expanded nodes change
+  React.useEffect(() => {
+    if (currentFavorites) {
+      const nodesOpened = getNodesOpenedPath();
+      setCurrentFavorites(prev => prev ? {
+        ...prev,
+        nodesOpened,
+        lastModifiedDate: new Date()
+      } : null);
+    }
+  }, [expanded]);
+
+  const loadBookmarksFile = (file: File, filePath: string) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const result = ev.target?.result;
@@ -220,22 +263,171 @@ export const BrowserFavorites: React.FC<Props> = () => {
         setTree(parsed);
         // keep folders collapsed by default
         setExpanded({});
+
+        // Update current favorites with the new file
+        if (currentFavorites) {
+          setCurrentFavorites(prev => prev ? {
+            ...prev,
+            filePath,
+            nodesOpened: [],
+            lastModifiedDate: new Date()
+          } : null);
+        }
       } catch (err) {
         // ignore parse errors
         console.error(err);
       }
     };
-    reader.readAsText(f);
-  }
+    reader.readAsText(file);
+  };
+
+  const handleFormSave = (formData: BrowserFavoritesFormData, file?: File) => {
+    if (formMode === FormDisplayMode.Create) {
+      // Create new browser favorites
+      const newFavorites: BrowserFavoritesType = {
+        id: `bf-${Date.now()}`,
+        filePath: formData.filePath,
+        nodesOpened: [],
+        createdDate: new Date(),
+        lastModifiedDate: new Date()
+      };
+      setCurrentFavorites(newFavorites);
+
+      // If a file was provided, load it
+      if (file) {
+        loadBookmarksFile(file, formData.filePath);
+      }
+    } else if (formMode === FormDisplayMode.Edit && currentFavorites) {
+      // Update existing browser favorites
+      const updatedFavorites: BrowserFavoritesType = {
+        ...currentFavorites,
+        filePath: formData.filePath,
+        lastModifiedDate: new Date()
+      };
+      setCurrentFavorites(updatedFavorites);
+
+      // If a new file was provided, load it
+      if (file) {
+        loadBookmarksFile(file, formData.filePath);
+      }
+    }
+    // Keep the form open after saving for potential further use
+    // setIsFormOpen(false); // Commented out to keep form open
+  };
+
+  const handleFormCancel = () => {
+    // Don't close the form, just keep it open for further use
+    // User can manually collapse it using the toggle button if desired
+  };
+
+  const toggleForm = () => {
+    setIsFormOpen(!isFormOpen);
+  };
+
+  const openCreateForm = () => {
+    setFormMode(FormDisplayMode.Create);
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = () => {
+    setFormMode(FormDisplayMode.Edit);
+    setIsFormOpen(true);
+  };
+
+  // ...existing code...
 
   return (
     <div className="browser-favorites">
-      <div className="bf-controls">
-        <label className="bf-file-label">
-          <input ref={fileRef} type="file" accept="text/html" onChange={onFile} />
-          <span className="bf-file-cta">Import Chrome Bookmarks HTML</span>
-        </label>
+      {/* Browser Favorites Form Collapsible Section */}
+      <div style={{ marginBottom: '1rem', border: '1px solid #ccc', borderRadius: '6px' }}>
+        <button
+          type="button"
+          onClick={toggleForm}
+          style={{
+            width: '100%',
+            padding: '1rem',
+            border: 'none',
+            borderRadius: '6px 6px 0 0',
+            backgroundColor: '#f8f9fa',
+            color: '#333',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '1rem',
+            fontWeight: 500
+          }}
+        >
+          <span>Browser Favorites Configuration</span>
+          <span style={{ transform: isFormOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
+            ▶
+          </span>
+        </button>
+
+        {isFormOpen && (
+          <div style={{ padding: '1rem', borderTop: '1px solid #eee' }}>
+            <BrowserFavoritesForm
+              browserFavorites={formMode === FormDisplayMode.Edit ? currentFavorites : null}
+              mode={formMode}
+              onSave={handleFormSave}
+              onCancel={handleFormCancel}
+            />
+          </div>
+        )}
       </div>
+
+      <div className="bf-controls">
+        {currentFavorites ? (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '1rem' }}>
+            <span style={{ fontSize: '0.9rem', color: '#666' }}>
+              Current file: {currentFavorites.filePath}
+            </span>
+            <button
+              type="button"
+              onClick={openEditForm}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                backgroundColor: '#f5f5f5',
+                cursor: 'pointer'
+              }}
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={openCreateForm}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                backgroundColor: '#f5f5f5',
+                cursor: 'pointer'
+              }}
+            >
+              Load New File
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={openCreateForm}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              cursor: 'pointer',
+              marginBottom: '1rem'
+            }}
+          >
+            Import Chrome Bookmarks HTML
+          </button>
+        )}
+      </div>
+
       <div className="bf-tree" role="tree">
         {tree.length === 0 ? (
           <div className="bf-empty">No bookmarks loaded. Import a Chrome bookmarks HTML file.</div>
