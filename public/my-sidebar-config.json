@@ -13,12 +13,10 @@
           "type": "menu-item",
           "flexLayoutId": "app-fusion-flexlayout-bookmarks",
           "createdDate": "2025-08-27T18:23:00.228Z",
-          "lastModifiedDate": "2025-08-28T05:59:36.523Z",
+          "lastModifiedDate": "2025-08-29T05:49:44.557Z",
           "badge": {
             "id": "35867ffe-fc2d-45f8-8048-5c7f9d86a8c6",
-            "title": "",
-            "createdDate": "2025-08-27T18:23:00.228Z",
-            "lastModifiedDate": "2025-08-28T05:59:36.523Z"
+            "title": ""
           }
         },
         {
@@ -37,31 +35,42 @@
           }
         }
       ],
-      "expanded": true
+      "expanded": true,
+      "icon": "🚀",
+      "createdDate": "2025-08-27T18:23:00.228Z",
+      "lastModifiedDate": "2025-08-29T05:58:29.413Z"
     },
     {
       "id": "53e24801-ec5b-4658-8254-499e87f52b7a",
       "title": "Decathlon",
       "type": "category",
       "flexLayoutId": "53e24801-ec5b-4658-8254-499e87f52b7a",
+      "createdDate": "2025-08-27T18:23:00.228Z",
+      "lastModifiedDate": "2025-08-29T05:57:42.234Z",
       "children": [
         {
           "id": "a4759f72-91d4-4d5a-b595-0ec16aa5ab04",
           "title": "Management",
           "type": "menu-group",
           "flexLayoutId": "a4759f72-91d4-4d5a-b595-0ec16aa5ab04",
+          "createdDate": "2025-08-27T18:23:00.228Z",
+          "lastModifiedDate": "2025-08-28T05:59:36.523Z",
           "children": [
             {
               "id": "87e4733f-0e06-4cdf-9baf-e9c26bdceddc",
               "title": "Administrative",
               "type": "menu-item",
-              "flexLayoutId": "87e4733f-0e06-4cdf-9baf-e9c26bdceddc"
+              "flexLayoutId": "87e4733f-0e06-4cdf-9baf-e9c26bdceddc",
+              "createdDate": "2025-08-27T18:23:00.228Z",
+              "lastModifiedDate": "2025-08-28T05:59:36.523Z"
             },
             {
               "id": "8aa8e435-7a84-4b5a-b5a8-fd08cdc2af29",
               "title": "Services",
               "type": "menu-item",
-              "flexLayoutId": "8aa8e435-7a84-4b5a-b5a8-fd08cdc2af29"
+              "flexLayoutId": "8aa8e435-7a84-4b5a-b5a8-fd08cdc2af29",
+              "createdDate": "2025-08-27T18:23:00.228Z",
+              "lastModifiedDate": "2025-08-28T05:59:36.523Z"
             },
             {
               "id": "4ac5addb-a3ce-42ad-b06b-645ef14a2e21",
@@ -72,15 +81,27 @@
               "lastModifiedDate": "2025-08-28T05:59:36.523Z"
             }
           ],
-          "expanded": false
+          "expanded": true
         },
         {
           "id": "b8d4c3b5-e570-4c59-961a-7c724ad14da2",
           "title": "Architecture",
-          "type": "menu-item",
+          "icon": "🏗️",
+          "type": "menu-group",
           "flexLayoutId": "b8d4c3b5-e570-4c59-961a-7c724ad14da2",
           "createdDate": "2025-08-27T18:23:00.228Z",
-          "lastModifiedDate": "2025-08-28T05:59:36.523Z"
+          "lastModifiedDate": "2025-08-28T05:59:36.523Z",
+          "children": [
+            {
+              "id": "0e79e488-3c58-41e5-bc07-6025c475c3e2",
+              "title": "SIG-Backend",
+              "type": "menu-item",
+              "flexLayoutId": "0e79e488-3c58-41e5-bc07-6025c475c3e2",
+              "createdDate": "2025-08-27T18:23:00.228Z",
+              "lastModifiedDate": "2025-08-28T05:59:36.523Z"
+            }
+          ],
+          "expanded": true
         },
         {
           "id": "0af03306-16b7-426d-a387-18f92e3deb7e",
@@ -132,10 +153,10 @@
                       "lastModifiedDate": "2025-08-28T05:59:36.523Z"
                     }
                   ],
-                  "expanded": false
+                  "expanded": true
                 }
               ],
-              "expanded": false
+              "expanded": true
             },
             {
               "id": "34cb6c96-c860-48c6-b7c8-26c38032138d",
@@ -178,6 +199,49 @@
                         "title": "",
                         "icon": "⬅️"
                       }
+                    },
+                    {
+                      "id": "0c5f275e-76d3-42de-8118-b48d40e678c3",
+                      "title": "Perso",
+                      "icon": "😅",
+                      "type": "category",
+                      "flexLayoutId": "0c5f275e-76d3-42de-8118-b48d40e678c3",
+                      "children": [
+                        {
+                          "id": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53",
+                          "title": "Veille Techno",
+                          "icon": "eye",
+                          "type": "menu-item",
+                          "flexLayoutId": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53",
+                          "createdDate": "2025-08-27T18:23:00.228Z",
+                          "lastModifiedDate": "2025-08-28T05:59:36.523Z"
+                        },
+                        {
+                          "id": "d9f815cc-fa3f-4392-8862-1a29560a0401",
+                          "title": "Documentation",
+                          "icon": "📚",
+                          "type": "menu-group",
+                          "flexLayoutId": "d9f815cc-fa3f-4392-8862-1a29560a0401",
+                          "createdDate": "2025-08-27T18:23:00.228Z",
+                          "lastModifiedDate": "2025-08-28T05:59:36.523Z",
+                          "expanded": true,
+                          "badge": {
+                            "id": "9cbe70c1-a127-4b6d-8ae8-e9f54251b4d9",
+                            "title": "ghgf"
+                          }
+                        },
+                        {
+                          "id": "491f115f-bade-48eb-99f5-32ca4f6c6241",
+                          "title": "Tools",
+                          "icon": "hammer",
+                          "type": "menu-group",
+                          "flexLayoutId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
+                          "createdDate": "2025-08-27T18:23:00.228Z",
+                          "lastModifiedDate": "2025-08-29T05:51:59.954Z",
+                          "expanded": true
+                        }
+                      ],
+                      "expanded": true
                     }
                   ],
                   "expanded": true
@@ -189,57 +253,12 @@
           "expanded": true
         }
       ],
-      "expanded": true
-    },
-    {
-      "id": "0c5f275e-76d3-42de-8118-b48d40e678c3",
-      "title": "Perso",
-      "type": "category",
-      "flexLayoutId": "0c5f275e-76d3-42de-8118-b48d40e678c3",
-      "createdDate": "2025-08-27T18:23:00.228Z",
-      "lastModifiedDate": "2025-08-28T05:59:36.523Z",
-      "children": [
-        {
-          "id": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53",
-          "title": "Veille Techno",
-          "type": "menu-item",
-          "flexLayoutId": "c4f9bd0e-a940-4e75-94ae-7e50196b4f53",
-          "createdDate": "2025-08-27T18:23:00.228Z",
-          "lastModifiedDate": "2025-08-28T06:19:50.616Z",
-          "icon": "eye"
-        },
-        {
-          "id": "d9f815cc-fa3f-4392-8862-1a29560a0401",
-          "title": "Documentation",
-          "type": "menu-group",
-          "flexLayoutId": "d9f815cc-fa3f-4392-8862-1a29560a0401",
-          "createdDate": "2025-08-27T18:23:00.228Z",
-          "lastModifiedDate": "2025-08-28T06:19:25.474Z",
-          "expanded": false,
-          "children": [],
-          "color": "#bf1d1d",
-          "icon": "📚"
-        },
-        {
-          "id": "491f115f-bade-48eb-99f5-32ca4f6c6241",
-          "title": "Tools",
-          "type": "menu-group",
-          "flexLayoutId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
-          "createdDate": "2025-08-27T18:23:00.228Z",
-          "lastModifiedDate": "2025-08-28T06:37:35.988Z",
-          "expanded": false,
-          "children": [],
-          "icon": "hammer",
-          "tags": [
-            "Tools"
-          ]
-        }
-      ],
-      "expanded": true
+      "expanded": true,
+      "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACgUlEQVQ4jT3STYiVdRzF8XN+//9z57n3eq9z03GcgbEpEl/CodEJRUuEZuG6VQRRi9qFtFEXWguF2lRLF4GgbtwKKlYqKmItshRfimC0wZwxM8b7+sz4vPyPiyud9Wdz4Mupty8AAiiJFEww9EcAggIVSLLPPACJgOgCTCAImgFAlikvgnf0kYXcJJIwQfxf44Vud/JWK6st8+NrqnHsWr2MLgCS5CnIBTpBcI5pFpJOvnP7qnd2DlcrzhzHRis/Xnp8/OT9uBSFnB4ETQhwnklS1Gt+354NZjh9bv7PmXayWGxcv/z4ka2zf3cvXnlci2OTCwCct15SjK4uHz6w6fqNhb1f3Jx7tPjm5EvOePtu86/Z7uREI80CXTBCJJ+lxeBgtP+z9d8du3f6+7lK7Pft2bBubb3Vzl4eq7w6vuzhXOKNNBmNZlhayj/9eO2ps3O/3XpaKtn0ruHd0yPNVrb0rPjo/Vect6s/PymXXRCMRKebb5ta6RzPX/6nWvGjI+WDe1+X1Ovl07uG33t3/OiJew8eJgMDXpIZkabFtqkV128sNNtZOXZfH3pjeCgGsJQWO7YO3fmjeeToTL0WhUISvEQAK1fEZpycaHz1+cSmjY1eklUrUaMeXbn275kf5kmYMQQh0Cu3UuR++uXJN4c3f/Lha/0oqpWol+T/LaS/3nw6uDyKY1cEEEAwNzL2QWnAZu53ekm+aihOszD7oHfuwvyX3/5+626zXisBkEAGBUMgt7x1HgBd6C5m9XpUKftOJ+t0s3jAxbELQSQlIRCFifAkJSBYvRoVudrt1DlrNEoKUACAvlZhAAl4AKQAFpnRZCYFFP0rAkQESsZ+6+BzzFo1bcZcD1MAAAAASUVORK5CYII="
     }
   ],
-  "lastSelectedItemId": "491f115f-bade-48eb-99f5-32ca4f6c6241",
-  "createdDate": "2025-08-27T18:23:00.228Z",
-  "lastModifiedDate": "2025-08-28T06:37:35.988Z",
-  "lastUpdateDate": "2025-08-28T06:36:40.996Z"
+  "lastSelectedItemId": "87e4733f-0e06-4cdf-9baf-e9c26bdceddc",
+  "createdDate": "2025-08-29T05:36:14.577Z",
+  "lastModifiedDate": "2025-08-29T05:58:29.413Z",
+  "lastUpdateDate": "2025-08-29T05:57:27.231Z"
 }
