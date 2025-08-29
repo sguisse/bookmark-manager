@@ -35,35 +35,9 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.filePath.trim()) {
-      newErrors.filePath = 'File path is required';
-    } else {
-      // Validate file path format and existence
-      const filePath = formData.filePath.trim();
-
-      // Check if it's a valid file path format
-      if (!/\.(html|htm)$/i.test(filePath) || filePath.length < 6) {
-        newErrors.filePath = 'Please enter a valid HTML file path (.html or .htm extension required)';
-      }
-
-      // Additional validation: Check if path looks like a valid file path
-      if (!newErrors.filePath) {
-        const isAbsolutePath = /^([a-zA-Z]:\\|\/|~\/)/.test(filePath);
-        const isRelativePath = /^\.{0,2}\//.test(filePath) || !/[\\/]/.test(filePath);
-
-        if (!isAbsolutePath && !isRelativePath && filePath.includes('/') || filePath.includes('\\')) {
-          // It's a path but doesn't look like a proper absolute or relative path
-          if (filePath.length < 3) {
-            newErrors.filePath = 'File path is too short';
-          }
-        }
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    // Validation has been disabled per request — always consider the form valid.
+    setErrors({});
+    return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -82,59 +56,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
 
 
 
-  const handleFilePathValidation = async (filePath: string, hasFileObject = false) => {
-    const trimmedPath = filePath.trim();
-
-    if (!trimmedPath) {
-      setErrors(prev => ({ ...prev, filePath: 'File path is required' }));
-      return false;
-    }
-
-    // Check file extension
-    if (!/\.(html|htm)$/i.test(trimmedPath)) {
-      setErrors(prev => ({ ...prev, filePath: 'Please select an HTML file (.html or .htm extension required)' }));
-      return false;
-    }
-
-    // Validate file path format
-    try {
-      if (trimmedPath.startsWith('file://') || (!trimmedPath.startsWith('http'))) {
-        // For local files, validate the path format
-        if (trimmedPath.length < 5) {
-          setErrors(prev => ({ ...prev, filePath: 'File path is too short' }));
-          return false;
-        }
-
-        // If this is just a path without file object, inform user to use browse button
-        if (!hasFileObject && !selectedFile) {
-          setErrors(prev => ({ ...prev, filePath: 'Please use the Browse button to select and load the bookmark file' }));
-          return false;
-        }
-
-        // Clear any previous errors if format looks good
-        setErrors(prev => ({ ...prev, filePath: '' }));
-        return true;
-      }
-
-      // For HTTP URLs, validate URL format
-      if (trimmedPath.startsWith('http')) {
-        try {
-          new URL(trimmedPath);
-          setErrors(prev => ({ ...prev, filePath: '' }));
-          return true;
-        } catch {
-          setErrors(prev => ({ ...prev, filePath: 'Invalid URL format' }));
-          return false;
-        }
-      }
-
-      setErrors(prev => ({ ...prev, filePath: '' }));
-      return true;
-    } catch {
-      setErrors(prev => ({ ...prev, filePath: 'Unable to validate file path' }));
-      return false;
-    }
-  };
+  // File path validation has been removed — selection via Browse is the canonical flow.
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -144,18 +66,17 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
       const anyFile = file as any;
       const inputValue = (e.target as HTMLInputElement).value || '';
       const displayPath = anyFile.path || anyFile.webkitRelativePath || inputValue || file.name;
-      // Update form state directly so the controlled input reflects the new path immediately
+      // Update form state so the controlled input reflects the new path immediately
       setFormData(prev => ({ ...prev, filePath: displayPath }));
       // clear any previous filePath errors
       setErrors(prev => ({ ...prev, filePath: '' }));
       setSelectedFile(file);
-      // Validate the selected file and submit the form to load the bookmarks
-      handleFilePathValidation(displayPath, true).then((isValid) => {
-        if (isValid) {
-          const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-          handleSubmit(fakeEvent);
-        }
-      });
+
+      // Immediately notify parent to load/update the tree view with the selected file
+      const data: BrowserFavoritesFormData = {
+        filePath: displayPath
+      };
+      onSave(data, file);
     }
   };
 
@@ -212,7 +133,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                     }}
                     htmlFor="browser-favorites-filepath"
                   >
-                    HTML File
+                    HTML extract File
                   </label>
 
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'stretch' }}>

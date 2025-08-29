@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import type { BrowserBookmarkNode } from '../../services/BrowserFavoritesParser';
-import { parseChromeBookmarksHtml } from '../../services/BrowserFavoritesParser';
-import { BrowserFavorites, BrowserFavoritesFormData } from '../../types/browser';
+import { BrowserBookmarkNode, BrowserFavorites, BrowserFavoritesFormData } from '../../types/browser';
 import { FormDisplayMode } from '../../types/app';
 import BrowserFavoritesForm from './BrowserFavoritesForm';
 
 import '../../styles/index.css';
+import BrowserFavoritesService from '../../services/BrowserFavoritesService';
 
 type Props = {};
 
@@ -258,7 +257,7 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
       const result = ev.target?.result;
       const text = typeof result === 'string' ? result : '';
       try {
-        const parsed = parseChromeBookmarksHtml(text);
+        const parsed = BrowserFavoritesService.parseChromeBookmarksHtml(text);
         setTree(parsed);
         // keep folders collapsed by default
         setExpanded({});
@@ -286,6 +285,7 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
       const updatedFavorites: BrowserFavorites = {
         ...currentFavorites,
         filePath: formData.filePath,
+        bookmarksTree: tree,
         lastModifiedDate: new Date()
       };
       setCurrentFavorites(updatedFavorites);
@@ -299,7 +299,7 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
       const newFavorites: BrowserFavorites = {
         id: `bf-${Date.now()}`,
         filePath: formData.filePath,
-        nodesOpened: [],
+        bookmarksTree: [],
         createdDate: new Date(),
         lastModifiedDate: new Date()
       };
