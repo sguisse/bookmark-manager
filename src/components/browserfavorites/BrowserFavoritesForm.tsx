@@ -80,13 +80,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
     onSave(data, selectedFile || undefined);
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
+
 
   const handleFilePathValidation = async (filePath: string, hasFileObject = false) => {
     const trimmedPath = filePath.trim();
@@ -145,10 +139,18 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleChange('filePath', file.name);
+      // Try to get the full path when available (Electron or directory uploads), fall back to webkitRelativePath,
+      // then to the file input value (may contain C:\\fakepath\\name), and finally to the file.name
+      const anyFile = file as any;
+      const inputValue = (e.target as HTMLInputElement).value || '';
+      const displayPath = anyFile.path || anyFile.webkitRelativePath || inputValue || file.name;
+      // Update form state directly so the controlled input reflects the new path immediately
+      setFormData(prev => ({ ...prev, filePath: displayPath }));
+      // clear any previous filePath errors
+      setErrors(prev => ({ ...prev, filePath: '' }));
       setSelectedFile(file);
       // Validate the selected file and submit the form to load the bookmarks
-      handleFilePathValidation(file.name, true).then((isValid) => {
+      handleFilePathValidation(displayPath, true).then((isValid) => {
         if (isValid) {
           const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
           handleSubmit(fakeEvent);
@@ -182,19 +184,18 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
         {/* File Selection block with chevron */}
         <div className="card mb-4" style={{ borderColor: theme.colors.border, marginTop: '0' }}>
 
-          <div
+          <button
+            type="button"
             className="card-header"
-            role="button"
-            tabIndex={0}
+            aria-expanded={formData.showFileSelection}
             onClick={() => setFormData(f => ({ ...f, showFileSelection: !f.showFileSelection }))}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFormData(f => ({ ...f, showFileSelection: !f.showFileSelection })); } }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', background: 'transparent', border: 'none', width: '100%', textAlign: 'left', padding: '12px 16px' }}
           >
             <strong>Favoris selection</strong>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               {formData.showFileSelection ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </div>
-          </div>
+          </button>
 
 
           {formData.showFileSelection && (
@@ -220,31 +221,6 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                       type="text"
                       value={formData.filePath}
                       readOnly
-                      onKeyDown={(e) => {
-                        // Only attempt to validate/submit when a File object is selected (security restriction)
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          if (selectedFile) {
-                            handleFilePathValidation(formData.filePath, true).then((isValid) => {
-                              if (isValid) {
-                                const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                                handleSubmit(fakeEvent);
-                              }
-                            });
-                          }
-                        }
-                      }}
-                      onBlur={() => {
-                        // Only attempt to validate/submit when a File object is selected
-                        if (formData.filePath.trim() && selectedFile) {
-                          handleFilePathValidation(formData.filePath, true).then((isValid) => {
-                            if (isValid) {
-                              const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                              handleSubmit(fakeEvent);
-                            }
-                          });
-                        }
-                      }}
                       style={{
                         ... (errors.filePath ? errorInputStyle : { ...inputStyle, flex: 1 }),
                         cursor: 'default'
@@ -255,7 +231,10 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                       type="button"
                       onClick={() => {
                         const fileInput = document.getElementById('browser-favorites-file-input') as HTMLInputElement;
-                        fileInput?.click();
+                        if (fileInput) {
+                          fileInput.value = '';
+                          fileInput.click();
+                        }
                       }}
                       style={{
                         padding: '0.75rem 1.5rem',
