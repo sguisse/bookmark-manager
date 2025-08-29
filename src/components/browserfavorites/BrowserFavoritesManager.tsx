@@ -8,10 +8,8 @@ import { BrowserFavoritesService } from '../../services/BrowserFavoritesService'
 
 type Props = {};
 
-function formatAddDate(addDate?: number | null) {
-  if (!addDate) return '';
-  // parser normalizes addDate to milliseconds
-  const d = new Date(addDate);
+function formatAddDate(d?: Date | null) {
+  if (!d) return '';
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yyyy = d.getFullYear();
@@ -60,7 +58,7 @@ const collectUrls = (node: BrowserBookmarkNode | undefined | null): string[] => 
 
 const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (id: string) => void; expanded: Record<string, boolean> }> = ({ node, open, onToggle, expanded }) => {
   const tooltipLines: string[] = [];
-  const dateStr = formatAddDate(node.addDate);
+  const dateStr = formatAddDate(node.createdDate);
   if (dateStr) tooltipLines.push(dateStr);
   if (node.url) tooltipLines.push(node.url || '');
 

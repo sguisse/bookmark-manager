@@ -6,8 +6,6 @@ export interface BrowserBookmarkNode extends BaseAuditing {
   url?: string;
   isFolder: boolean;
   children?: BrowserBookmarkNode[];
-  addDate?: number | null;
-  lastModified?: number | null;
   icon?: string | null;
   description?: string | null;
   attributes?: Record<string, string>;

@@ -322,8 +322,8 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           const out: any[] = [];
           if (!n) return out;
           if (!n.isFolder) {
-            const createdDate = n.addDate ? new Date(n.addDate) : new Date();
-            const lastModifiedDate = n.lastModified ? new Date(n.lastModified) : createdDate;
+            const createdDate = n.createdDate ? new Date(n.createdDate) : new Date();
+            const lastModifiedDate = n.lastModifiedDate ? new Date(n.lastModifiedDate) : createdDate;
             out.push({ id: uuidv4(), title: n.title || (n.url || ''), url: n.url || '', createdDate, lastModifiedDate, icon: n.icon, description: n.description });
             return out;
           }
@@ -342,8 +342,8 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           for (const child of n.children) {
             if (!child) continue;
             if (!child.isFolder) {
-              const createdDate = child.addDate ? new Date(child.addDate) : new Date();
-              const lastModifiedDate = child.lastModified ? new Date(child.lastModified) : createdDate;
+              const createdDate = child.createdDate ? new Date(child.createdDate) : new Date();
+              const lastModifiedDate = child.lastModifiedDate ? new Date(child.lastModifiedDate) : createdDate;
               out.push({ id: uuidv4(), title: child.title || (child.url || ''), url: child.url || '', createdDate, lastModifiedDate, icon: child.icon, description: child.description });
             }
           }

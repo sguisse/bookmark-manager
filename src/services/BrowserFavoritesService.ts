@@ -115,8 +115,8 @@ export class BrowserFavoritesService {
           title,
           isFolder: true,
           children,
-          addDate,
-          lastModified,
+          createdDate: addDate ? new Date(addDate) : undefined,
+          lastModifiedDate: lastModified ? new Date(lastModified) : undefined,
           description: ddText,
           attributes,
           order: orderCounter++,
@@ -137,7 +137,7 @@ export class BrowserFavoritesService {
           title,
           url: href,
           isFolder: false,
-          addDate,
+          createdDate: addDate ? new Date(addDate) : undefined,
           icon,
           description: ddText,
           attributes,
@@ -192,6 +192,49 @@ export class BrowserFavoritesService {
       const parsed = JSON.parse(raw);
       // Basic shape check
       if (!parsed || typeof parsed !== 'object' || !parsed.id || !Array.isArray(parsed.bookmarksTree)) return null;
+
+      // Helper: parse a value that may be a Date (string/number) or already a Date
+      function parseDateVal(v: any): Date | undefined {
+        if (v === null || v === undefined) return undefined;
+        if (typeof v === 'number') {
+          const d = new Date(v);
+          return Number.isNaN(d.getTime()) ? undefined : d;
+        }
+        if (typeof v === 'string') {
+          const d = new Date(v);
+          return Number.isNaN(d.getTime()) ? undefined : d;
+        }
+        if (v instanceof Date) return v;
+        return undefined;
+      }
+
+      // Recursively walk nodes and convert createdDate/lastModifiedDate to Date instances
+      function rehydrateNode(node: any) {
+        if (!node || typeof node !== 'object') return;
+        if ('createdDate' in node) node.createdDate = parseDateVal(node.createdDate);
+        if ('lastModifiedDate' in node) node.lastModifiedDate = parseDateVal(node.lastModifiedDate);
+        // also support legacy numeric fields in case older stored data still uses them
+        if ((!node.createdDate || node.createdDate === undefined) && ('addDate' in node)) {
+          node.createdDate = parseDateVal(node.addDate);
+        }
+        if ((!node.lastModifiedDate || node.lastModifiedDate === undefined) && ('lastModified' in node)) {
+          node.lastModifiedDate = parseDateVal(node.lastModified);
+        }
+        if (Array.isArray(node.children)) {
+          for (const c of node.children) rehydrateNode(c);
+        }
+      }
+
+      // Rehydrate top-level auditing fields
+      if ('createdDate' in parsed) parsed.createdDate = parseDateVal(parsed.createdDate);
+      if ('lastModifiedDate' in parsed) parsed.lastModifiedDate = parseDateVal(parsed.lastModifiedDate);
+      if (!parsed.createdDate && 'createdDate' in parsed && parsed.createdDate === undefined && 'createdAt' in parsed) parsed.createdDate = parseDateVal(parsed.createdAt);
+
+      // Rehydrate each node in the bookmarksTree
+      if (Array.isArray(parsed.bookmarksTree)) {
+        for (const n of parsed.bookmarksTree) rehydrateNode(n);
+      }
+
       return parsed as import('../types/browser').BrowserFavorites;
     } catch (err) {
       // Log and return null on error
