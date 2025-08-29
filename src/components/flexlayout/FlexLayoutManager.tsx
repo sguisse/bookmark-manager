@@ -137,6 +137,148 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
     return action;
   }, [saveModelForSelected]);
 
+  // Helper: recursive mapping used for single non-folder nodes: convert a node subtree into bookmark array
+  const mapNodeToBookmarks = (n: any): Array<any> => {
+    const out: any[] = [];
+    if (!n) return out;
+    if (!n.isFolder) {
+      const createdDate = n.createdDate ? new Date(n.createdDate) : new Date();
+      const lastModifiedDate = n.lastModifiedDate ? new Date(n.lastModifiedDate) : createdDate;
+      out.push({ id: uuidv4(), title: n.title || (n.url || ''), url: n.url || '', createdDate, lastModifiedDate, icon: n.icon, description: n.description });
+      return out;
+    }
+    if (Array.isArray(n.children)) {
+      for (const child of n.children) {
+        out.push(...mapNodeToBookmarks(child));
+      }
+    }
+    return out;
+  };
+
+  // Helper: collect only the immediate (same-level) bookmark children of a folder node
+  const getImmediateBookmarks = (n: any): Array<any> => {
+    if (!n?.isFolder || !Array.isArray(n.children)) return [];
+    const out: any[] = [];
+    for (const child of n.children) {
+      if (!child) continue;
+      if (!child.isFolder) {
+        const createdDate = child.createdDate ? new Date(child.createdDate) : new Date();
+        const lastModifiedDate = child.lastModifiedDate ? new Date(child.lastModifiedDate) : createdDate;
+        out.push({ id: uuidv4(), title: child.title || (child.url || ''), url: child.url || '', createdDate, lastModifiedDate, icon: child.icon, description: child.description });
+      }
+    }
+    return out;
+  };
+
+  // collect all folder nodes in the subtree (including root)
+  const collectFolders = (n: any, acc: any[] = []) => {
+    if (!n) return acc;
+    if (n.isFolder) acc.push(n);
+    if (Array.isArray(n.children)) {
+      for (const ch of n.children) collectFolders(ch, acc);
+    }
+    return acc;
+  };
+
+  // attempt to insert newTabs into the currently selected tabset; returns true when inserted
+  const insertIntoSelectedTabset = (children: any[] | undefined, newTabs: any[]): boolean => {
+    if (!Array.isArray(children)) return false;
+    for (const child of children) {
+      if (child.type === 'tabset') {
+        // insert as last child(s) of this tabset
+        child.children = child.children || [];
+        child.children.push(...newTabs);
+        return true;
+      }
+      if (child.children && insertIntoSelectedTabset(child.children, newTabs)) return true;
+    }
+    return false;
+  };
+
+  // Create new tab definitions and JSON from a drop payload and current model
+  const buildBookmarksFromNodes = (nodes: any[] | undefined) => {
+    const out: any[] = [];
+    if (!Array.isArray(nodes)) return out;
+    for (const n of nodes) {
+      if (!n) continue;
+      if (!n.isFolder && n.url) {
+        const createdDate = n.createdDate ? new Date(n.createdDate) : new Date();
+        const lastModifiedDate = n.lastModifiedDate ? new Date(n.lastModifiedDate) : createdDate;
+        out.push({ id: uuidv4(), title: n.title || (n.url || ''), url: n.url || '', createdDate, lastModifiedDate, icon: n.icon, description: n.description });
+      }
+    }
+    return out;
+  };
+
+  const buildTabsForFolderNode = (node: any, title: string) => {
+    const tabs: any[] = [];
+    if (!node) return tabs;
+    const folders = collectFolders(node, []);
+    if (folders.length > 1) {
+      for (const folder of folders) {
+        const leafBookmarks = getImmediateBookmarks(folder).filter((b: any) => !!b?.url);
+        if (leafBookmarks.length === 0) continue;
+        const nid = uuidv4();
+        tabs.push({ type: 'tab', id: nid, name: folder.title || title, component: 'bookmarks', config: { id: nid, title: folder.title || title, bookmarks: leafBookmarks, createdDate: new Date(), lastModifiedDate: new Date() } });
+      }
+    } else {
+      const leafBookmarks = getImmediateBookmarks(node).filter((b: any) => !!b?.url);
+      const nid = uuidv4();
+      tabs.push({ type: 'tab', id: nid, name: title || node.title || 'Bookmarks', component: 'bookmarks', config: { id: nid, title: title || node.title || 'Bookmarks', bookmarks: leafBookmarks, createdDate: new Date(), lastModifiedDate: new Date() } });
+    }
+    return tabs;
+  };
+
+  const createTabsFromPayload = (p: any, model: Model | null): { json: any; newTabs: any[] } | null => {
+    if (!p || !model) return null;
+
+    const title = p.title || 'Bookmarks';
+    const json = model.toJson();
+
+    let newTabs: any[] = [];
+
+    // folder payload
+    if (p.node?.isFolder) {
+      newTabs = buildTabsForFolderNode(p.node, title);
+    } else {
+      // bookmarks collected from nodes or node subtree or urls
+      let bookmarks: any[] = [];
+      if (Array.isArray(p.nodes) && p.nodes.length > 0) {
+        bookmarks = buildBookmarksFromNodes(p.nodes);
+      } else if (p.node) {
+        bookmarks = mapNodeToBookmarks(p.node).filter((b: any) => !!b?.url);
+      } else {
+        const urls = Array.isArray(p.urls) ? p.urls.filter(Boolean) : [];
+        bookmarks = (urls || []).filter(Boolean).map((u: string) => ({ id: uuidv4(), title: u, url: u, createdDate: new Date(), lastModifiedDate: new Date() }));
+      }
+
+      if (bookmarks.length > 0) {
+        const nid = uuidv4();
+        newTabs.push({ type: 'tab', id: nid, name: title, component: 'bookmarks', config: { id: nid, title, bookmarks, createdDate: new Date(), lastModifiedDate: new Date() } });
+      }
+    }
+
+    if (newTabs.length === 0) return null;
+
+    // insert into layout
+    insertNewTabsIntoJson(json, newTabs);
+
+    return { json, newTabs };
+  };
+
+  const insertNewTabsIntoJson = (json: any, newTabs: any[]) => {
+    if (!insertIntoSelectedTabset([json.layout], newTabs)) {
+      if (json.layout && Array.isArray(json.layout.children)) {
+        json.layout.children.push(...newTabs);
+      } else if (!json.layout) {
+        json.layout = { type: 'row', children: [{ type: 'tabset', children: [...newTabs] }] };
+      } else {
+        json.layout = { type: 'row', children: [json.layout, { type: 'tabset', children: [...newTabs] }] };
+      }
+    }
+  };
+
+
   // update a tab node's config (and optionally name/icon) and persist the model
   const updateTabConfigAndSave = useCallback((nodeId: string, newConfig: any) => {
     const m = modelRef.current;
@@ -310,140 +452,20 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   useEffect(() => {
     const handler = (ev: Event) => {
       try {
-        const ce = ev as CustomEvent<{ title?: string; urls?: string[]; node?: any }>;
+        const ce = ev as CustomEvent<any>;
         const payload = ce?.detail;
         if (!payload) return;
         const m = modelRef.current;
         if (!m) return;
 
-        // Helper: map a BrowserBookmarkNode (possibly a folder) to an array of Bookmark-like objects
-        // Recursive mapping (used for single non-folder nodes). Not used for per-folder tab creation.
-        const mapNodeToBookmarks = (n: any): Array<any> => {
-          const out: any[] = [];
-          if (!n) return out;
-          if (!n.isFolder) {
-            const createdDate = n.createdDate ? new Date(n.createdDate) : new Date();
-            const lastModifiedDate = n.lastModifiedDate ? new Date(n.lastModifiedDate) : createdDate;
-            out.push({ id: uuidv4(), title: n.title || (n.url || ''), url: n.url || '', createdDate, lastModifiedDate, icon: n.icon, description: n.description });
-            return out;
-          }
-          if (Array.isArray(n.children)) {
-            for (const child of n.children) {
-              out.push(...mapNodeToBookmarks(child));
-            }
-          }
-          return out;
-        };
+        const result = createTabsFromPayload(payload, m);
+        if (!result) return;
 
-        // Helper: collect only the immediate (same-level) bookmark children of a folder node
-        const getImmediateBookmarks = (n: any): Array<any> => {
-          if (!n || !n.isFolder || !Array.isArray(n.children)) return [];
-          const out: any[] = [];
-          for (const child of n.children) {
-            if (!child) continue;
-            if (!child.isFolder) {
-              const createdDate = child.createdDate ? new Date(child.createdDate) : new Date();
-              const lastModifiedDate = child.lastModifiedDate ? new Date(child.lastModifiedDate) : createdDate;
-              out.push({ id: uuidv4(), title: child.title || (child.url || ''), url: child.url || '', createdDate, lastModifiedDate, icon: child.icon, description: child.description });
-            }
-          }
-          return out;
-        };
-
-        // prefer node payload if provided (richer)
-        let bookmarks: any[] = [];
-        if (payload.node) {
-          // payload.node might be a folder root or single node
-          bookmarks = mapNodeToBookmarks(payload.node).filter((b) => !!b?.url);
-        } else {
-          // fallback to urls array
-          const urls = Array.isArray(payload.urls) ? payload.urls.filter(Boolean) : [];
-          bookmarks = (urls || []).filter(Boolean).map(u => ({ id: uuidv4(), title: u, url: u, createdDate: new Date(), lastModifiedDate: new Date() }));
-        }
-
-        const title = payload.title || 'Bookmarks';
-        const json = m.toJson();
-
-        // If we have a folder tree, create a tab per folder (including root) when nested folders exist.
-        const newTabs: any[] = [];
-        if (payload.node && payload.node.isFolder) {
-          // collect all folder nodes in the subtree (including root)
-          const collectFolders = (n: any, acc: any[] = []) => {
-            if (!n) return acc;
-            if (n.isFolder) acc.push(n);
-            if (Array.isArray(n.children)) {
-              for (const ch of n.children) collectFolders(ch, acc);
-            }
-            return acc;
-          };
-
-          const folders = collectFolders(payload.node, []);
-
-          if (folders.length > 1) {
-            // create a tab per folder, each including only the leaf bookmarks under that folder
-            for (const folder of folders) {
-              // only include immediate (same-level) bookmark children for each folder
-              const leafBookmarks = getImmediateBookmarks(folder).filter((b) => !!b?.url);
-              if (leafBookmarks.length === 0) continue;
-              const nid = uuidv4();
-              newTabs.push({
-                type: 'tab',
-                id: nid,
-                name: folder.title || title,
-                component: 'bookmarks',
-                config: { id: nid, title: folder.title || title, bookmarks: leafBookmarks, createdDate: new Date(), lastModifiedDate: new Date() }
-              });
-            }
-          } else {
-            // single folder (no nested folders): create one tab with the folder's leaf bookmarks
-            const leafBookmarks = getImmediateBookmarks(payload.node).filter((b) => !!b?.url);
-            const nid = uuidv4();
-            newTabs.push({ type: 'tab', id: nid, name: title || payload.node.title || 'Bookmarks', component: 'bookmarks', config: { id: nid, title: title || payload.node.title || 'Bookmarks', bookmarks: leafBookmarks, createdDate: new Date(), lastModifiedDate: new Date() } });
-          }
-        } else {
-          // fallback to single tab from urls (or single non-folder node)
-          if (bookmarks.length > 0) {
-            const nid = uuidv4();
-            newTabs.push({ type: 'tab', id: nid, name: title, component: 'bookmarks', config: { id: nid, title, bookmarks, createdDate: new Date(), lastModifiedDate: new Date() } });
-          }
-        }
-
-        if (newTabs.length === 0) {
-          // nothing to add
-          return;
-        }
-
-        // attempt to insert into the currently selected tabset, otherwise append to top-level
-        const insertIntoSelectedTabset = (children: any[] | undefined): boolean => {
-          if (!Array.isArray(children)) return false;
-          for (const child of children) {
-            if (child.type === 'tabset') {
-              // insert as last child(s) of this tabset
-              child.children = child.children || [];
-              child.children.push(...newTabs);
-              return true;
-            }
-            if (child.children && insertIntoSelectedTabset(child.children)) return true;
-          }
-          return false;
-        };
-
-        if (!insertIntoSelectedTabset([json.layout])) {
-          // fallback: append to top-level
-          if (json.layout && Array.isArray(json.layout.children)) {
-            json.layout.children.push(...newTabs);
-          } else if (!json.layout) {
-            json.layout = { type: 'row', children: [{ type: 'tabset', children: [...newTabs] }] };
-          } else {
-            // best effort: wrap existing layout children into a new row
-            json.layout = { type: 'row', children: [json.layout, { type: 'tabset', children: [...newTabs] }] };
-          }
-        }
-
-        const newModel = Model.fromJson(json as any);
+        const { json } = result;
+  const newModel = Model.fromJson(json);
         setModel(newModel);
         modelRef.current = newModel;
-        FlexLayoutService.saveConfig(selectedMenuItem?.id || '', json as any);
+  FlexLayoutService.saveConfig(selectedMenuItem?.id || '', json);
       } catch (err) {
         console.warn('Failed to create bookmarks tab from header drop', err);
       }
@@ -517,10 +539,10 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
                       json.layout = { type: 'row', children: [{ type: 'tabset', children: [newTab] }] };
                     }
 
-                    const newModel = Model.fromJson(json as any);
+                    const newModel = Model.fromJson(json);
                     setModel(newModel);
                     modelRef.current = newModel;
-                    FlexLayoutService.saveConfig(selectedMenuItem?.id || '', json as any);
+                    FlexLayoutService.saveConfig(selectedMenuItem?.id || '', json);
                   }
                 } else if (editingNodeId) {
                   updateTabConfigAndSave(editingNodeId, update);

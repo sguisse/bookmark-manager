@@ -28,23 +28,33 @@ export default function HeaderPanel(_props: Readonly<HeaderPanelProps>) {
         className="header-content"
         aria-label="Header"
         onDragOver={(e) => {
-          // allow drop when dragging bookmarks folder
-          if (e.dataTransfer && (Array.from(e.dataTransfer.types || []).includes('application/x-bookmarks-folder') || Array.from(e.dataTransfer.types || []).includes('text/plain'))) {
+          // allow drop when dragging bookmarks folder or multiple bookmarks payload
+          const types = Array.from(e.dataTransfer?.types || []);
+          if (e.dataTransfer && (types.includes('application/x-bookmarks-folder') || types.includes('application/x-bookmarks') || types.includes('text/plain'))) {
             e.preventDefault();
             if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
           }
         }}
         onDrop={(e) => {
-          console.log('Dropped data:', e.dataTransfer?.getData('text/plain'));
-
-          const raw = (e.dataTransfer?.getData('application/x-bookmarks-folder') || e.dataTransfer?.getData('text/plain') || '').trim();
-          if (!raw) return;
-          let payload: { title?: string; urls?: string[] } = { title: raw, urls: [] };
-          // only attempt to parse if the payload looks like JSON
-          if (raw.startsWith('{') || raw.startsWith('[')) {
-            const parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object') payload = parsed;
+          // Prefer structured payloads: application/x-bookmarks or application/x-bookmarks-folder
+          let raw = '';
+          if (e.dataTransfer) {
+            raw = (e.dataTransfer.getData('application/x-bookmarks') || e.dataTransfer.getData('application/x-bookmarks-folder') || e.dataTransfer.getData('text/plain') || '').trim();
           }
+          if (!raw) return;
+          let payload: any = { title: raw, urls: [] };
+          try {
+            if (raw.startsWith('{') || raw.startsWith('[')) {
+              const parsed = JSON.parse(raw);
+              if (parsed && typeof parsed === 'object') payload = parsed;
+            }
+          } catch (err) {
+            // fallback to plain text payload and log parse error
+            // eslint-disable-next-line no-console
+            console.warn('Failed to parse dropped bookmarks payload as JSON, using plain text fallback', err);
+            payload = { title: raw, urls: [] };
+          }
+          // Dispatch event for FlexLayoutManager to handle and create tabs directly
           window.dispatchEvent(new CustomEvent('app:header:dropped-bookmarks', { detail: payload }));
         }}
       >
