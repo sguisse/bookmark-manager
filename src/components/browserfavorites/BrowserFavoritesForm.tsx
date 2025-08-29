@@ -19,7 +19,8 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
   const [formData, setFormData] = useState(() => ({
     filePath: browserFavorites?.filePath || '',
     showFileSelection: true, // Collapsible section state
-    showInfo: !!(mode === FormDisplayMode.Edit && browserFavorites && (browserFavorites.nodesOpened.length > 0 || browserFavorites.createdDate || browserFavorites.lastModifiedDate))
+  // show info when we have timestamps or at least one expanded node in the bookmarksTree
+  showInfo: !!(mode === FormDisplayMode.Edit && browserFavorites && ((browserFavorites.bookmarksTree?.some(n => n.isExpanded)) || browserFavorites.createdDate || browserFavorites.lastModifiedDate))
   }));
 
   // Sync initial values only when the browserFavorites id changes to avoid clobbering user edits
@@ -27,7 +28,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
     setFormData(prev => ({
       ...prev,
       filePath: browserFavorites?.filePath || '',
-      showInfo: !!(mode === FormDisplayMode.Edit && browserFavorites && (browserFavorites.nodesOpened.length > 0 || browserFavorites.createdDate || browserFavorites.lastModifiedDate))
+  showInfo: !!(mode === FormDisplayMode.Edit && browserFavorites && ((browserFavorites.bookmarksTree?.some(n => n.isExpanded)) || browserFavorites.createdDate || browserFavorites.lastModifiedDate))
     }));
   }, [browserFavorites?.id, mode]);
 
@@ -48,7 +49,8 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
     }
 
     const data: BrowserFavoritesFormData = {
-      filePath: formData.filePath.trim()
+      filePath: formData.filePath.trim(),
+      bookmarksTree: browserFavorites?.bookmarksTree || []
     };
 
     onSave(data, selectedFile || undefined);
@@ -74,7 +76,8 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
 
       // Immediately notify parent to load/update the tree view with the selected file
       const data: BrowserFavoritesFormData = {
-        filePath: displayPath
+        filePath: displayPath,
+        bookmarksTree: browserFavorites?.bookmarksTree || []
       };
       onSave(data, file);
     }
@@ -204,7 +207,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
         </div>
 
         {/* Information block with chevron (Edit mode only) */}
-        {mode === FormDisplayMode.Edit && browserFavorites && (browserFavorites.nodesOpened.length > 0 || browserFavorites.createdDate || browserFavorites.lastModifiedDate) && (
+  {mode === FormDisplayMode.Edit && browserFavorites && ((browserFavorites.bookmarksTree?.some(n => n.isExpanded)) || browserFavorites.createdDate || browserFavorites.lastModifiedDate) && (
           <div className="card mb-4" style={{ borderColor: theme.colors.border, marginTop: '0' }}>
             <button
               type="button"
@@ -259,34 +262,7 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
                     </div>
                   )}
 
-                  {/* Opened nodes section */}
-                  {browserFavorites.nodesOpened.length > 0 && (
-                    <div id="browser-favorites-opened-nodes">
-                      <div style={{
-                        display: 'block',
-                        marginBottom: '0.5rem',
-                        fontSize: theme.fonts.sizes.small,
-                        fontWeight: 500,
-                        color: theme.colors.text.primary
-                      }}>
-                        Currently Opened Nodes
-                      </div>
-                      <div style={{
-                        padding: '0.75rem',
-                        border: `1px solid ${theme.colors.border}`,
-                        borderRadius: '6px',
-                        backgroundColor: theme.colors.surface ?? theme.colors.background,
-                        fontSize: theme.fonts.sizes.small,
-                        color: theme.colors.text.secondary
-                      }}>
-                        {browserFavorites.nodesOpened.map((node, index) => (
-                          <div key={`${node}-${index}`} style={{ marginBottom: index < browserFavorites.nodesOpened.length - 1 ? '0.25rem' : '0' }}>
-                            {node}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Opened nodes UI removed — manager now uses node.isExpanded on bookmarksTree */}
 
                   {/* Timestamps section */}
                   {(browserFavorites.createdDate || browserFavorites.lastModifiedDate) && (

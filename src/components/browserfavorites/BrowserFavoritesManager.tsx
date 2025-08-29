@@ -4,7 +4,7 @@ import { FormDisplayMode } from '../../types/app';
 import BrowserFavoritesForm from './BrowserFavoritesForm';
 
 import '../../styles/index.css';
-import BrowserFavoritesService from '../../services/BrowserFavoritesService';
+import { BrowserFavoritesService } from '../../services/BrowserFavoritesService';
 
 type Props = {};
 
@@ -209,47 +209,76 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   const [currentFavorites, setCurrentFavorites] = useState<BrowserFavorites | null>(null);
   const formMode = FormDisplayMode.Edit; // Always in edit mode since form is always visible
 
-  // Helper function to build hierarchical path for a node
-  const buildNodePath = (nodeId: string, nodes: BrowserBookmarkNode[]): string[] => {
-    const findNodePath = (currentNodes: BrowserBookmarkNode[], targetId: string, path: string[] = []): string[] | null => {
-      for (const node of currentNodes) {
-        const currentPath = [...path, node.title || node.id];
-
-        if (node.id === targetId) {
-          return currentPath;
-        }
-
-        if (node.children) {
-          const result = findNodePath(node.children, targetId, currentPath);
-          if (result) return result;
-        }
+  // Build a mapping of nodeId => true for nodes which have isExpanded set
+  const buildExpandedMapFromTree = (nodes: BrowserBookmarkNode[]): Record<string, boolean> => {
+    const map: Record<string, boolean> = {};
+    const walk = (arr: BrowserBookmarkNode[]) => {
+      for (const n of arr) {
+        if (n.isExpanded) map[n.id] = true;
+        if (n.children) walk(n.children);
       }
-      return null;
+    };
+    walk(nodes);
+    return map;
+  };
+
+  // On mount, try to load saved BrowserFavorites from storage to initialize form and tree
+  React.useEffect(() => {
+    try {
+      const stored = BrowserFavoritesService.loadFromStorage();
+      if (stored) {
+        setCurrentFavorites(stored);
+        setTree(stored.bookmarksTree || []);
+        // rebuild expanded mapping from stored bookmarksTree isExpanded flags
+        setExpanded(buildExpandedMapFromTree(stored.bookmarksTree || []));
+      }
+    } catch (err) {
+      // ignore
+      // eslint-disable-next-line no-console
+      console.warn('Failed to load stored BrowserFavorites', err);
+    }
+  }, []);
+
+  // (removed buildNodePath — we now use node.isExpanded flags directly)
+
+  // Toggle a node's isExpanded flag in the tree, update expanded map and persist
+  const toggleNodeExpanded = (nodeId: string) => {
+    const updateNodes = (nodes: BrowserBookmarkNode[]): BrowserBookmarkNode[] => {
+      return nodes.map(n => {
+        if (n.id === nodeId) {
+          return { ...n, isExpanded: !n.isExpanded };
+        }
+        if (n.children) {
+          return { ...n, children: updateNodes(n.children) };
+        }
+        return n;
+      });
     };
 
-    return findNodePath(nodes, nodeId) || [nodeId];
-  };
+    setTree(prev => {
+      const next = updateNodes(prev);
+      // rebuild expanded mapping from tree isExpanded flags
+      setExpanded(buildExpandedMapFromTree(next));
 
-  // Helper function to get the path of opened nodes as hierarchical strings
-  const getNodesOpenedPath = (): string[] => {
-    const openedNodeIds = Object.keys(expanded).filter(id => expanded[id]);
-    return openedNodeIds.map(nodeId => {
-      const path = buildNodePath(nodeId, tree);
-      return path.join(' > ');
+      // persist updated tree (with isExpanded) if we have currentFavorites
+      if (currentFavorites) {
+        try {
+          const updatedFav: BrowserFavorites = {
+            ...currentFavorites,
+            bookmarksTree: next,
+            lastModifiedDate: new Date()
+          };
+          setCurrentFavorites(updatedFav);
+          BrowserFavoritesService.saveToStorage(updatedFav);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to persist expanded state', err);
+        }
+      }
+
+      return next;
     });
   };
-
-  // Update the current favorites state when expanded nodes change
-  React.useEffect(() => {
-    if (currentFavorites) {
-      const nodesOpened = getNodesOpenedPath();
-      setCurrentFavorites(prev => prev ? {
-        ...prev,
-        nodesOpened,
-        lastModifiedDate: new Date()
-      } : null);
-    }
-  }, [expanded]);
 
   const loadBookmarksFile = (file: File, filePath: string) => {
     const reader = new FileReader();
@@ -267,9 +296,40 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
           setCurrentFavorites(prev => prev ? {
             ...prev,
             filePath,
+            bookmarksTree: parsed,
             nodesOpened: [],
             lastModifiedDate: new Date()
           } : null);
+          // persist updated favorites
+          try {
+            const updated = {
+              ...currentFavorites,
+              filePath,
+              bookmarksTree: parsed,
+              nodesOpened: [],
+              lastModifiedDate: new Date()
+            } as BrowserFavorites;
+            BrowserFavoritesService.saveToStorage(updated);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('Failed to save BrowserFavorites after loading file', err);
+          }
+        } else {
+          // if no currentFavorites existed, create and persist one
+          const newFav: BrowserFavorites = {
+            id: `bf-${Date.now()}`,
+            filePath,
+            bookmarksTree: parsed,
+            createdDate: new Date(),
+            lastModifiedDate: new Date()
+          };
+          setCurrentFavorites(newFav);
+          try {
+            BrowserFavoritesService.saveToStorage(newFav);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('Failed to save new BrowserFavorites after loading file', err);
+          }
         }
       } catch (err) {
         // ignore parse errors
@@ -290,6 +350,14 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
       };
       setCurrentFavorites(updatedFavorites);
 
+      // persist updated favorites
+      try {
+        BrowserFavoritesService.saveToStorage(updatedFavorites);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to save BrowserFavorites on form save', err);
+      }
+
       // If a new file was provided, load it
       if (file) {
         loadBookmarksFile(file, formData.filePath);
@@ -304,6 +372,14 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
         lastModifiedDate: new Date()
       };
       setCurrentFavorites(newFavorites);
+
+      // persist new favorites
+      try {
+        BrowserFavoritesService.saveToStorage(newFavorites);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to save new BrowserFavorites on form save', err);
+      }
 
       // If a file was provided, load it
       if (file) {
@@ -342,7 +418,7 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
           <div className="bf-empty">No bookmarks loaded. Import a Chrome bookmarks HTML file.</div>
         ) : (
           tree.map((n) => (
-            <TreeNode key={n.id} node={n} open={!!expanded[n.id]} onToggle={(id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))} expanded={expanded} />
+            <TreeNode key={n.id} node={n} open={!!expanded[n.id]} onToggle={(id) => toggleNodeExpanded(id)} expanded={expanded} />
           ))
         )}
       </div>
