@@ -149,9 +149,28 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
         </div>
 
         {/* Color Field */}
-          <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-color">Color</label>
-          <input id="bookmark-color" type="color" value={formData.color || normalizeColorForInput(String(bookmark?.color || '')) || '#3b82f6'} onChange={(e) => handleChange('color', e.target.value)} style={{ ...inputStyle, padding: '0.25rem', width: '56px', height: '36px' }} />
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {/* color input requires a valid hex value; use a sensible fallback for the picker but keep formData.color empty to represent default */}
+            <input
+              id="bookmark-color"
+              type="color"
+              aria-label="Bookmark color"
+              value={formData.color || ''}
+              onChange={(e) => handleChange('color', e.target.value)}
+              style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
+            />
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: theme.fonts.sizes.small, color: theme.colors.text.primary }}>
+              <input
+                type="checkbox"
+                checked={!formData.color}
+                onChange={(e) => handleChange('color', e.target.checked ? '' : (formData.color || ''))}
+                aria-label="Default bookmark color"
+              />
+              <span>Default</span>
+            </label>
+          </div>
         </div>
 
         {/* Icon Field with preview */}
