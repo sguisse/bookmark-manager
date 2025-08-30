@@ -1,6 +1,6 @@
 import { Bookmark } from '../types/bookmark';
 
-// Global event system for cross-tab bookmark transfers
+// Global event system for cross-tab bookmark DnD
 interface CrossTabDropEvent {
   bookmark: Bookmark;
   sourceNodeId: string;
