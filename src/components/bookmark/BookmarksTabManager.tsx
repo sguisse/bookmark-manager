@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import BookmarkForm from './BookmarkForm';
 import { Bookmark, BookmarkFormData, BookmarksTabConfig } from '../../types/bookmark';
@@ -67,6 +67,103 @@ function DraggableBookmarkRow({
 
   // Get the current dragged bookmark (prioritize local, then global)
   const currentDraggedBookmark = draggedBookmark || globalDraggedBookmark;
+  // Track whether the drag image currently shows copy state
+  const lastCopyRef = useRef<boolean | null>(null);
+  const dragImageRef = useRef<HTMLElement | null>(null);
+
+  // Helper to build a drag image element (used at dragstart and when modifier changes)
+  const createDragImage = (isCopy: boolean) => {
+    const dragImage = document.createElement('div');
+    dragImage.style.cssText = `
+      position: fixed;
+      top: -1000px;
+      left: -1000px;
+      padding: 8px 12px;
+      background: rgba(59, 130, 246, 0.95);
+      color: white;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 400px;
+      min-width: 100px;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: ellipsis;
+      z-index: 9999;
+    `;
+
+    const icon = bookmark.icon || '🌐';
+    if (bookmark.icon && (bookmark.icon.startsWith('http') || bookmark.icon.startsWith('data:'))) {
+      dragImage.innerHTML = `<img src="${bookmark.icon}" style="width: 16px; height: 16px; border-radius: 2px;"> ${bookmark.title}`;
+    } else {
+      dragImage.innerHTML = `<span style="font-size: 16px;">${icon}</span> ${bookmark.title}`;
+    }
+
+    const selectionCount = selectedIds && selectedIds.length > 0 ? selectedIds.length : 1;
+    if (selectionCount > 1) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'margin-left:8px; background: rgba(0,0,0,0.2); padding:2px 6px; border-radius:12px; font-size:12px; color:white;';
+      badge.textContent = `${selectionCount}`;
+      dragImage.appendChild(badge);
+    }
+
+    if (isCopy) {
+      console.log('Creating copy indicator for drag image'); // Debug log
+      const copyIndicator = document.createElement('div');
+      copyIndicator.style.cssText = `
+        margin-left: 8px;
+        padding: 6px 10px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0,0,0,0.3);
+        border: 2px solid rgba(255,255,255,0.4);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      `;
+      copyIndicator.innerHTML = `
+        <span style="font-size: 14px;">📋</span>
+        <span>COPY</span>
+      `;
+      dragImage.appendChild(copyIndicator);
+      console.log('Copy indicator created and added to drag image'); // Debug log
+    } else {
+      const moveIndicator = document.createElement('div');
+      moveIndicator.style.cssText = `
+        margin-left: 8px;
+        padding: 6px 10px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0,0,0,0.3);
+        border: 2px solid rgba(255,255,255,0.4);
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      `;
+      moveIndicator.innerHTML = `
+        <span style="font-size: 14px;">📋</span>
+        <span>MOVE</span>
+      `;
+      dragImage.appendChild(moveIndicator);
+      console.log('Move indicator created and added to drag image'); // Debug log
+    }
+
+    return dragImage;
+  };
 
   return (
     <li
@@ -75,67 +172,37 @@ function DraggableBookmarkRow({
       onDragStart={(e) => {
         onDragStart(bookmark);
 
-        // Create custom drag image with minimal content
-        const dragImage = document.createElement('div');
-        dragImage.style.cssText = `
-          position: fixed;
-          top: -1000px;
-          left: -1000px;
-          padding: 8px 12px;
-          background: rgba(59, 130, 246, 0.95);
-          color: white;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          max-width: 300px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        `;
-
-        // Add icon and title to drag image
-        const icon = bookmark.icon || '🌐';
-        if (bookmark.icon && (bookmark.icon.startsWith('http') || bookmark.icon.startsWith('data:'))) {
-          dragImage.innerHTML = `<img src="${bookmark.icon}" style="width: 16px; height: 16px; border-radius: 2px;"> ${bookmark.title}`;
-        } else {
-          dragImage.innerHTML = `<span style="font-size: 16px;">${icon}</span> ${bookmark.title}`;
-        }
-        // If multiple selected, add a small badge
-        const selectionCount = selectedIds && selectedIds.length > 0 ? selectedIds.length : 1;
-        if (selectionCount > 1) {
-          const badge = document.createElement('span');
-          badge.style.cssText = 'margin-left:8px; background: rgba(0,0,0,0.2); padding:2px 6px; border-radius:12px; font-size:12px; color:white;';
-          badge.textContent = `${selectionCount}`;
-          dragImage.appendChild(badge);
-        }
-
-        // If user is holding Ctrl/Cmd at start, show copy icon on drag image
+        // Create initial drag image and remember copy state
         const isCopyStart = (e as any).ctrlKey || (e as any).metaKey;
-        if (isCopyStart) {
-          const copyIcon = document.createElement('span');
-          copyIcon.style.cssText = 'margin-left:6px; font-size:12px; opacity:0.9;';
-          copyIcon.textContent = '📄';
-          dragImage.appendChild(copyIcon);
-          try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'copy' })); } catch (err) { /* ignore */ }
+        console.log('DragStart - Ctrl/Cmd key detected:', isCopyStart); // Debug log
+        console.log('DragStart - Event details:', { ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey, shiftKey: e.shiftKey }); // Debug log
+
+        lastCopyRef.current = !!isCopyStart;
+
+        try {
+          // Clean up any existing drag image
+          if (dragImageRef.current && document.body.contains(dragImageRef.current)) {
+            document.body.removeChild(dragImageRef.current);
+          }
+
+          const dragImage = createDragImage(isCopyStart);
+          dragImageRef.current = dragImage;
+          document.body.appendChild(dragImage);
+          e.dataTransfer.setDragImage(dragImage, 20, 20);
+
+          // Don't remove immediately - keep it until drag ends
+          console.log('DragStart - Created drag image with copy mode:', true); // Debug log
+
+          if (isCopyStart) try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'copy' })); } catch (_) { }
+          else try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'move' })); } catch (_) { }
+        } catch (err) {
+          console.warn('Failed to create initial drag image', err);
         }
 
-        document.body.appendChild(dragImage);
-        e.dataTransfer.setDragImage(dragImage, 20, 20);
-
-        // Clean up drag image after a short delay
-        setTimeout(() => {
-          if (document.body.contains(dragImage)) {
-            document.body.removeChild(dragImage);
-          }
-        }, 100);
-
-        // Set both simple and cross-tab drag data
+  // Set both simple and cross-tab drag data
         e.dataTransfer.setData('text/plain', bookmark.id);
-        if (selectionCount > 1) {
+  const selectionCount = selectedIds && selectedIds.length > 0 ? selectedIds.length : 1;
+  if (selectionCount > 1) {
           // multi selection: include full bookmark objects so target can insert copies
           try {
             const nodesPayload = JSON.stringify({ type: 'bookmarks-multi', nodes: selectedBookmarks, sourceNodeId: nodeId, sourceIndex: index, timestamp: Date.now() });
@@ -151,7 +218,17 @@ function DraggableBookmarkRow({
   e.dataTransfer.effectAllowed = 'copyMove';
         console.log('[DraggableBookmarkRow] Drag started for:', bookmark.title, 'from node:', nodeId);
       }}
-      onDragEnd={onDragEnd}
+      onDragEnd={() => {
+        // Clean up drag image
+        if (dragImageRef.current && document.body.contains(dragImageRef.current)) {
+          try {
+            document.body.removeChild(dragImageRef.current);
+          } catch (_) {}
+        }
+        dragImageRef.current = null;
+        lastCopyRef.current = null;
+        onDragEnd();
+      }}
       onDragOver={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -162,6 +239,34 @@ function DraggableBookmarkRow({
 
         // Set appropriate drop effect
         e.dataTransfer.dropEffect = hasUrlTypes ? 'copy' : 'move';
+
+        // Detect modifier changes during drag (Ctrl/Cmd for copy) and update drag image
+        try {
+          const isCopyNow = (e as any).ctrlKey || (e as any).metaKey;
+          console.log('DragOver - Ctrl/Cmd key detected:', isCopyNow); // Debug log
+          if (lastCopyRef.current === null || isCopyNow !== lastCopyRef.current) {
+            lastCopyRef.current = !!isCopyNow;
+            console.log('DragOver - Updating drag image for copy mode:', !!isCopyNow); // Debug log
+            try {
+              // Clean up old drag image
+              if (dragImageRef.current && document.body.contains(dragImageRef.current)) {
+                document.body.removeChild(dragImageRef.current);
+              }
+
+              const newDragImage = createDragImage(!!isCopyNow);
+              dragImageRef.current = newDragImage;
+              document.body.appendChild(newDragImage);
+              e.dataTransfer.setDragImage(newDragImage, 20, 20);
+
+              if (isCopyNow) try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'copy' })); } catch (_) {}
+              else try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'move' })); } catch (_) {}
+            } catch (err) {
+              console.warn('Failed to update drag image during dragover:', err);
+            }
+          }
+        } catch (err) {
+          console.warn('Error in dragover modifier detection:', err);
+        }
 
         const rect = e.currentTarget.getBoundingClientRect();
         const mouseY = e.clientY - rect.top;
@@ -728,6 +833,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       setDropPosition(position);
     }
   };
+
+
   // Updated to handle external application drops (e.g. URLs dragged from Chrome).
   const handleDrop = (index: number, position: 'before' | 'after', event: React.DragEvent | DragEvent) => {
     event.preventDefault();
