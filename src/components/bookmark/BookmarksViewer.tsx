@@ -278,14 +278,41 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
               padding: '2px'
             }}>
               {onCollapse && (
-                <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row view" style={actionButtonStyle(theme.colors.info)}>
+                <button onClick={(e) => { e.stopPropagation(); onCollapse(); }} title="Collapse to row view"
+                style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#666'
+              }}>
                   <ChevronUp size={16} />
                 </button>
               )}
-              <button onClick={handleEditClick} title="Edit bookmark" style={actionButtonStyle(theme.colors.info)}>
+              <button onClick={handleEditClick} title="Edit bookmark"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#666'
+              }}>
                 <Edit size={16} />
               </button>
-              <button onClick={handleDeleteClick} title="Delete bookmark" style={actionButtonStyle(theme.colors.error)}>
+              <button onClick={handleDeleteClick} title="Delete bookmark"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#d32f2f'
+              }}>
                 <Trash2 size={16} />
               </button>
             </div>
@@ -380,17 +407,44 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
             opacity: buttonsOpacity,
             transition: 'opacity 120ms ease',
             pointerEvents: buttonsPointerEvents,
-            backgroundColor: theme.colors.surface,
+            backgroundColor: 'transparent',
             borderRadius: '4px',
             padding: '2px'
           }}>
-            <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'} style={smallIconButtonStyle(theme.colors.info)}>
+            <button onClick={(e) => { e.stopPropagation(); onToggleExpand(); }} title={expanded ? 'Collapse' : 'Expand'}
+                    style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#666'
+              }}>
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit" style={smallIconButtonStyle(theme.colors.info)}>
+            <button onClick={(e) => { e.stopPropagation(); onEdit(bookmark); }} title="Edit"
+            style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#666'
+              }}>
               <Edit size={16} />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete" style={smallIconButtonStyle(theme.colors.error)}>
+            <button onClick={(e) => { e.stopPropagation(); onDelete(bookmark.id); }} title="Delete"
+            style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#d32f2f'
+              }}>
               <Trash2 size={16} />
             </button>
           </div>
