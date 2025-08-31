@@ -200,6 +200,7 @@ function renderIconElement(src: string | undefined, size: number) {
 function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; isDragging?: boolean; }>) {
   const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme, isDragging } = props;
   const [isHovered, setIsHovered] = useState(false);
+  const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const urlRef = useRef<HTMLDivElement | null>(null);
   const truncatedTitle = useTruncatedText(bookmark.title, titleRef);
@@ -249,12 +250,16 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
               <h3
                 ref={titleRef}
                 className="bookmark-title"
+                onMouseEnter={() => setIsTitleHovered(true)}
+                onMouseLeave={() => setIsTitleHovered(false)}
                 style={{
                   ...titleStyleCardView(theme),
                   margin: 0,
                   paddingLeft: '5px',
-                  color: bookmark.color || theme.colors.text.primary,
-                  overflow: 'hidden'
+                  color: isTitleHovered ? (bookmark.color || '#1a73e8') : (bookmark.color || theme.colors.text.primary),
+                  overflow: 'hidden',
+                  cursor: isTitleHovered ? 'pointer' : 'inherit',
+                  textDecoration: isTitleHovered ? 'underline' : 'none'
                 }}
               >
                 {truncatedTitle}
@@ -361,6 +366,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
 function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; isDragging?: boolean; }>) {
   const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen, isDragging } = props;
   const [isHovered, setIsHovered] = useState(false);
+  const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLButtonElement | null>(null);
   const truncatedTitle = useTruncatedText(bookmark.title, titleRef);
 
@@ -387,8 +393,15 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
               className="bookmark-title"
               onClick={(e) => { e.stopPropagation(); onOpen(bookmark.url); }}
               ref={titleRef}
+              onMouseEnter={() => setIsTitleHovered(true)}
+              onMouseLeave={() => setIsTitleHovered(false)}
               style={{
-                color: bookmark.color || theme.colors.text.primary,
+                color: isTitleHovered ? (bookmark.color || '#1a73e8') : (bookmark.color || theme.colors.text.primary),
+                textDecoration: isTitleHovered ? 'underline' : 'none',
+                cursor: isTitleHovered ? 'pointer' : 'inherit',
+                background: 'none',
+                border: 'none',
+                padding: 0
               }}
             >
               {truncatedTitle}
