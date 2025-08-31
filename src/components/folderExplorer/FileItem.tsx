@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import path from 'path';
 
 interface FileItemProps {
   item: {

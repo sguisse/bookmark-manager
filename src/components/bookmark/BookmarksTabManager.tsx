@@ -6,6 +6,13 @@ import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
 import { useBookmarkDragDrop } from '../../contexts/BookmarkDragDropContext';
 import { crossTabBookmarkService } from '../../services/CrossTabBookmarkService';
+import { extractUrlFromDataTransfer, extractNodesFromParsed } from '../../services/BookmarksTabDropService';
+import {
+  createDragImageElement,
+  updateDragImageElement,
+  removeDragImageElement,
+  setDataTransferForBookmarkDrag
+} from '../../services/BookmarksTabDnDService';
 
 interface BookmarksTabProps {
   config?: BookmarksTabConfig;
@@ -71,99 +78,7 @@ function DraggableBookmarkRow({
   const lastCopyRef = useRef<boolean | null>(null);
   const dragImageRef = useRef<HTMLElement | null>(null);
 
-  // Helper to build a drag image element (used at dragstart and when modifier changes)
-  const createDragImage = (isCopy: boolean) => {
-    const dragImage = document.createElement('div');
-    dragImage.style.cssText = `
-      position: fixed;
-      top: -1000px;
-      left: -1000px;
-      padding: 8px 12px;
-      background: rgba(59, 130, 246, 0.95);
-      color: white;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      max-width: 400px;
-      min-width: 100px;
-      white-space: nowrap;
-      overflow: visible;
-      text-overflow: ellipsis;
-      z-index: 9999;
-    `;
 
-    const icon = bookmark.icon || '🌐';
-    if (bookmark.icon && (bookmark.icon.startsWith('http') || bookmark.icon.startsWith('data:'))) {
-      dragImage.innerHTML = `<img src="${bookmark.icon}" style="width: 16px; height: 16px; border-radius: 2px;"> ${bookmark.title}`;
-    } else {
-      dragImage.innerHTML = `<span style="font-size: 16px;">${icon}</span> ${bookmark.title}`;
-    }
-
-    const selectionCount = selectedIds && selectedIds.length > 0 ? selectedIds.length : 1;
-    if (selectionCount > 1) {
-      const badge = document.createElement('span');
-      badge.style.cssText = 'margin-left:8px; background: rgba(0,0,0,0.2); padding:2px 6px; border-radius:12px; font-size:12px; color:white;';
-      badge.textContent = `${selectionCount}`;
-      dragImage.appendChild(badge);
-    }
-
-    if (isCopy) {
-      console.log('Creating copy indicator for drag image'); // Debug log
-      const copyIndicator = document.createElement('div');
-      copyIndicator.style.cssText = `
-        margin-left: 8px;
-        padding: 6px 10px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0,0,0,0.3);
-        border: 2px solid rgba(255,255,255,0.4);
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      `;
-      copyIndicator.innerHTML = `
-        <span style="font-size: 14px;">📋</span>
-        <span>COPY</span>
-      `;
-      dragImage.appendChild(copyIndicator);
-      console.log('Copy indicator created and added to drag image'); // Debug log
-    } else {
-      const moveIndicator = document.createElement('div');
-      moveIndicator.style.cssText = `
-        margin-left: 8px;
-        padding: 6px 10px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        color: white;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.4), 0 1px 3px rgba(0,0,0,0.3);
-        border: 2px solid rgba(255,255,255,0.4);
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      `;
-      moveIndicator.innerHTML = `
-        <span style="font-size: 14px;">📋</span>
-        <span>MOVE</span>
-      `;
-      dragImage.appendChild(moveIndicator);
-      console.log('Move indicator created and added to drag image'); // Debug log
-    }
-
-    return dragImage;
-  };
 
   return (
     <li
@@ -172,59 +87,33 @@ function DraggableBookmarkRow({
       onDragStart={(e) => {
         onDragStart(bookmark);
 
-        // Create initial drag image and remember copy state
         const isCopyStart = (e as any).ctrlKey || (e as any).metaKey;
-        console.log('DragStart - Ctrl/Cmd key detected:', isCopyStart); // Debug log
-        console.log('DragStart - Event details:', { ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey, shiftKey: e.shiftKey }); // Debug log
-
         lastCopyRef.current = !!isCopyStart;
 
         try {
           // Clean up any existing drag image
           if (dragImageRef.current && document.body.contains(dragImageRef.current)) {
-            document.body.removeChild(dragImageRef.current);
+            try { document.body.removeChild(dragImageRef.current); } catch (_) {}
           }
 
-          const dragImage = createDragImage(isCopyStart);
-          dragImageRef.current = dragImage;
-          document.body.appendChild(dragImage);
-          e.dataTransfer.setDragImage(dragImage, 20, 20);
+          const el = createDragImageElement(bookmark, selectedIds, !!isCopyStart);
+          dragImageRef.current = el;
+          document.body.appendChild(el);
+          try { e.dataTransfer.setDragImage(el, 20, 20); } catch (_) {}
 
-          // Don't remove immediately - keep it until drag ends
-          console.log('DragStart - Created drag image with copy mode:', true); // Debug log
-
-          if (isCopyStart) try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'copy' })); } catch (_) { }
-          else try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'move' })); } catch (_) { }
+          // Populate DataTransfer using central helper (handles cross-tab and multi-select payloads)
+          try {
+            setDataTransferForBookmarkDrag(e.dataTransfer, { bookmark, selectedBookmarks, nodeId, index, selectedIds });
+          } catch (err) {
+            console.warn('Failed to set data transfer via service', err);
+          }
         } catch (err) {
           console.warn('Failed to create initial drag image', err);
         }
-
-  // Set both simple and cross-tab drag data
-        e.dataTransfer.setData('text/plain', bookmark.id);
-  const selectionCount = selectedIds && selectedIds.length > 0 ? selectedIds.length : 1;
-  if (selectionCount > 1) {
-          // multi selection: include full bookmark objects so target can insert copies
-          try {
-            const nodesPayload = JSON.stringify({ type: 'bookmarks-multi', nodes: selectedBookmarks, sourceNodeId: nodeId, sourceIndex: index, timestamp: Date.now() });
-            e.dataTransfer.setData('application/x-bookmarks', nodesPayload);
-          } catch (err) {
-            console.warn('Failed to serialize selectedBookmarks for drag', err);
-          }
-        } else {
-          e.dataTransfer.setData('application/x-bookmark-cross-tab',
-            crossTabBookmarkService.createDragData(bookmark, nodeId, index)
-          );
-        }
-  e.dataTransfer.effectAllowed = 'copyMove';
-        console.log('[DraggableBookmarkRow] Drag started for:', bookmark.title, 'from node:', nodeId);
       }}
       onDragEnd={() => {
         // Clean up drag image
-        if (dragImageRef.current && document.body.contains(dragImageRef.current)) {
-          try {
-            document.body.removeChild(dragImageRef.current);
-          } catch (_) {}
-        }
+        try { removeDragImageElement(dragImageRef.current); } catch (_) {}
         dragImageRef.current = null;
         lastCopyRef.current = null;
         onDragEnd();
@@ -243,23 +132,13 @@ function DraggableBookmarkRow({
         // Detect modifier changes during drag (Ctrl/Cmd for copy) and update drag image
         try {
           const isCopyNow = (e as any).ctrlKey || (e as any).metaKey;
-          console.log('DragOver - Ctrl/Cmd key detected:', isCopyNow); // Debug log
           if (lastCopyRef.current === null || isCopyNow !== lastCopyRef.current) {
             lastCopyRef.current = !!isCopyNow;
-            console.log('DragOver - Updating drag image for copy mode:', !!isCopyNow); // Debug log
             try {
-              // Clean up old drag image
-              if (dragImageRef.current && document.body.contains(dragImageRef.current)) {
-                document.body.removeChild(dragImageRef.current);
-              }
-
-              const newDragImage = createDragImage(!!isCopyNow);
-              dragImageRef.current = newDragImage;
-              document.body.appendChild(newDragImage);
-              e.dataTransfer.setDragImage(newDragImage, 20, 20);
-
-              if (isCopyNow) try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'copy' })); } catch (_) {}
-              else try { e.dataTransfer.setData('application/x-drag-mode', JSON.stringify({ mode: 'move' })); } catch (_) {}
+              const updated = updateDragImageElement(bookmark, dragImageRef.current, selectedIds, !!isCopyNow);
+              if (updated && !document.body.contains(updated)) document.body.appendChild(updated);
+              dragImageRef.current = updated;
+              try { e.dataTransfer.setDragImage(updated, 20, 20); } catch (_) {}
             } catch (err) {
               console.warn('Failed to update drag image during dragover:', err);
             }
@@ -451,54 +330,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   // State for tracking drag over empty container
   const [isDragOverEmptyContainer, setIsDragOverEmptyContainer] = useState(false);
 
-  // Helper to extract a URL string from a DataTransfer object (if any)
-  const extractUrlFromDataTransfer = (dt: DataTransfer | null | undefined): string | null => {
-    if (!dt) return null;
-    let url = '';
-    try {
-      if ((dt as any).getData) url = (dt as any).getData('text/uri-list') || '';
-    } catch (err) {
-      console.debug('No text/uri-list available on DataTransfer', err);
-    }
-    if (!url && (dt as any).getData) {
-      const plain = (dt as any).getData('text/plain') || '';
-      const trimmed = (plain || '').trim();
-      try {
-        if (trimmed) new URL(trimmed);
-        url = trimmed;
-      } catch (err) {
-        console.debug('DataTransfer text/plain is not a valid URL', err);
-      }
-    }
-    return url || null;
-  };
 
-  // Helper to extract bookmark-like node objects from parsed BrowserFavorites payloads
-  const extractNodesFromParsed = (parsed: any): any[] => {
-    if (!parsed) return [];
-    if (Array.isArray(parsed.nodes)) return parsed.nodes;
-    if (parsed.node) {
-      const root = parsed.node;
-      // If node is not a folder, return it directly
-      if (!root.isFolder) return [root];
-
-      // Otherwise collect all leaf bookmark nodes (non-folders)
-      const out: any[] = [];
-      const walk = (n: any) => {
-        if (!n) return;
-        if (!n.isFolder) {
-          out.push(n);
-          return;
-        }
-        if (Array.isArray(n.children)) {
-          for (const c of n.children) walk(c);
-        }
-      };
-      walk(root);
-      return out;
-    }
-    return [];
-  };
 
   // Helper to convert image URL to base64 data URL
   const convertImageToBase64 = async (imageUrl: string): Promise<string | null> => {

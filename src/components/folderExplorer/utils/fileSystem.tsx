@@ -1,4 +1,4 @@
-import { readdir, rename, unlink, rmdir, stat } from 'fs/promises';
+import { readdir, rename, unlink, rmdir, stat, readFile } from 'fs/promises';
 import path from 'path';
 
 export const listDirectory = async (directoryPath: string) => {
@@ -53,9 +53,9 @@ export const getFileContent = async (filePath: string) => {
   try {
     const fileStats = await stat(filePath);
     if (!fileStats.isDirectory()) {
-      // Lire les 1000 premiers caractères pour un aperçu
-      const content = await readdir(filePath, { encoding: 'utf-8', start: 0, end: 1000 });
-      return content.toString();
+      // Read up to 1000 chars for preview
+      const buffer = await readFile(filePath, { encoding: 'utf-8' });
+      return buffer.slice(0, 1000).toString();
     }
     return null;
   } catch (error) {

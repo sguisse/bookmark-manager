@@ -65,9 +65,8 @@ export default function BrowserFavoritesForm(props: Readonly<BrowserFavoritesFor
     if (file) {
       // Try to get the full path when available (Electron or directory uploads), fall back to webkitRelativePath,
       // then to the file input value (may contain C:\\fakepath\\name), and finally to the file.name
-      const anyFile = file as any;
-      const inputValue = (e.target as HTMLInputElement).value || '';
-      const displayPath = file.name; // anyFile.path || anyFile.webkitRelativePath || inputValue || file.name;
+  // Normalize selected file path for UI. Some environments expose file.path or webkitRelativePath.
+  const displayPath = file.name; // prefer user-visible name
       // Update form state so the controlled input reflects the new path immediately
       setFormData(prev => ({ ...prev, filePath: displayPath }));
       // clear any previous filePath errors

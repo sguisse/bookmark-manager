@@ -507,38 +507,7 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
   );
 }
 
-// Small style helpers
-const actionButtonStyle = (bg: string) => ({
-  width: '28px',
-  height: '28px',
-  border: 'none',
-  borderRadius: '4px',
-  backgroundColor: bg,
-  color: '#ffffff',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '12px',
-  transition: 'all 0.2s ease'
-} as React.CSSProperties);
-
-// smaller icon button style used in row view
-const smallIconButtonStyle = (bg: string) => ({
-  width: '28px',
-  height: '22px',
-  padding: '4px',
-  border: 'none',
-  borderRadius: '6px',
-  backgroundColor: bg,
-  color: '#ffffff',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '13px',
-  transition: 'all 0.15s ease'
-} as React.CSSProperties);
+// (Previously unused style helpers removed to avoid unused-variable warnings)
 
 
 
