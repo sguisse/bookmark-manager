@@ -3,16 +3,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { Bookmark, BookmarkFormData } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import { formatDate, normalizeColorForInput } from '../../services/Utils';
+import Image from '../common/image/Image';
 
-// small helper to render icon preview
-function IconPreview(props: Readonly<{ src?: string; errored: boolean; onError: () => void }>) {
-  const { src, errored, onError } = props;
-  if (!src || errored) return <span style={{ fontSize: 18, opacity: 0.45 }}>🌐</span>;
-  if (src.startsWith('http') || src.startsWith('data:')) {
-    return <img src={src} alt="icon" style={{ width: 24, height: 24, objectFit: 'cover' }} onError={onError} />;
-  }
-  return <span style={{ fontSize: 18 }}>{src}</span>;
-}
 
 interface BookmarkFormProps {
   bookmark?: Bookmark | null;
@@ -29,6 +21,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     icon: bookmark?.icon || '', // could be prefilled in creation mode (DnD)
     url: bookmark?.url || '', // could be prefilled in creation mode (DnD)
     color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
+    bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.bgColor || ''))),
     description: bookmark?.description || '',
     tags: bookmark?.tags?.join(', ') || ''
   }));
@@ -40,6 +33,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
       icon: bookmark?.icon || '', // could be prefilled in creation mode (DnD)
       url: bookmark?.url || '', // could be prefilled in creation mode (DnD)
       color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.color || ''))),
+      bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(bookmark?.bgColor || ''))),
       description: bookmark?.description || '',
       tags: bookmark?.tags?.join(', ') || ''
     });
@@ -79,6 +73,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     const bookmarkData = {
       title: formData.title.trim(),
       color: formData.color.trim() || undefined,
+      bgColor: formData.bgColor.trim() || undefined,
       icon: formData.icon.trim() || undefined,
       url: formData.url.trim(),
       description: formData.description.trim() || undefined,
@@ -191,13 +186,11 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
 
           {/* Icon Field with preview - right column */}
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: theme.fonts.sizes.small, fontWeight: 500, color: theme.colors.text.primary }} htmlFor="bookmark-icon">Icon</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 6, border: `1px solid ${theme.colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: theme.colors.background, overflow: 'hidden' }}>
-                <IconPreview src={formData.icon} errored={iconError} onError={() => setIconError(true)} />
-              </div>
-
-              <input id="bookmark-icon" type="text" value={formData.icon} onChange={(e) => handleChange('icon', e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 100 }} placeholder="emoji or URL" />
+            <label htmlFor="sf-icon" style={{ display: 'block', marginBottom: 4 }}>Icon (optional)</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Image value={formData.icon } size={20} rounded style={{ display: 'inline-block' }} />
+              <input id="sf-icon" value={formData.icon} onChange={(e) => setFormData(f => ({ ...f, icon: e.target.value }))}
+                     style={inputStyle} placeholder="camera or https://..." />
             </div>
           </div>
 

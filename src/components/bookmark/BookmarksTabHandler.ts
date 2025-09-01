@@ -43,6 +43,8 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
   // Hamndle relative to Bookmark Form
 
   const handleAdd = (e: Event) => {
+    console.log("Start add new bookmark");
+
     try {
       const ce = e as CustomEvent<{ nodeId: string }>;
       if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
@@ -56,11 +58,14 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
   };
 
   const handleEdit = (bookmark: Bookmark) => {
+    console.log("Start editing bookmark", bookmark);
     setEditingBookmark(bookmark);
     setIsBookmarkFormOpen(true);
   };
 
   const handleSubmitForm = (data: BookmarkFormData, editingBookmark?: Bookmark | null) => {
+    console.log("Current bookmark data", editingBookmark);
+    console.log("Submitting bookmark form data", data);
     // if editingBookmark is set and has an id, update existing
     if (editingBookmark?.id) {
       const updated = bookmarks.map(b => b.id === editingBookmark.id ? { ...b, ...data } : b);
