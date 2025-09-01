@@ -22,7 +22,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
   // Support multi-selection within a tab
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
+  // Track last selected index for range selections (shift/opt)
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
 
   const handleEdit = (bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
@@ -95,6 +96,43 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       console.warn('toolbar event handler error', err);
     }
   };
+
+  // Selection handler for clicks: supports Shift (range), Alt/Opt (range), Ctrl/Cmd toggle
+  const handleSelect = (id: string, index: number, e: React.MouseEvent) => {
+    const isCmd = e.ctrlKey || e.metaKey;
+    const isShift = e.shiftKey;
+    const isAlt = e.altKey || e.altKey; // alt/option
+
+    // If shift or alt is held and we have a lastSelectedIndex, select range
+    if ((isShift || isAlt) && lastSelectedIndex !== null) {
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
+      const rangeIds = bookmarks.slice(start, end + 1).map(b => b.id);
+
+      if (isCmd) {
+        // Add range to existing selection (union)
+        setSelectedIds(prev => Array.from(new Set([...prev, ...rangeIds])));
+      } else {
+        // Replace selection with range
+        setSelectedIds(rangeIds);
+      }
+
+      setLastSelectedIndex(index);
+      return;
+    }
+
+    // Toggle when Ctrl/Cmd held
+    if (isCmd) {
+      setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+      setLastSelectedIndex(index);
+      return;
+    }
+
+    // Default: single select
+    setSelectedIds([id]);
+    setLastSelectedIndex(index);
+  };
+
 
   const toggleAllTableRowsViewHandler = (e: Event) => {
       try {
@@ -169,7 +207,8 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       ) : (
         <div className="grid" style={{ gap: '5px' }}>
           {bookmarks.map(b => (
-            <BookmarkTableRow key={b.id} bookmark={b} onEdit={handleEdit} onDelete={handleDelete} onToggleCollapsed={handleToggleCollapsed} />
+            <BookmarkTableRow key={b.id} bookmark={b} onEdit={handleEdit} onDelete={handleDelete} onToggleCollapsed={handleToggleCollapsed}
+                              isSelected={selectedIds.includes(b.id)} />
           ))}
         </div>
       )}
