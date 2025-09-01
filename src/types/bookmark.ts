@@ -16,7 +16,7 @@ export interface Bookmark extends BaseAuditing {
 
 export interface BookmarksTabConfig extends FlexLayoutTabConfig {
   bookmarks: Bookmark[];
-  viewMode?: 'card' | 'row';
+  toggleViewMode?: 'card' | 'row';
 }
 
 

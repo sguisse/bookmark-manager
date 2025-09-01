@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import BookmarkForm from './BookmarkForm';
-import { Bookmark, BookmarkFormData, BookmarksTabConfig } from '../../types/bookmark';
+import { Bookmark, BookmarksTabConfig } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
-import { openAllUrls } from './utils';
+import { createBookmarksTabHandlers } from './BookmarksTabHandler';
 
 interface BookmarksTabProps {
   config?: BookmarksTabConfig;
@@ -18,187 +17,50 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
 
   const bookmarks = config?.bookmarks || [];
-  const [tableRowViewMode, setTableRowViewMode] = useState<'card' | 'row'>(config?.viewMode || 'row');
+  // Used to know the action needed if user click on toggle view button in tab toolbar
+  const [tabToggleViewMode, setTabToggleViewMode] = useState<'card' | 'row'>(config?.toggleViewMode || 'row');
 
   // Support multi-selection within a tab
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // Track last selected index for range selections (shift/opt)
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
 
-  const handleEdit = (bookmark: Bookmark) => {
-    setEditingBookmark(bookmark);
-    setIsBookmarkFormOpen(true);
-  };
-
-  // Handle individual bookmark collapsed toggle
-  const handleToggleCollapsed = (bookmarkId: string) => {
-    if (!onConfigChange) return;
-
-    const updatedBookmarks = bookmarks.map(b =>
-      b.id === bookmarkId
-        ? { ...b, collapsed: !(b.collapsed ?? true) }
-        : b
-    );
-
-    onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updatedBookmarks });
-  };
-
-
-  const handleDelete = (bookmarkId: string) => {
-    const newBookmarks = bookmarks.filter(b => b.id !== bookmarkId);
-    if (onConfigChange) {
-      onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
-    } else {
-      console.log('Delete bookmark', bookmarkId);
-    }
-  };
-
-  const handleSubmit = (data: BookmarkFormData) => {
-    // if editingBookmark is set and has an id, update existing
-    if (editingBookmark?.id) {
-      const updated = bookmarks.map(b => b.id === editingBookmark.id ? { ...b, ...data } : b);
-      onConfigChange && onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updated });
-      setEditingBookmark(null);
-      setIsBookmarkFormOpen(false);
-      return;
-    }
-
-    // create new - insert at remembered pendingInsertIndex if present
-    const newBookmark: Bookmark = {
-      id: uuidv4(),
-      title: data.title || '',
-      url: data.url || '',
-      icon: data.icon || '',
-      color: data.color || '',
-      description: data.description || '',
-      tags: data.tags || [],
-      collapsed: true,
-      createdDate: new Date(),
-      lastModifiedDate: new Date()
-    };
-
-    const updated = [...bookmarks, newBookmark];
-    onConfigChange && onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updated });
-    setIsBookmarkFormOpen(false);
-    setEditingBookmark(null);
-  };
-
-  // Listen for toolbar events dispatched from FlexLayoutManager for this node
-  const handler = (e: Event) => {
-    try {
-      const ce = e as CustomEvent<{ nodeId: string }>;
-      if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
-        // open add-bookmark form
-        setEditingBookmark(null);
-        setIsBookmarkFormOpen(true);
-      }
-    } catch (err) {
-      console.warn('toolbar event handler error', err);
-    }
-  };
-
-  // Selection handler for clicks: supports Shift (range), Alt/Opt (range), Ctrl/Cmd toggle
-  const handleSelect = (id: string, index: number, e: React.MouseEvent) => {
-    const isCmd = e.ctrlKey || e.metaKey;
-    const isShift = e.shiftKey;
-    const isAlt = e.altKey || e.altKey; // alt/option
-
-    // If shift or alt is held and we have a lastSelectedIndex, select range
-    if ((isShift || isAlt) && lastSelectedIndex !== null) {
-      const start = Math.min(lastSelectedIndex, index);
-      const end = Math.max(lastSelectedIndex, index);
-      const rangeIds = bookmarks.slice(start, end + 1).map(b => b.id);
-
-      if (isCmd) {
-        // Add range to existing selection (union)
-        setSelectedIds(prev => Array.from(new Set([...prev, ...rangeIds])));
-      } else {
-        // Replace selection with range
-        setSelectedIds(rangeIds);
-      }
-
-      setLastSelectedIndex(index);
-      return;
-    }
-
-    // Toggle when Ctrl/Cmd held
-    if (isCmd) {
-      setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-      setLastSelectedIndex(index);
-      return;
-    }
-
-    // Default: single select
-    setSelectedIds([id]);
-    setLastSelectedIndex(index);
-  };
-
-
-  const toggleAllTableRowsViewHandler = (e: Event) => {
-      try {
-        const ce = e as CustomEvent<{ nodeId: string }>;
-        if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
-          console.log('[BookmarksTabManager] Toggle handler triggered, current view:', tableRowViewMode);
-
-          const newViewMode = tableRowViewMode === 'card' ? 'row' : 'card';
-          console.log('[BookmarksTabManager] Switching to view:', newViewMode);
-
-          setTableRowViewMode(newViewMode);
-
-          // When toggling to table view (row), set all bookmarks to collapsed (true)
-          // When toggling to card view, set all bookmarks to not collapsed (false)
-          if (onConfigChange) {
-            const updatedBookmarks = bookmarks.map(b => ({
-              ...b,
-              collapsed: newViewMode === 'row'
-            }));
-
-            // Save both the view mode and updated bookmarks to config
-            onConfigChange({
-              ...(config || {} as BookmarksTabConfig),
-              viewMode: newViewMode,
-              bookmarks: updatedBookmarks
-            });
-          }
-        }
-      } catch (err) {
-        console.warn('toggle view handler error', err);
-      }
-    };
+  // handlers from externalized module
+  const { handler, handleSelect, toggleTabRowsViewHandler, openAllHandler, handleEdit, handleToggleCollapsed, handleDelete, handleSubmit } = createBookmarksTabHandlers({
+    nodeId,
+    bookmarks,
+    config,
+    onConfigChange,
+    tabToggleViewMode,
+    setTabToggleViewMode,
+    setSelectedIds,
+    selectedIds,
+    setLastSelectedIndex,
+    lastSelectedIndex,
+    setEditingBookmark,
+    setIsBookmarkFormOpen,
+    editingBookmark
+  });
 
     // Listen for toolbar events dispatched from FlexLayoutManager for this node
     useEffect(() => {
       // Sync local state with config when it changes
-      if (config?.viewMode && config.viewMode !== tableRowViewMode) {
-        setTableRowViewMode(config.viewMode);
+      if (config?.toggleViewMode && config.toggleViewMode !== tabToggleViewMode) {
+        setTabToggleViewMode(config.toggleViewMode);
       }
-    }, [config?.viewMode, tableRowViewMode]);
+    }, [config?.toggleViewMode, tabToggleViewMode]);
 
     useEffect(() => {
       window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-      window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleAllTableRowsViewHandler as EventListener);
-
-    const openAllHandler = (e: Event) => {
-      try {
-        const ce = e as CustomEvent<{ nodeId: string }>;
-        if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
-          const urls = bookmarks.map(b => b.url).filter(Boolean);
-          if (urls.length === 0) return;
-          openAllUrls(urls);
-        }
-      } catch (err) {
-        console.warn('open-all handler error', err);
-      }
-    };
-
-    window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
+      window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleTabRowsViewHandler as EventListener);
+      window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
 
     return () => {
       window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
-      window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleAllTableRowsViewHandler as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleTabRowsViewHandler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
     };
-  }, [nodeId, bookmarks, tableRowViewMode, config, onConfigChange]);
+  }, [nodeId, bookmarks, tabToggleViewMode, config, onConfigChange]);
 
   return (
     <div className="p-0">
