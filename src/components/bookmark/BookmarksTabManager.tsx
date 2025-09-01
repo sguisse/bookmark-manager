@@ -206,8 +206,13 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
         <div className="grid" style={{ gap: '5px' }}>
-          {bookmarks.map(b => (
-            <BookmarkTableRow key={b.id} bookmark={b} onEdit={handleEdit} onDelete={handleDelete} onToggleCollapsed={handleToggleCollapsed}
+          {bookmarks.map((b, i) => (
+            <BookmarkTableRow key={b.id}
+                              bookmark={b}
+                              onSelect={(id, e) => handleSelect(id, i, e)}
+                              onEdit={handleEdit}
+                              onDelete={handleDelete}
+                              onToggleCollapsed={handleToggleCollapsed}
                               isSelected={selectedIds.includes(b.id)} />
           ))}
         </div>

@@ -18,6 +18,7 @@ import Image from '../common/image/Image';
 interface BookmarkTableRowProps {
   bookmark: Bookmark;
   isSelected: boolean;
+  onSelect?: (id: string, e: React.MouseEvent) => void;
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
   onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
@@ -27,7 +28,7 @@ interface BookmarkTableRowProps {
 // Each BookmarkTableRow can display either a RowView (compact) or CardView (expanded)
 //------------------------------------------------------------------
 export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>) {
-  const { bookmark, isSelected, onEdit, onDelete, onToggleCollapsed } = props;
+  const { bookmark, isSelected, onEdit, onDelete, onToggleCollapsed, onSelect } = props;
   const { theme } = useTheme();
 
   const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
@@ -41,6 +42,7 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
         <CardView
           bookmark={bookmark}
           isSelected={isSelected}
+          onSelect={onSelect}
           onEdit={onEdit}
           onDelete={onDelete}
           onOpen={openUrl}
@@ -51,6 +53,7 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
         <RowView
           bookmark={bookmark}
           isSelected={isSelected}
+          onSelect={onSelect}
           onEdit={onEdit}
           onDelete={onDelete}
           onToggleExpand={() => onToggleCollapsed(bookmark.id)}
@@ -66,8 +69,8 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
 //------------------------------------------------------------------
 // Row view component (compact view within a table row)
 //------------------------------------------------------------------
-function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; }>) {
-  const { bookmark, isSelected, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen } = props;
+function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; onSelect?: (id: string, e: React.MouseEvent) => void }>) {
+  const { bookmark, isSelected, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen, onSelect } = props;
   const [isHovered, setIsHovered] = useState(false);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLButtonElement | null>(null);
@@ -80,8 +83,10 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
   return (
     <div
       className="bookmark-row-view"
+      onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      style={{ backgroundColor: isSelected ? (theme.colors.primary + '50') : 'transparent', borderRadius: 4 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
         <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -173,8 +178,8 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
 //------------------------------------------------------------------
 // Card view component (expanded view within a table row)
 //------------------------------------------------------------------
-function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
-  const { bookmark, isSelected, onEdit, onDelete, onOpen, onCollapse, theme } = props;
+function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; onSelect?: (id: string, e: React.MouseEvent) => void }>) {
+  const { bookmark, isSelected, onEdit, onDelete, onOpen, onCollapse, theme, onSelect } = props;
   const [isHovered, setIsHovered] = useState(false);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
@@ -192,9 +197,10 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
   return (
     <button
       type="button"
+      onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onOpen(bookmark.url); } }}
       style={{
-        backgroundColor: theme.colors.surface,
+        backgroundColor: isSelected ? (theme.colors.primary + '50') : theme.colors.surface,
         border: `1px solid ${theme.colors.border}`,
         borderRadius: '8px',
         padding: '5px',
