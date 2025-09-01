@@ -16,13 +16,14 @@ export interface Bookmark extends BaseAuditing {
 
 export interface BookmarksTabConfig extends FlexLayoutTabConfig {
   bookmarks: Bookmark[];
-  toggleViewMode?: 'card' | 'row';
+  toggleTabViewMode?: 'card' | 'row';
 }
 
 
 export interface BookmarkFormData {
   title: string;
   color?: string;
+  bgColor?: string;
   icon?: string;
   url: string;
   description?: string;

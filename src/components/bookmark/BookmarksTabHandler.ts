@@ -39,7 +39,7 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     setIsBookmarkFormOpen
   } = deps;
 
-  const handler = (e: Event) => {
+  const handleAddBookmark = (e: Event) => {
     try {
       const ce = e as CustomEvent<{ nodeId: string }>;
       if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
@@ -80,7 +80,7 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     }
   };
 
-  const handleSubmit = (data: BookmarkFormData, editingBookmark?: Bookmark | null) => {
+  const handleSubmitForm = (data: BookmarkFormData, editingBookmark?: Bookmark | null) => {
     // if editingBookmark is set and has an id, update existing
     if (editingBookmark?.id) {
       const updated = bookmarks.map(b => b.id === editingBookmark.id ? { ...b, ...data } : b);
@@ -159,7 +159,7 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
             collapsed: newViewMode === 'row'
           }));
 
-          onConfigChange({ ...(config || {} as BookmarksTabConfig), toggleViewMode: newViewMode, bookmarks: updatedBookmarks });
+          onConfigChange({ ...(config || {} as BookmarksTabConfig), toggleTabViewMode: newViewMode, bookmarks: updatedBookmarks });
         }
       }
     } catch (err) {
@@ -181,13 +181,13 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
   };
 
   return {
-    handler,
+    handleAddBookmark,
     handleSelect,
     toggleTabRowsViewHandler,
     openAllHandler,
     handleEdit,
     handleToggleCollapsed,
     handleDelete,
-    handleSubmit
+    handleSubmit: handleSubmitForm
   } as const;
 }

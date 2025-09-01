@@ -1,5 +1,5 @@
 import type { Bookmark } from '../types/bookmark';
-import { crossTabBookmarkService } from './CrossTabBookmarkService';
+import { crossTabBookmarkService } from './CrossTabBookmarkService.ts.keep';
 
 interface DragDataForTransfer {
   bookmark: Bookmark;

@@ -86,7 +86,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
       onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ backgroundColor: isSelected ? (theme.colors.primary + '50') : 'transparent', borderRadius: 4 }}
+      style={{ backgroundColor: isSelected ? (theme.colors.primary + '20') : 'transparent', borderRadius: 4 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
         <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -199,7 +199,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
       onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onOpen(bookmark.url); } }}
       style={{
-        backgroundColor: isSelected ? (theme.colors.primary + '50') : theme.colors.surface,
+        backgroundColor: isSelected ? (theme.colors.primary + '20') : theme.colors.surface,
         border: `1px solid ${theme.colors.border}`,
         borderRadius: '8px',
         padding: '5px',
@@ -259,7 +259,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
               opacity: buttonsOpacity,
               transition: 'opacity 0.18s ease',
               pointerEvents: buttonsPointerEvents,
-              backgroundColor: theme.colors.surface,
+              backgroundColor: 'inherit',
               borderRadius: '4px',
               padding: '2px'
             }}>

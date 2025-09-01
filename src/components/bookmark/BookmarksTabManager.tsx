@@ -18,7 +18,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
 
   const bookmarks = config?.bookmarks || [];
   // Used to know the action needed if user click on toggle view button in tab toolbar
-  const [tabToggleViewMode, setTabToggleViewMode] = useState<'card' | 'row'>(config?.toggleViewMode || 'row');
+  const [tabToggleViewMode, setTabToggleViewMode] = useState<'card' | 'row'>(config?.toggleTabViewMode || 'row');
 
   // Support multi-selection within a tab
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -26,7 +26,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
 
   // handlers from externalized module
-  const { handler, handleSelect, toggleTabRowsViewHandler, openAllHandler, handleEdit, handleToggleCollapsed, handleDelete, handleSubmit } = createBookmarksTabHandlers({
+  const { handleAddBookmark, handleSelect, toggleTabRowsViewHandler, openAllHandler, handleEdit, handleToggleCollapsed, handleDelete, handleSubmit } = createBookmarksTabHandlers({
     nodeId,
     bookmarks,
     config,
@@ -45,22 +45,23 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     // Listen for toolbar events dispatched from FlexLayoutManager for this node
     useEffect(() => {
       // Sync local state with config when it changes
-      if (config?.toggleViewMode && config.toggleViewMode !== tabToggleViewMode) {
-        setTabToggleViewMode(config.toggleViewMode);
+      if (config?.toggleTabViewMode && config.toggleTabViewMode !== tabToggleViewMode) {
+        setTabToggleViewMode(config.toggleTabViewMode);
       }
-    }, [config?.toggleViewMode, tabToggleViewMode]);
+    }, [config?.toggleTabViewMode, tabToggleViewMode]);
 
     useEffect(() => {
-      window.addEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
+      window.addEventListener('flexlayout:bookmarks:toolbar', handleAddBookmark as EventListener);
       window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleTabRowsViewHandler as EventListener);
       window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
 
     return () => {
-      window.removeEventListener('flexlayout:bookmarks:toolbar', handler as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:toolbar', handleAddBookmark as EventListener);
       window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleTabRowsViewHandler as EventListener);
       window.removeEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
     };
   }, [nodeId, bookmarks, tabToggleViewMode, config, onConfigChange]);
+
 
   return (
     <div className="p-0">
