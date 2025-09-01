@@ -3,7 +3,7 @@ import BookmarkForm from './BookmarkForm';
 import { Bookmark, BookmarksTabConfig } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
-import { createBookmarksTabHandlers } from './BookmarksTabHandler';
+import { useBookmarksTabHandlers } from './useBookmarksTabHandlers';
 
 interface BookmarksTabProps {
   config?: BookmarksTabConfig;
@@ -20,23 +20,15 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   // Used to know the action needed if user click on toggle view button in tab toolbar
   const [tabToggleViewMode, setTabToggleViewMode] = useState<'card' | 'row'>(config?.toggleTabViewMode || 'row');
 
-  // Support multi-selection within a tab
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  // Track last selected index for range selections (shift/opt)
-  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
+  // Selection now managed by the hook
 
-  // handlers from externalized module
-  const { handleAdd, handleSelect, handleToggleTabView, handleOpenAllUrls, handleEdit, handleToggleCollapsed, handleDelete, handleSubmit } = createBookmarksTabHandlers({
+  const { handleAdd, handleSelect, handleToggleTabView, handleOpenAllUrls, handleEdit, handleToggleCollapsed, handleDelete, handleSubmit, selectionState } = useBookmarksTabHandlers({
     nodeId,
     bookmarks,
     config,
     onConfigChange,
     tabToggleViewMode,
     setTabToggleViewMode,
-    setSelectedIds,
-    selectedIds,
-    setLastSelectedIndex,
-    lastSelectedIndex,
     setEditingBookmark,
     setIsBookmarkFormOpen,
     editingBookmark
@@ -76,7 +68,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
                               onEdit={handleEdit}
                               onDelete={handleDelete}
                               onToggleCollapsed={handleToggleCollapsed}
-                              isSelected={selectedIds.includes(b.id)} />
+                              isSelected={selectionState.selectedIds.includes(b.id)} />
           ))}
         </div>
       )}
@@ -91,7 +83,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
             <BookmarkForm
               bookmark={editingBookmark}
               mode={editingBookmark?.id ? FormDisplayMode.Edit : FormDisplayMode.Create}
-              onSave={(d) => handleSubmit(d)}
+              onSave={(d) => handleSubmit(d, editingBookmark)}
               onCancel={() => { setIsBookmarkFormOpen(false); setEditingBookmark(null); }}
             />
           </div>

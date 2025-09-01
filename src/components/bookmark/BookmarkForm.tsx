@@ -40,7 +40,7 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
   }, [bookmark?.id, mode]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [iconError, setIconError] = useState(false);
+  // NOTE: iconError state was removed because it's not currently used.
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -90,10 +90,6 @@ export default function BookmarkForm(props: Readonly<BookmarkFormProps>) {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-    if (field === 'icon') {
-      // reset image error when user edits the icon field
-      setIconError(false);
     }
   };
 

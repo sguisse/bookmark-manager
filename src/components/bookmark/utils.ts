@@ -38,7 +38,7 @@
   };
 
   // Helper to fetch title and favicon from URL
-  const fetchUrlMetadata = async (url: string): Promise<{ title: string; favicon?: string; description?: string; keywords?: string }> => {
+  export const fetchUrlMetadata = async (url: string): Promise<{ title: string; favicon?: string; description?: string; keywords?: string }> => {
     try {
       console.log('Fetching metadata for URL:', url);
 
