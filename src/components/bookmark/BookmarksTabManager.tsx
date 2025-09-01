@@ -3,6 +3,7 @@ import BookmarkForm from './BookmarkForm';
 import { Bookmark, BookmarksTabConfig } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
+import { DndKitMultiDragProvider } from './dnd/DndKitMultiDragProvider';
 import { useBookmarksTabHandlers } from './useBookmarksTabHandlers';
 
 interface BookmarksTabProps {
@@ -60,17 +61,48 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       {bookmarks.length === 0 ? (
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
-        <div className="grid" style={{ gap: '5px' }}>
-          {bookmarks.map((b, i) => (
-            <BookmarkTableRow key={b.id}
-                              bookmark={b}
-                              onSelect={(id, e) => handleSelect(id, i, e)}
-                              onEdit={handleEdit}
-                              onDelete={handleDelete}
-                              onToggleCollapsed={handleToggleCollapsed}
-                              isSelected={selectionState.selectedIds.includes(b.id)} />
-          ))}
-        </div>
+        <DndKitMultiDragProvider
+          visibleList={bookmarks}
+          selectedIds={selectionState.selectedIds}
+          tabId={nodeId}
+          onPerformDrop={async ({ sourceIds, /* sourceTabId, */ targetIndex, effect }) => {
+            // Move or copy within the same tab. Caller persists via onConfigChange.
+            if (!onConfigChange) return;
+            const sourceSet = new Set(sourceIds);
+            const moving = bookmarks.filter(b => sourceSet.has(b.id));
+            const remaining = bookmarks.filter(b => !sourceSet.has(b.id));
+            const before = remaining.slice(0, targetIndex);
+            const after = remaining.slice(targetIndex);
+
+            let newBookmarks: Bookmark[];
+            if (effect === 'copy') {
+              // Duplicate moved items with new ids
+              const copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+              newBookmarks = [...before, ...copies, ...after];
+              // Keep selection on the newly copied items
+              // Note: selectionState is owned by the hook; we can't mutate it here — it's fine if copies are not selected by default.
+            } else {
+              // move
+              newBookmarks = [...before, ...moving, ...after];
+            }
+
+            const base = config ? config : ({ id: nodeId || 'tab-unknown', title: 'Bookmarks', component: 'Bookmarks', bookmarks: [], toggleTabViewMode: tabToggleViewMode } as unknown as BookmarksTabConfig);
+            const newCfg: BookmarksTabConfig = { ...base, id: base.id || (nodeId || 'tab-unknown'), bookmarks: newBookmarks } as BookmarksTabConfig;
+            onConfigChange(newCfg);
+          }}
+        >
+          <div className="grid" style={{ gap: '5px' }}>
+            {bookmarks.map((b, i) => (
+              <BookmarkTableRow key={b.id}
+                                bookmark={b}
+                                onSelect={(id, e) => handleSelect(id, i, e)}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onToggleCollapsed={handleToggleCollapsed}
+                                isSelected={selectionState.selectedIds.includes(b.id)} />
+            ))}
+          </div>
+        </DndKitMultiDragProvider>
       )}
       {isBookmarkFormOpen && (
         <div className="modal-overlay">

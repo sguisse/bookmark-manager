@@ -4,6 +4,7 @@ import { Bookmark } from '../../types/bookmark';
 import { formatDate, calculateVisibleCharacters } from '../../services/Utils';
 import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import Image from '../common/image/Image';
+import { useDndKitSortableRow } from './dnd/DndKitMultiDragProvider';
 
 /*
  * BookmarksViewer Structure:
@@ -71,6 +72,7 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
 //------------------------------------------------------------------
 function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; onSelect?: (id: string, e: React.MouseEvent) => void }>) {
   const { bookmark, isSelected, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen, onSelect } = props;
+  const { attributes, listeners, setNodeRef, style: dragStyle } = useDndKitSortableRow(bookmark.id);
   const [isHovered, setIsHovered] = useState(false);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLButtonElement | null>(null);
@@ -82,11 +84,14 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
 
   return (
     <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       className="bookmark-row-view"
       onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ backgroundColor: isSelected ? (theme.colors.primary + '20') : 'transparent', borderRadius: 4 }}
+      style={{ ...dragStyle, backgroundColor: isSelected ? (theme.colors.primary + '20') : 'transparent', borderRadius: 4 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
         <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -180,6 +185,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
 //------------------------------------------------------------------
 function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; onSelect?: (id: string, e: React.MouseEvent) => void }>) {
   const { bookmark, isSelected, onEdit, onDelete, onOpen, onCollapse, theme, onSelect } = props;
+  const { attributes, listeners, setNodeRef, style: dragStyle } = useDndKitSortableRow(bookmark.id);
   const [isHovered, setIsHovered] = useState(false);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
@@ -196,9 +202,13 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
 
   return (
     <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onOpen(bookmark.url); } }}
       style={{
+        ...dragStyle,
         backgroundColor: isSelected ? (theme.colors.primary + '20') : theme.colors.surface,
         border: `1px solid ${theme.colors.border}`,
         borderRadius: '8px',
