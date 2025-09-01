@@ -195,8 +195,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
   const handleDeleteClick = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(bookmark.id); };
 
   return (
-    <button
-      type="button"
+    <div
       onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onOpen(bookmark.url); } }}
       style={{
@@ -338,7 +337,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
           {/* category is not part of Bookmark type; skip showing it here */}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
 
