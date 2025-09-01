@@ -1,0 +1,202 @@
+import React, { useRef } from 'react';
+import BookmarkTableRow from './BookmarksViewer';
+import { Bookmark } from '../../types/bookmark';
+import {
+  createDragImageElement,
+  updateDragImageElement,
+  removeDragImageElement,
+  setDataTransferForBookmarkDrag
+} from '../../services/BookmarksTabDnDService';
+
+interface DraggableBookmarkRowProps {
+  bookmark: Bookmark;
+  index: number;
+  nodeId: string;
+  tableRowViewMode: 'card' | 'row';
+  draggedBookmark: Bookmark | null;
+  dragOverIndex: number | null;
+  dropPosition: 'before' | 'after';
+  crossTabDragOverIndex: number | null;
+  crossTabDropPosition: 'before' | 'after';
+  globalDraggedBookmark: Bookmark | null;
+  onEdit: (bookmark: Bookmark) => void;
+  onDelete: (bookmarkId: string) => void;
+  onToggleCollapsed: (bookmarkId: string) => void;
+  onDragStart: (bookmark: Bookmark) => void;
+  onDragEnd: () => void;
+  onDragOver: (index: number, position: 'before' | 'after', event?: React.DragEvent) => void;
+  onDrop: (targetIndex: number, position: 'before' | 'after', event: DragEvent | React.DragEvent) => void;
+  onDragOverIndexChange: (index: number | null) => void;
+  selectedIds?: string[];
+  selectedBookmarks?: Bookmark[];
+  onSelect?: (id: string, index: number, e: React.MouseEvent) => void;
+}
+
+export default function DraggableBookmarkRow({
+  bookmark,
+  index,
+  nodeId,
+  tableRowViewMode,
+  draggedBookmark,
+  dragOverIndex,
+  dropPosition,
+  crossTabDragOverIndex,
+  crossTabDropPosition,
+  globalDraggedBookmark,
+  onEdit,
+  onDelete,
+  onToggleCollapsed,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
+  onDragOverIndexChange,
+  selectedIds = [], selectedBookmarks = [], onSelect
+}: Readonly<DraggableBookmarkRowProps>) {
+  const isDraggedOver = dragOverIndex === index || crossTabDragOverIndex === index;
+  const currentDropPosition = crossTabDragOverIndex === index ? crossTabDropPosition : dropPosition;
+  const isDragged = draggedBookmark?.id === bookmark.id;
+  const currentDraggedBookmark = draggedBookmark || globalDraggedBookmark;
+  const lastCopyRef = useRef<boolean | null>(null);
+  const dragImageRef = useRef<HTMLElement | null>(null);
+
+    let previewIcon = '🌐';
+    if (currentDraggedBookmark) {
+      previewIcon = globalDraggedBookmark ? '🔗' : '📄';
+    }
+
+  return (
+    <li style={{ position: 'relative' }}>
+      <button
+        type="button"
+        aria-label={`Select bookmark: ${bookmark.title}`}
+        onClick={(e) => { if (onSelect) onSelect(bookmark.id, index, e); }}
+        onKeyDown={(_e: React.KeyboardEvent) => {}}
+        style={{ display: 'block', background: 'transparent', border: 'none', padding: 0, textAlign: 'left' }}
+        draggable
+  onDragStart={(e: React.DragEvent<HTMLButtonElement>) => {
+          onDragStart(bookmark);
+
+          const isCopyStart = (e as any).ctrlKey || (e as any).metaKey;
+          lastCopyRef.current = !!isCopyStart;
+
+          try {
+            if (dragImageRef.current && document.body.contains(dragImageRef.current)) {
+              try { document.body.removeChild(dragImageRef.current); } catch (err) { console.warn(err); }
+            }
+
+            const el = createDragImageElement(bookmark, selectedIds, !!isCopyStart);
+            dragImageRef.current = el;
+            document.body.appendChild(el);
+            try { e.dataTransfer.setDragImage(el, 20, 20); } catch (err) { console.warn(err); }
+
+            try {
+              setDataTransferForBookmarkDrag(e.dataTransfer, { bookmark, selectedBookmarks, nodeId, index, selectedIds });
+            } catch (err) {
+              console.warn('Failed to set data transfer via service', err);
+            }
+          } catch (err) {
+            console.warn('Failed to create initial drag image', err);
+          }
+        }}
+        onDragEnd={() => {
+          try { removeDragImageElement(dragImageRef.current); } catch (err) { console.warn(err); }
+          dragImageRef.current = null;
+          lastCopyRef.current = null;
+          onDragEnd();
+        }}
+        onDragOver={(e: React.DragEvent<HTMLButtonElement>) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const hasUrlTypes = e.dataTransfer.types.includes('text/uri-list') || e.dataTransfer.types.includes('text/plain');
+          e.dataTransfer.dropEffect = hasUrlTypes ? 'copy' : 'move';
+
+          try {
+            const isCopyNow = (e as any).ctrlKey || (e as any).metaKey;
+            if (lastCopyRef.current === null || isCopyNow !== lastCopyRef.current) {
+              lastCopyRef.current = !!isCopyNow;
+              try {
+                const updated = updateDragImageElement(bookmark, dragImageRef.current, selectedIds, !!isCopyNow);
+                if (updated && !document.body.contains(updated)) document.body.appendChild(updated);
+                dragImageRef.current = updated;
+                try { e.dataTransfer.setDragImage(updated, 20, 20); } catch (err) { console.warn(err); }
+              } catch (err) {
+                console.warn('Failed to update drag image during dragover:', err);
+              }
+            }
+          } catch (err) {
+            console.warn('Error in dragover modifier detection:', err);
+          }
+
+          const rect = e.currentTarget.getBoundingClientRect();
+          const mouseY = e.clientY - rect.top;
+          const elementHeight = rect.height;
+          const position = mouseY < elementHeight / 2 ? 'before' : 'after';
+          onDragOver(index, position, e);
+        }}
+  onDrop={(e: React.DragEvent<HTMLButtonElement>) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('[DraggableBookmarkRow] ===== DROP EVENT RECEIVED =====');
+          console.log('[DraggableBookmarkRow] Drop event received at index:', index, 'position:', currentDropPosition);
+          onDrop(index, currentDropPosition, e);
+        }}
+  onDragLeave={(e: React.DragEvent<HTMLButtonElement>) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          if (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+          ) {
+            onDragOverIndexChange(null);
+          }
+        }}
+      >
+        {(() => {
+          console.log(`[DraggableBookmarkRow ${index}] Preview condition check:`, {
+            isDraggedOver,
+            currentDropPosition,
+            dragOverIndex,
+            index,
+            crossTabDragOverIndex,
+            dropPosition,
+            crossTabDropPosition
+          });
+          return null;
+        })()}
+
+        {isDraggedOver && currentDropPosition === 'before' && (
+          <div style={{ position: 'relative', margin: '3px 0', opacity: 0.6, transform: 'scale(0.98)', border: '2px dashed #3b82f6', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.05)', padding: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#3b82f6', fontSize: '14px', fontWeight: 500 }}>
+              <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '16px', opacity: 0.7 }}>{previewIcon}</span>
+              </div>
+              <span>{currentDraggedBookmark ? currentDraggedBookmark.title : 'External item'}</span>
+              {globalDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from other tab)</span>}
+              {!currentDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from external source)</span>}
+            </div>
+          </div>
+        )}
+
+        <div style={{ opacity: isDragged ? 0.5 : 1, transform: isDragged ? 'rotate(2deg)' : 'none', transition: 'all 0.2s ease', background: selectedIds.includes(bookmark.id) ? 'rgba(59,130,246,0.06)' : undefined, boxShadow: selectedIds.includes(bookmark.id) ? 'inset 0 0 0 1px rgba(59,130,246,0.08)' : undefined, borderLeft: selectedIds.includes(bookmark.id) ? '4px solid rgba(59,130,246,0.9)' : undefined, paddingLeft: selectedIds.includes(bookmark.id) ? '8px' : undefined }}>
+          <BookmarkTableRow bookmark={bookmark} onEdit={onEdit} onDelete={onDelete} onToggleCollapsed={onToggleCollapsed} view={tableRowViewMode} isDragging={isDragged} />
+        </div>
+
+        {isDraggedOver && currentDropPosition === 'after' && (
+          <div style={{ position: 'relative', margin: '3px 0', opacity: 0.6, transform: 'scale(0.98)', border: '2px dashed #3b82f6', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.05)', padding: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#3b82f6', fontSize: '14px', fontWeight: 500 }}>
+              <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '16px', opacity: 0.7 }}>{previewIcon}</span>
+              </div>
+              <span>{currentDraggedBookmark ? currentDraggedBookmark.title : 'External item'}</span>
+              {globalDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from other tab)</span>}
+              {!currentDraggedBookmark && <span style={{ fontSize: '12px', opacity: 0.7 }}>(from external source)</span>}
+            </div>
+          </div>
+        )}
+  </button>
+    </li>
+  );
+}

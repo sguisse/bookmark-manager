@@ -17,8 +17,6 @@ import Image from '../common/image/Image';
 
 interface BookmarkTableRowProps {
   bookmark: Bookmark;
-  view?: 'row' | 'card'; // 'row' (default) or 'card'
-  isDragging?: boolean; // New prop to indicate if this row is being dragged
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (bookmarkId: string) => void;
   onToggleCollapsed: (bookmarkId: string) => void; // New callback for toggling individual bookmark collapsed state
@@ -28,7 +26,7 @@ interface BookmarkTableRowProps {
 // Each BookmarkTableRow can display either a RowView (compact) or CardView (expanded)
 //------------------------------------------------------------------
 export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>) {
-  const { bookmark, onEdit, onDelete, onToggleCollapsed, isDragging } = props;
+  const { bookmark, onEdit, onDelete, onToggleCollapsed } = props;
   const { theme } = useTheme();
 
   const openUrl = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
@@ -46,7 +44,6 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
           onOpen={openUrl}
           onCollapse={() => onToggleCollapsed(bookmark.id)}
           theme={theme}
-          isDragging={isDragging}
         />
       ) : (
         <RowView
@@ -57,7 +54,6 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
           expanded={!isCollapsed}
           theme={theme}
           onOpen={openUrl}
-          isDragging={isDragging}
         />
       )}
     </div>
@@ -67,16 +63,16 @@ export default function BookmarkTableRow(props: Readonly<BookmarkTableRowProps>)
 //------------------------------------------------------------------
 // Row view component (compact view within a table row)
 //------------------------------------------------------------------
-function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; isDragging?: boolean; }>) {
-  const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen, isDragging } = props;
+function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onToggleExpand: () => void; expanded: boolean; theme: any; onOpen: (url: string) => void; }>) {
+  const { bookmark, onEdit, onDelete, onToggleExpand, expanded, theme, onOpen } = props;
   const [isHovered, setIsHovered] = useState(false);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLButtonElement | null>(null);
   const truncatedTitle = useTruncatedText(bookmark.title, titleRef);
 
   // Calculate button visibility and interactivity
-  const buttonsOpacity = isDragging ? 0 : (isHovered ? 1 : 0);
-  const buttonsPointerEvents = isDragging ? 'none' : (isHovered ? 'auto' : 'none');
+  const buttonsOpacity = isHovered ? 1 : 0;
+  const buttonsPointerEvents = isHovered ? 'auto' : 'none';
 
   return (
     <div
@@ -174,8 +170,8 @@ function RowView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => 
 //------------------------------------------------------------------
 // Card view component (expanded view within a table row)
 //------------------------------------------------------------------
-function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; isDragging?: boolean; }>) {
-  const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme, isDragging } = props;
+function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) => void; onDelete: (id: string) => void; onOpen: (url: string) => void; onCollapse?: () => void; theme: any; }>) {
+  const { bookmark, onEdit, onDelete, onOpen, onCollapse, theme } = props;
   const [isHovered, setIsHovered] = useState(false);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const titleRef = useRef<HTMLHeadingElement | null>(null);
@@ -184,8 +180,8 @@ function CardView(props: Readonly<{ bookmark: Bookmark; onEdit: (b: Bookmark) =>
   const truncatedUrl = useTruncatedText(bookmark.url, urlRef);
 
   // Calculate button visibility and interactivity
-  const buttonsOpacity = isDragging ? 0 : (isHovered ? 1 : 0);
-  const buttonsPointerEvents = isDragging ? 'none' : (isHovered ? 'auto' : 'none');
+  const buttonsOpacity = isHovered ? 1 : 0;
+  const buttonsPointerEvents = isHovered ? 'auto' : 'none';
 
   const handleEditClick = (e: React.MouseEvent) => { e.stopPropagation(); onEdit(bookmark); };
   const handleDeleteClick = (e: React.MouseEvent) => { e.stopPropagation(); onDelete(bookmark.id); };
