@@ -92,7 +92,7 @@ export function useBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
         setTabToggleViewMode(newViewMode);
         if (onConfigChange) {
           const updatedBookmarks = bookmarks.map(b => ({ ...b, collapsed: newViewMode === 'row' }));
-          onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updatedBookmarks });
+          onConfigChange({ ...(config || {} as BookmarksTabConfig), toggleTabViewMode: newViewMode, bookmarks: updatedBookmarks });
         }
       }
     } catch (err) {
