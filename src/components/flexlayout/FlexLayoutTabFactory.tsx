@@ -74,7 +74,7 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
                   const nodeId = selectedTabNode.getId();
                   try { console.log('[FlexLayoutTabFactory] bookmark-editor-open-add clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
                   // signal the bookmarks manager (it listens for this event) to open the add-bookmark modal
-                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:toolbar', { detail: { nodeId, mode: FormDisplayMode.Create } })); } catch (err) { console.warn('Event dispatch failed', err); }
+                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:add', { detail: { nodeId, mode: FormDisplayMode.Create } })); } catch (err) { console.warn('Event dispatch failed', err); }
                 }}
                 title="Add new Bookmark"
               >
@@ -89,7 +89,7 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   const nodeId = selectedTabNode.getId();
-                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:toggle-table-row-view', { detail: { nodeId } })); } catch (err) { console.warn('Event dispatch failed', err); }
+                  try { window.dispatchEvent(new CustomEvent('flexlayout:bookmarks:toggle-tab-view', { detail: { nodeId } })); } catch (err) { console.warn('Event dispatch failed', err); }
                 }}
                 title="Toggle Table Cards/Rows View"
               >

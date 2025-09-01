@@ -39,7 +39,10 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     setIsBookmarkFormOpen
   } = deps;
 
-  const handleAddBookmark = (e: Event) => {
+  // ---------------------------------------------------------------------------------------------------------------------
+  // Hamndle relative to Bookmark Form
+
+  const handleAdd = (e: Event) => {
     try {
       const ce = e as CustomEvent<{ nodeId: string }>;
       if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
@@ -55,29 +58,6 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
   const handleEdit = (bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
     setIsBookmarkFormOpen(true);
-  };
-
-  // Handle individual bookmark collapsed toggle
-  const handleToggleCollapsed = (bookmarkId: string) => {
-    if (!onConfigChange) return;
-
-    const updatedBookmarks = bookmarks.map(b =>
-      b.id === bookmarkId
-        ? { ...b, collapsed: !(b.collapsed ?? true) }
-        : b
-    );
-
-    onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updatedBookmarks });
-  };
-
-
-  const handleDelete = (bookmarkId: string) => {
-    const newBookmarks = bookmarks.filter(b => b.id !== bookmarkId);
-    if (onConfigChange) {
-      onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
-    } else {
-      console.log('Delete bookmark', bookmarkId);
-    }
   };
 
   const handleSubmitForm = (data: BookmarkFormData, editingBookmark?: Bookmark | null) => {
@@ -108,6 +88,32 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     onConfigChange && onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updated });
     setIsBookmarkFormOpen(false);
     setEditingBookmark(null);
+  };
+
+
+
+  // ---------------------------------------------------------------------------------------------------------------------
+  // Handle individual bookmark collapsed toggle
+  const handleToggleCollapsed = (bookmarkId: string) => {
+    if (!onConfigChange) return;
+
+    const updatedBookmarks = bookmarks.map(b =>
+      b.id === bookmarkId
+        ? { ...b, collapsed: !(b.collapsed ?? true) }
+        : b
+    );
+
+    onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: updatedBookmarks });
+  };
+
+
+  const handleDelete = (bookmarkId: string) => {
+    const newBookmarks = bookmarks.filter(b => b.id !== bookmarkId);
+    if (onConfigChange) {
+      onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
+    } else {
+      console.log('Delete bookmark', bookmarkId);
+    }
   };
 
   const handleSelect = (id: string, index: number, e: React.MouseEvent) => {
@@ -145,7 +151,7 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     setLastSelectedIndex(index);
   };
 
-  const toggleTabRowsViewHandler = (e: Event) => {
+  const handleToggleTabView = (e: Event) => {
     try {
       const ce = e as CustomEvent<{ nodeId: string }>;
       if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
@@ -167,7 +173,7 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     }
   };
 
-  const openAllHandler = (e: Event) => {
+  const handleOpenAllUrls = (e: Event) => {
     try {
       const ce = e as CustomEvent<{ nodeId: string }>;
       if (ce?.detail?.nodeId && ce.detail.nodeId === nodeId) {
@@ -181,10 +187,10 @@ export function createBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
   };
 
   return {
-    handleAddBookmark,
+    handleAdd,
     handleSelect,
-    toggleTabRowsViewHandler,
-    openAllHandler,
+    handleToggleTabView,
+    handleOpenAllUrls,
     handleEdit,
     handleToggleCollapsed,
     handleDelete,

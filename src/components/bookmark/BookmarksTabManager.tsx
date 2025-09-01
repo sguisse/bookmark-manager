@@ -26,7 +26,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
 
   // handlers from externalized module
-  const { handleAddBookmark, handleSelect, toggleTabRowsViewHandler, openAllHandler, handleEdit, handleToggleCollapsed, handleDelete, handleSubmit } = createBookmarksTabHandlers({
+  const { handleAdd, handleSelect, handleToggleTabView, handleOpenAllUrls, handleEdit, handleToggleCollapsed, handleDelete, handleSubmit } = createBookmarksTabHandlers({
     nodeId,
     bookmarks,
     config,
@@ -51,14 +51,14 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     }, [config?.toggleTabViewMode, tabToggleViewMode]);
 
     useEffect(() => {
-      window.addEventListener('flexlayout:bookmarks:toolbar', handleAddBookmark as EventListener);
-      window.addEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleTabRowsViewHandler as EventListener);
-      window.addEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
+      window.addEventListener('flexlayout:bookmarks:add', handleAdd as EventListener);
+      window.addEventListener('flexlayout:bookmarks:toggle-tab-view', handleToggleTabView as EventListener);
+      window.addEventListener('flexlayout:bookmarks:open-all-urls', handleOpenAllUrls as EventListener);
 
     return () => {
-      window.removeEventListener('flexlayout:bookmarks:toolbar', handleAddBookmark as EventListener);
-      window.removeEventListener('flexlayout:bookmarks:toggle-table-row-view', toggleTabRowsViewHandler as EventListener);
-      window.removeEventListener('flexlayout:bookmarks:open-all-urls', openAllHandler as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:add', handleAdd as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:toggle-tab-view', handleToggleTabView as EventListener);
+      window.removeEventListener('flexlayout:bookmarks:open-all-urls', handleOpenAllUrls as EventListener);
     };
   }, [nodeId, bookmarks, tabToggleViewMode, config, onConfigChange]);
 
