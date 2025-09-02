@@ -17,6 +17,15 @@ import { getRowRect } from './rowRegistry';
 import { crossTabBookmarkService } from '../../../services/CrossTabBookmarkService';
 import { DndKitPreviewMarker } from './DndKitPreviewMarker';
 
+/**
+ * Global DnD Provider for bookmark drag and drop operations across FlexLayout tabs.
+ *
+ * SOLUTION: This provider is now scoped to individual bookmark/browser favorites tabs
+ * rather than wrapping the entire app. This prevents conflicts with FlexLayout's
+ * native tab reordering system by ensuring dnd-kit only manages bookmark content
+ * and doesn't interfere with FlexLayout's HTML5 drag-and-drop for tab reordering.
+ */
+
 type DropEffect = 'move' | 'copy' | 'none';
 
 type OnPerformDrop = (opts: { sourceIds: string[]; sourceTabId?: string; targetIndex: number; effect: DropEffect }) => Promise<void>;
@@ -82,19 +91,26 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const registerList = useCallback((list: RegisteredList) => {
+    if (listsRef.current.has(list.tabId)) {
+      console.log('[GlobalDndProvider] registerList ignored (already registered)', { tabId: list.tabId });
+      return;
+    }
     listsRef.current.set(list.tabId, list);
+    console.log('[GlobalDndProvider] registerList', { tabId: list.tabId });
     rebuildIdMap();
     setListsVersion(v => v + 1);
   }, [rebuildIdMap]);
 
   const updateList = useCallback((list: RegisteredList) => {
     listsRef.current.set(list.tabId, list);
+    console.log('[GlobalDndProvider] updateList', { tabId: list.tabId });
     rebuildIdMap();
     setListsVersion(v => v + 1);
   }, [rebuildIdMap]);
 
   const unregisterList = useCallback((tabId: string) => {
     listsRef.current.delete(tabId);
+    console.log('[GlobalDndProvider] unregisterList', { tabId });
     rebuildIdMap();
     setListsVersion(v => v + 1);
   }, [rebuildIdMap]);
@@ -208,26 +224,7 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return (ne as MouseEvent).clientY ?? (rect.top + rect.height / 2);
   };
 
-  const renderTabsetOverlay = (count: number, eff: DropEffect) => (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      background: eff === 'copy' ? 'rgba(0,123,255,0.12)' : 'rgba(0,200,83,0.08)',
-      border: '1px dashed #888',
-      borderRadius: 6,
-      padding: '8px 12px',
-      minWidth: 160,
-      fontWeight: 600,
-      color: '#333',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div>{count > 1 ? `${count} bookmarks` : '1 bookmark'}</div>
-      </div>
-      <div style={{ marginLeft: '6px', fontSize: 13, color: '#666' }}>{eff === 'copy' ? 'Create as copy' : 'Create new tab'}</div>
-    </div>
-  );
+  // Tabset overlay rendering removed; tabset-specific droppable areas are disabled.
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const nativeEvent = (event as any).event as (MouseEvent | KeyboardEvent | undefined);
@@ -270,12 +267,6 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
 
     const overId = event.over?.id as string | undefined;
-    // If we're over a tabset drop target, show a tabset overlay and do not show the row placeholder
-    if (overId?.startsWith('flex-tabset-')) {
-      setPreview(null);
-      setOverlay(renderTabsetOverlay(dragCountRef.current, nativeEvent?.altKey ? 'copy' : 'move'));
-      return;
-    }
 
     const overInfo = getOverInfo(overId, nativeEvent);
     if (overInfo) {
@@ -345,7 +336,7 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
           {children}
         </SortableContext>
-        <DragOverlay dropAnimation={null}>{overlay}</DragOverlay>
+  <DragOverlay dropAnimation={null}><div style={{ pointerEvents: 'none' }}>{overlay}</div></DragOverlay>
         {preview && preview.effect !== 'none' && (
     <DndKitPreviewMarker top={preview.top} left={preview.left} width={preview.width} effect={preview.effect} count={preview.count} height={preview.height} />
         )}

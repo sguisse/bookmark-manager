@@ -262,6 +262,21 @@ export class FlexLayoutService {
   }
 
   /**
+   * Debug function to verify FlexLayout drag configuration
+   */
+  static debugDragConfiguration(): void {
+    const defaultConfig = FlexLayoutService.getDefaultConfig();
+    const global = defaultConfig.global;
+    console.log('[FlexLayoutService] Drag Configuration Debug:', {
+      tabSetEnableDrag: global?.tabSetEnableDrag,
+      tabSetEnableDrop: global?.tabSetEnableDrop,
+      tabEnableClose: global?.tabEnableClose,
+      tabEnableRename: global?.tabEnableRename,
+      globalConfigExists: !!global
+    });
+  }
+
+  /**
    * Validate FlexLayout configuration structure
    */
   static isValidConfig(config: any): config is FlexLayoutConfig {

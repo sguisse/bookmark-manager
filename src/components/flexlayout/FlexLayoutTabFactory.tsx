@@ -10,8 +10,8 @@ import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink, Copy } from 'lucide-react';
 import Image from '../common/image/Image';
-import TabsetDropTarget from './TabsetDropTarget';
 import { FormDisplayMode } from '../../types/app';
+import { GlobalDndProvider } from '../bookmark/dnd/GlobalDndProvider';
 
 
 const renderIconElement = (val: string | undefined, key = 'icon') => {
@@ -47,20 +47,9 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
           </button>
         );
 
-      // ensure a small droppable overlay is present in the tabset header so
-      // users can drop bookmarks onto the tabset to create a new Bookmarks tab
-      try {
-        const tabsetId = String((tabSetNode as any).getId ? (tabSetNode as any).getId() : (tabSetNode as any).id || '');
-        if (tabsetId) {
-          renderValues.stickyButtons.push(
-            <div key="tabset-drop-target" style={{ position: 'relative', minWidth: 0, minHeight: 0 }}>
-              <TabsetDropTarget tabsetId={tabsetId} />
-            </div>
-          );
-        }
-      } catch (err) {
-        // non-fatal
-      }
+      // Tabset header DnD overlay removed — using alternate solution for creating
+      // Bookmarks tabs from external drags. Previously we injected a small
+      // droppable overlay here; that behavior is disabled intentionally.
 
         // duplicate selected tab
         renderValues.stickyButtons.push(
@@ -252,10 +241,29 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const config = node.getConfig() as FlexLayoutTabConfig;
     const compKey = String(component || '').toLowerCase();
 
-  if (compKey === 'markdown') return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-  if (compKey === 'bookmarks') return <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-  if (compKey === 'web') return <WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-  if (compKey === 'browserfavorites' || compKey === 'browser_favorites') return <BrowserFavorites />;
+    if (compKey === 'markdown') {
+      return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+    }
+
+    if (compKey === 'bookmarks') {
+      return (
+        <GlobalDndProvider>
+          <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />
+        </GlobalDndProvider>
+      );
+    }
+
+    if (compKey === 'web') {
+      return <WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+    }
+
+    if (compKey === 'browserfavorites' || compKey === 'browser_favorites') {
+      return (
+        <GlobalDndProvider>
+          <BrowserFavorites />
+        </GlobalDndProvider>
+      );
+    }
 
     return (
       <div style={{ padding: 12 }}>
