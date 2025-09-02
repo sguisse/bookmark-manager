@@ -16,7 +16,7 @@ interface BookmarksTabProps {
 export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> = {}) {
   const { config, onConfigChange, nodeId } = props;
   // stable local tab id used by provider to identify this tab as drag source
-  const localTabIdRef = useRef<string>(nodeId || (config && config.id) || `tab-${Math.random().toString(36).slice(2)}`);
+  const localTabIdRef = useRef<string>(nodeId || config?.id || `tab-${Math.random().toString(36).slice(2)}`);
   const [isBookmarkFormOpen, setIsBookmarkFormOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
 
@@ -42,7 +42,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
   const globalDnd = useOptionalGlobalDnd();
 
   const onPerformDrop = async ({ sourceIds, sourceTabId, targetIndex, effect }: { sourceIds: string[]; sourceTabId?: string; targetIndex: number; effect: 'move' | 'copy' | 'none' }) => {
-    try { console.debug('[BookmarksTabManager] onPerformDrop', { sourceIds, sourceTabId, targetIndex, effect }); } catch (e) {}
+    console.debug('[BookmarksTabManager] onPerformDrop', { sourceIds, sourceTabId, targetIndex, effect });
     if (!onConfigChange) return;
     const sourceSet = new Set(sourceIds);
     const moving = bookmarks.filter(b => sourceSet.has(b.id));
@@ -88,7 +88,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
             copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
           }
           newBookmarks = [...before, ...copies, ...after];
-          try { crossTabBookmarkService.notifyMove(sourceTabId, sourceIds); } catch (err) { /* ignore */ }
+          try { crossTabBookmarkService.notifyMove(sourceTabId, sourceIds); } catch (err) { console.warn('[BookmarksTabManager] notifyMove failed', err); }
           try {
             const newIds = newBookmarks.slice(before.length, before.length + copies.length).map(c => c.id);
             dispatch({ type: 'RANGE_SELECT', ids: newIds, index: targetIndex, union: false });
@@ -121,7 +121,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       console.warn('[BookmarksTabManager] registerList failed', err);
     }
     return () => {
-      try { globalDnd.unregisterList(localTabIdRef.current); } catch (err) { /* ignore */ }
+      try { globalDnd.unregisterList(localTabIdRef.current); } catch (err) { console.warn('[BookmarksTabManager] unregisterList failed', err); }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -192,12 +192,150 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     return () => window.removeEventListener('cross-tab-move', onCrossTabMove as EventListener);
   }, [config, onConfigChange]);
 
+  // handle external drops coming from BrowserFavorites (native drag)
+  useEffect(() => {
+    const listRef = (document.querySelector('[data-bookmarks-list-id="' + (nodeId || config?.id || localTabIdRef.current) + '"]') as HTMLDivElement | null);
+
+    const computeTargetIndex = (clientX?: number, clientY?: number) => {
+      try {
+  const container = listRef || document.querySelector('.grid');
+        if (!container) return (config?.bookmarks || []).length;
+        const children = Array.from(container.children) as HTMLElement[];
+  if (children.length === 0) return 0;
+
+        if (typeof clientX === 'number' && typeof clientY === 'number') {
+          const el = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+          if (el && container.contains(el)) {
+            // walk up until the direct child of container
+            let cur: HTMLElement | null = el;
+            while (cur && cur.parentElement && cur.parentElement !== container) cur = cur.parentElement as HTMLElement;
+            if (cur && cur.parentElement === container) {
+              return children.indexOf(cur as HTMLElement);
+            }
+          }
+        }
+
+        // Fallback: use bounding boxes to find insertion index by Y coordinate
+        if (typeof clientY === 'number') {
+          for (let i = 0; i < children.length; i++) {
+            const r = children[i].getBoundingClientRect();
+            const mid = r.top + r.height / 2;
+            if (clientY < mid) return i;
+          }
+          return children.length;
+        }
+
+        return (config?.bookmarks || []).length;
+      } catch (err) {
+        console.warn('[BookmarksTabManager] computeTargetIndex failed', err);
+        return (config?.bookmarks || []).length;
+      }
+    };
+
+    const onExternalDrop = (e: Event) => {
+      try {
+        const ce = e as CustomEvent<any>;
+        const detail = ce?.detail || {};
+        console.debug('[BookmarksTabManager] external-drop received', { detail });
+        // normalize nodes/urls and handle folder recursion
+        const rawNodes: any[] = detail.nodes || (detail.node ? (Array.isArray(detail.node) ? detail.node : [detail.node]) : []);
+        const urls: string[] = detail.urls || [];
+
+        const copies: Bookmark[] = [];
+
+        const collectLeafNodes = (node: any, out: any[]) => {
+          if (!node) return;
+          if (!node.isFolder) {
+            out.push(node);
+            return;
+          }
+          if (node.children && Array.isArray(node.children)) {
+            for (const c of node.children) collectLeafNodes(c, out);
+          }
+        };
+
+        // If a folder node was provided directly (detail.node), and it's a folder, create a folder placeholder and then its leaves
+        if (detail.node && detail.node.isFolder) {
+          const folder = detail.node;
+          // folder placeholder (url empty string to satisfy Bookmark type)
+          copies.push({ id: Math.random().toString(36).slice(2), title: folder.title || 'Folder', url: '', icon: folder.icon || '📁', createdDate: new Date(), lastModifiedDate: new Date(), description: folder.description || '' });
+          const leaves: any[] = [];
+          collectLeafNodes(folder, leaves);
+          for (const n of leaves) {
+            copies.push({ id: Math.random().toString(36).slice(2), title: n.title || n.url || 'Bookmark', url: n.url || '', icon: n.icon, createdDate: n.createdDate || new Date(), lastModifiedDate: n.lastModifiedDate || new Date(), description: n.description });
+          }
+        }
+
+        // Process any raw nodes (which may include folders or bookmarks)
+        for (const n of rawNodes) {
+          if (n && n.isFolder) {
+            // folder: create placeholder + leaves
+            copies.push({ id: Math.random().toString(36).slice(2), title: n.title || 'Folder', url: '', icon: n.icon || '📁', createdDate: new Date(), lastModifiedDate: new Date(), description: n.description || '' });
+            const leaves: any[] = [];
+            collectLeafNodes(n, leaves);
+            for (const l of leaves) {
+              copies.push({ id: Math.random().toString(36).slice(2), title: l.title || l.url || 'Bookmark', url: l.url || '', icon: l.icon, createdDate: l.createdDate || new Date(), lastModifiedDate: l.lastModifiedDate || new Date(), description: l.description });
+            }
+          } else if (n) {
+            copies.push({ id: Math.random().toString(36).slice(2), title: n.title || n.url || 'Bookmark', url: n.url || '', icon: n.icon, createdDate: n.createdDate || new Date(), lastModifiedDate: n.lastModifiedDate || new Date(), description: n.description });
+          }
+        }
+
+        // simple url list
+        for (const u of urls) {
+          copies.push({ id: Math.random().toString(36).slice(2), title: u, url: u, createdDate: new Date(), lastModifiedDate: new Date() });
+        }
+
+        if (copies.length === 0) return;
+
+        const clientX = typeof detail.clientX === 'number' ? detail.clientX : undefined;
+        const clientY = typeof detail.clientY === 'number' ? detail.clientY : undefined;
+        const targetIndex = computeTargetIndex(clientX, clientY);
+
+        // Insert at computed index
+        const before = (config?.bookmarks || []).slice(0, targetIndex);
+        const after = (config?.bookmarks || []).slice(targetIndex);
+        const newBookmarks = [...before, ...copies, ...after];
+
+        if (onConfigChange) onConfigChange({ ...(config || {} as BookmarksTabConfig), bookmarks: newBookmarks });
+
+        // select newly added items
+        try {
+          const newIds = copies.map(c => c.id);
+          dispatch({ type: 'RANGE_SELECT', ids: newIds, index: targetIndex, union: false });
+        } catch (err) {
+          console.warn('[BookmarksTabManager] failed to select new items', err);
+        }
+
+        // If the drop was a move from BrowserFavorites, notify the BrowserFavorites manager to remove the original nodes
+        try {
+          const dropEffect = detail.dropEffect || undefined;
+          const nodeIds: string[] | undefined = detail.nodeIds;
+          if (dropEffect === 'move' && nodeIds && nodeIds.length > 0) {
+            try {
+              window.dispatchEvent(new CustomEvent('browserfavorites:remove-nodes', { detail: { ids: nodeIds } }));
+            } catch (err) {
+              console.warn('[BookmarksTabManager] failed to request BrowserFavorites remove nodes', err);
+            }
+          }
+        } catch (err) {
+          console.warn('[BookmarksTabManager] move semantics handling failed', err);
+        }
+      } catch (err) {
+        console.warn('[BookmarksTabManager] external-drop handler failed', err);
+      }
+    };
+
+    window.addEventListener('flexlayout:bookmarks:external-drop', onExternalDrop as EventListener);
+    return () => window.removeEventListener('flexlayout:bookmarks:external-drop', onExternalDrop as EventListener);
+  }, [config, onConfigChange]);
+
   return (
     <div className="p-0">
       {bookmarks.length === 0 ? (
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
-        <div className="grid" style={{ gap: '5px' }}>
+  <div className="grid" data-bookmarks-list-id={nodeId || config?.id || localTabIdRef.current} style={{ gap: '5px' }}>
           {bookmarks.map((b, i) => (
             <BookmarkTableRow key={b.id}
                               bookmark={b}

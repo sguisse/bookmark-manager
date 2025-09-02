@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BrowserBookmarkNode, BrowserFavorites, BrowserFavoritesFormData } from '../../types/browser';
 import { FormDisplayMode } from '../../types/app';
 import BrowserFavoritesForm from './BrowserFavoritesForm';
+import BrowserFavoritesDropHandler from './BrowserFavoritesDropHandler';
 
 import '../../styles/index.css';
 import { BrowserFavoritesService } from '../../services/BrowserFavoritesService';
@@ -56,6 +57,39 @@ const collectUrls = (node: BrowserBookmarkNode | undefined | null): string[] => 
   return out;
 };
 
+// Top-level helper to insert a group of records back into a tree under a given parentId
+const insertGroupHelper = (nodes: BrowserBookmarkNode[], parentId: string | null, group: { node: BrowserBookmarkNode; parentId: string | null; index: number }[]): BrowserBookmarkNode[] => {
+  if (parentId === null) {
+    const newRoot = [...nodes];
+    group.sort((a, b) => a.index - b.index);
+    for (const rec of group) {
+      const idx = Math.min(rec.index, newRoot.length);
+      newRoot.splice(idx, 0, rec.node);
+    }
+    return newRoot;
+  }
+
+  const walkAndInsert = (arr: BrowserBookmarkNode[]): BrowserBookmarkNode[] => {
+    return arr.map(n => {
+      if (n.id === parentId) {
+        const children = n.children ? [...n.children] : [];
+        const groupForParent = group.slice().sort((a, b) => a.index - b.index);
+        for (const rec of groupForParent) {
+          const idx = Math.min(rec.index, children.length);
+          children.splice(idx, 0, rec.node);
+        }
+        return { ...n, children };
+      }
+      if (n.children) {
+        return { ...n, children: walkAndInsert(n.children) };
+      }
+      return n;
+    });
+  };
+
+  return walkAndInsert(nodes);
+};
+
 const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (id: string) => void; expanded: Record<string, boolean>; selected?: boolean; onSelect?: (id: string, e: React.MouseEvent) => void; selectedIds?: string[]; getNodesByIds?: (ids: string[]) => BrowserBookmarkNode[] }> = ({ node, open, onToggle, expanded, selected, onSelect, selectedIds, getNodesByIds }) => {
   const tooltipLines: string[] = [];
   const dateStr = formatAddDate(node.createdDate);
@@ -88,7 +122,6 @@ const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (
   const moveTooltip = (e: React.MouseEvent) => {
     setTooltipPos({ x: e.clientX, y: e.clientY });
   };
-
   const hideTooltip = () => {
     if (tooltipTimerRef.current) {
       window.clearTimeout(tooltipTimerRef.current);
@@ -131,6 +164,7 @@ const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (
               e.dataTransfer?.setData('application/x-bookmarks-folder', payload);
               // set a plain text fallback
               e.dataTransfer?.setData('text/plain', `${node.title || 'Bookmarks'} (${urls.length} links)`);
+              console.debug('BrowserFavorites: dragstart folder', { nodeId: node.id, title: node.title, urls: urls.length });
               // allow move/copy
               if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
             } catch (err) {
@@ -236,6 +270,7 @@ const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (
             }
 
             if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
+            console.debug('BrowserFavorites: dragstart bookmark', { nodeId: node.id, selectedIds: selectedIds });
           } catch (err) {
             console.warn('Failed to set drag data for bookmark', err);
           }
@@ -277,7 +312,45 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   const [currentFavorites, setCurrentFavorites] = useState<BrowserFavorites | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+  const lastRemovedIdsRef = React.useRef<string[] | null>(null);
+  const lastRemovedRecordsRef = React.useRef<null | { node: BrowserBookmarkNode; parentId: string | null; index: number }[]>(null);
   const formMode = FormDisplayMode.Edit; // Always in edit mode since form is always visible
+
+  // Global debug hooks: listen for native dragstart and pointer events to diagnose when
+  // drags from TreeNode fail to fire. These are temporary diagnostics and can be removed
+  // once the issue is resolved.
+  React.useEffect(() => {
+    const onDragStartGlobal = (e: DragEvent) => {
+      try {
+        const tgt = e.target as HTMLElement | null;
+        const info: any = { type: e.type, targetTag: tgt?.tagName, targetClass: tgt?.className, targetId: tgt?.id };
+        try {
+          if (e.dataTransfer) info.types = Array.from(e.dataTransfer.types || []);
+        } catch (err) {
+          console.debug('GLOBAL dragstart handler inner error', err);
+        }
+        console.debug('GLOBAL dragstart', info);
+      } catch (err) {
+        console.debug('GLOBAL dragstart handler error', err);
+      }
+    };
+
+    const onMouseDownGlobal = (e: MouseEvent) => {
+      try {
+        const tgt = e.target as HTMLElement | null;
+        console.debug('GLOBAL mousedown', { tag: tgt?.tagName, id: tgt?.id, className: tgt?.className });
+      } catch (err) {
+        console.debug('GLOBAL mousedown handler inner error', err);
+      }
+    };
+
+    window.addEventListener('dragstart', onDragStartGlobal);
+    window.addEventListener('mousedown', onMouseDownGlobal);
+    return () => {
+      window.removeEventListener('dragstart', onDragStartGlobal);
+      window.removeEventListener('mousedown', onMouseDownGlobal);
+    };
+  }, []);
 
   // Build a mapping of nodeId => true for nodes which have isExpanded set
   const buildExpandedMapFromTree = (nodes: BrowserBookmarkNode[]): Record<string, boolean> => {
@@ -308,6 +381,136 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
       console.warn('Failed to load stored BrowserFavorites', err);
     }
   }, []);
+
+  // Listen for external requests to remove nodes (e.g. when bookmarks are moved to another tab)
+  React.useEffect(() => {
+    const handler = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail || {};
+        // support several shapes: { ids: string[] } or { nodeIds: string[] } or array directly
+        let ids: string[] = [];
+        if (Array.isArray(detail)) ids = detail as string[];
+        else if (Array.isArray(detail.ids)) ids = detail.ids;
+        else if (Array.isArray(detail.nodeIds)) ids = detail.nodeIds;
+
+        if (!ids || ids.length === 0) return;
+
+  // Remove nodes and get report
+  const { tree: next, removedIds, removedRecords } = removeNodesByIdsWithReport(tree, ids);
+
+        // update state and persist
+        setTree(next);
+        setExpanded(buildExpandedMapFromTree(next));
+        if (currentFavorites) {
+          try {
+            const updated: BrowserFavorites = { ...currentFavorites, bookmarksTree: next, lastModifiedDate: new Date() };
+            setCurrentFavorites(updated);
+            BrowserFavoritesService.saveToStorage(updated);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('Failed to persist BrowserFavorites after external removal', err);
+          }
+        }
+
+        // Clear any selected ids that were removed
+        setSelectedIds(filterOutIds(selectedIds, ids));
+
+        // store removed records and broadcast for telemetry/undo
+        if (removedIds && removedIds.length > 0) {
+          lastRemovedIdsRef.current = removedIds;
+          lastRemovedRecordsRef.current = removedRecords;
+          try {
+            window.dispatchEvent(new CustomEvent('browserfavorites:removed-nodes', { detail: { ids: removedIds } }));
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('Failed to dispatch browserfavorites:removed-nodes event', err);
+          }
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('Error handling browserfavorites:remove-nodes event', err);
+      }
+    };
+
+    window.addEventListener('browserfavorites:remove-nodes', handler as EventListener);
+    return () => window.removeEventListener('browserfavorites:remove-nodes', handler as EventListener);
+  }, [currentFavorites]);
+
+  // Restore previously removed nodes (undo). Listens to 'browserfavorites:restore-removed-nodes'.
+  React.useEffect(() => {
+    const restoreHandler = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail || {};
+        // optional: detail.ids to restore only a subset; otherwise restore all last removed records
+        let idsToRestore: string[] | null = null;
+        if (Array.isArray(detail.ids)) idsToRestore = detail.ids as string[];
+
+        const records = lastRemovedRecordsRef.current || [];
+        if (!records || records.length === 0) return;
+
+  const recordsToRestore = idsToRestore ? records.filter(r => idsToRestore.includes(r.node.id)) : records;
+        if (recordsToRestore.length === 0) return;
+
+        // Group records by parentId for stable insertion
+        const grouped = recordsToRestore.reduce<Record<string, typeof recordsToRestore>>((acc, r) => {
+          const key = r.parentId ?? '__ROOT__';
+          if (!acc[key]) acc[key] = [] as any;
+          acc[key].push(r);
+          return acc;
+        }, {} as Record<string, typeof recordsToRestore>);
+
+        // use top-level insertGroup helper to re-insert records
+
+        // Start with current tree
+        let nextTree = tree;
+
+        // First handle root inserts (key '__ROOT__')
+        const rootKey = '__ROOT__';
+        if (grouped[rootKey]) {
+          nextTree = insertGroupHelper(nextTree, null, grouped[rootKey]);
+        }
+
+        // Then handle other parent groups
+        for (const key of Object.keys(grouped)) {
+          if (key === rootKey) continue;
+          const parentId = key === '__ROOT__' ? null : key;
+          nextTree = insertGroupHelper(nextTree, parentId, grouped[key]);
+        }
+
+        // Persist and update state
+        setTree(nextTree);
+        setExpanded(buildExpandedMapFromTree(nextTree));
+        if (currentFavorites) {
+          try {
+            const updated: BrowserFavorites = { ...currentFavorites, bookmarksTree: nextTree, lastModifiedDate: new Date() };
+            setCurrentFavorites(updated);
+            BrowserFavoritesService.saveToStorage(updated);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('Failed to persist BrowserFavorites after restore', err);
+          }
+        }
+
+        const restoredIds = recordsToRestore.map(r => r.node.id);
+        try {
+          window.dispatchEvent(new CustomEvent('browserfavorites:restored-nodes', { detail: { ids: restoredIds } }));
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to dispatch browserfavorites:restored-nodes event', err);
+        }
+
+        // Optionally clear lastRemovedRecordsRef so undo cannot be repeated unless new removals occur
+        lastRemovedRecordsRef.current = null;
+        lastRemovedIdsRef.current = null;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('Error handling browserfavorites:restore-removed-nodes event', err);
+      }
+    };
+
+    window.addEventListener('browserfavorites:restore-removed-nodes', restoreHandler as EventListener);
+    return () => window.removeEventListener('browserfavorites:restore-removed-nodes', restoreHandler as EventListener);
+  }, [currentFavorites, tree]);
 
   // (removed buildNodePath — we now use node.isExpanded flags directly)
 
@@ -395,6 +598,43 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
     walk(node);
     return out;
   };
+
+  // Remove nodes matching any id in `ids` from a tree (recursively).
+  // Returns { tree, removedIds, removedRecords } where removedRecords include original parentId and index
+  const removeNodesByIdsWithReport = (nodes: BrowserBookmarkNode[], ids: string[]): { tree: BrowserBookmarkNode[]; removedIds: string[]; removedRecords: { node: BrowserBookmarkNode; parentId: string | null; index: number }[] } => {
+    const removedIds: string[] = [];
+    const removedRecords: { node: BrowserBookmarkNode; parentId: string | null; index: number }[] = [];
+
+    const walk = (arr: BrowserBookmarkNode[], parentId: string | null): BrowserBookmarkNode[] => {
+      const out: BrowserBookmarkNode[] = [];
+      for (let i = 0; i < arr.length; i++) {
+        const n = arr[i];
+        if (ids.includes(n.id)) {
+          removedIds.push(n.id);
+          removedRecords.push({ node: n, parentId, index: i });
+          continue; // drop
+        }
+        if (n.children && n.children.length > 0) {
+          const newChildren = walk(n.children, n.id);
+          if (newChildren.length !== n.children.length) {
+            out.push({ ...n, children: newChildren });
+          } else {
+            out.push(n);
+          }
+        } else {
+          out.push(n);
+        }
+      }
+      return out;
+    };
+
+    const newTree = walk(nodes, null);
+    return { tree: newTree, removedIds, removedRecords };
+  };
+
+  // insertGroup helper moved to top-level insertGroupHelper
+
+  const filterOutIds = (arr: string[], ids: string[]) => arr.filter(a => !ids.includes(a));
 
   // Selection handling: support Ctrl/Meta/Alt to toggle, Shift to select range
   const handleSelect = (id: string, e: React.MouseEvent) => {
@@ -561,6 +801,8 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
 
   return (
     <div className="browser-favorites">
+
+      <BrowserFavoritesDropHandler />
 
       <BrowserFavoritesForm
         browserFavorites={currentFavorites}
