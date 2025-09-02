@@ -2,32 +2,43 @@ type DragPayload = {
   ids: string[];
   bookmarks: any[];
   timestamp: number;
+  meta?: any;
 };
 
 class CrossTabBookmarkService {
-  private channel: BroadcastChannel | null = null;
-  private cache = new Map<string, DragPayload>();
+  private readonly channel: BroadcastChannel | null = null;
+  private readonly cache = new Map<string, DragPayload>();
   private readonly channelName = 'bookmark-cross-tab';
 
   constructor() {
+    // Use BroadcastChannel if available for cross-tab messaging. Fail gracefully if access is blocked.
     try {
-      // Use BroadcastChannel if available for cross-tab messaging
       // eslint-disable-next-line no-undef
       if (typeof BroadcastChannel !== 'undefined') {
-        this.channel = new BroadcastChannel(this.channelName);
-        this.channel.addEventListener('message', (ev) => this.handleMessage(ev.data));
+        // assign to a local then set up listener to avoid accidental exceptions
+        const ch = new BroadcastChannel(this.channelName);
+        ch.addEventListener('message', (ev) => this.handleMessage(ev.data));
+        // @ts-ignore - assign to readonly property during construction
+        (this as any).channel = ch;
       }
     } catch (err) {
-      // BroadcastChannel not available (older browsers) - fallback to in-memory cache
-      this.channel = null;
+      // BroadcastChannel not available or blocked (e.g. some secure contexts) - fallback to in-memory cache
+      console.debug('[CrossTabService] BroadcastChannel unavailable, using in-memory cache', err);
+      // leave this.channel as null
     }
   }
   private handleMessage(data: any) {
     console.debug('[CrossTabService] message received', data);
-  if (!data?.type) return;
+    if (!data?.type) {
+      return;
+    }
 
     if (data.type === 'announce-drag' && data.sourceTabId && data.payload) {
-      this.cache.set(data.sourceTabId, { ...data.payload, timestamp: Date.now() });
+      try {
+        this.cache.set(data.sourceTabId, { ...(data.payload as DragPayload), timestamp: Date.now() });
+      } catch (err) {
+        console.warn('[CrossTabService] failed to set announce-drag payload', err);
+      }
       return;
     }
 
@@ -50,10 +61,10 @@ class CrossTabBookmarkService {
     }
   }
 
-  public cacheDragData(sourceTabId: string, ids: string[], bookmarks: any[]) {
-    const payload: DragPayload = { ids, bookmarks, timestamp: Date.now() };
+  public cacheDragData(sourceTabId: string, ids: string[], bookmarks: any[], meta?: any) {
+    const payload: DragPayload = { ids, bookmarks, timestamp: Date.now(), meta };
     this.cache.set(sourceTabId, payload);
-    console.debug('[CrossTabService] announce-drag', { sourceTabId, ids: ids.slice(0, 8) });
+    console.debug('[CrossTabService] announce-drag', { sourceTabId, ids: ids.slice(0, 8), meta });
     try {
       this.channel?.postMessage({ type: 'announce-drag', sourceTabId, payload });
     } catch (err) {

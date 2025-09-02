@@ -396,12 +396,13 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
         // build a new tab config for bookmarks
         const newId = uuidv4();
   const bookmarks = payload.bookmarks.map((b: any) => ({ ...b, id: uuidv4() }));
+  const tabTitle = payload?.meta?.folderName ?? payload?.meta?.title ?? 'Bookmarks';
         const newTab = {
           type: 'tab',
           id: newId,
-          name: 'Bookmarks',
+          name: tabTitle,
           component: 'Bookmarks',
-          config: { id: newId, title: 'Bookmarks', bookmarks, createdDate: new Date(), lastModifiedDate: new Date() }
+          config: { id: newId, title: tabTitle, bookmarks, createdDate: new Date(), lastModifiedDate: new Date() }
         };
 
         // Determine where to insert: try to find the tabset by id, otherwise append to top-level

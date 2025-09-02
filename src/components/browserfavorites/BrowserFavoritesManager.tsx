@@ -390,6 +390,15 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
         }
         return out;
       }
+      ,
+      getMetadataForIds: (ids: string[]) => {
+        // If single id and it's a folder, provide its title as folderName
+        if (!ids || ids.length !== 1) return undefined;
+        const node = findNodeById(tree, ids[0]);
+        if (!node) return undefined;
+        if (node.isFolder) return { folderName: node.title || 'Folder' };
+        return undefined;
+      }
     };
 
     try { globalDnd.registerList(list); } catch (err) { console.warn('[BrowserFavoritesManager] registerList failed', err); }

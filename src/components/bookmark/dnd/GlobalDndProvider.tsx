@@ -32,6 +32,8 @@ type RegisteredList = {
   nodeIds?: string[];
   // optional: given node ids (possibly folder ids), return the bookmark payloads (leaf bookmarks)
   getPayloadForIds?: (ids: string[]) => Bookmark[];
+  // optional: given node ids return additional metadata (e.g. folder title) to be cached with the drag payload
+  getMetadataForIds?: (ids: string[]) => any;
 };
 
 const GlobalDndContext = createContext<{
@@ -186,8 +188,9 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       if (dragSourceTab.current) {
         const payloadItems = sourceList?.getPayloadForIds ? sourceList.getPayloadForIds(ids).map(b => ({ ...b })) : sourceList?.items.filter(b => ids.includes(b.id)).map(b => ({ ...b })) || [];
-        console.debug('[GlobalDnd] caching drag payload', { sourceTab: dragSourceTab.current, count: payloadItems.length });
-        if (payloadItems.length > 0) crossTabBookmarkService.cacheDragData(dragSourceTab.current, ids, payloadItems);
+        const meta = sourceList?.getMetadataForIds ? sourceList.getMetadataForIds(ids) : undefined;
+        console.debug('[GlobalDnd] caching drag payload', { sourceTab: dragSourceTab.current, count: payloadItems.length, meta });
+        if (payloadItems.length > 0) crossTabBookmarkService.cacheDragData(dragSourceTab.current, ids, payloadItems, meta);
       }
     } catch (err) {
       console.warn('[GlobalDnd] cache payload failed', err);
