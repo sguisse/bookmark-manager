@@ -90,7 +90,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
   onPointerDown={(e: React.PointerEvent) => { console.debug('[BookmarksViewer] row onPointerDown', { id: bookmark.id, shift: e.shiftKey, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }); if (onSelect) { onSelect(bookmark.id, e as unknown as React.MouseEvent); } }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ ...dragStyle, backgroundColor: isSelected ? (theme.colors.primary + '20') : 'transparent', borderRadius: 4 }}
+      style={{ ...dragStyle, backgroundColor: isSelected ? (theme.colors.primary + '20') : 'transparent', borderRadius: 4, width: '100%' }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
         {/* Drag handle for native HTML5 drag (keeps DataTransfer available). */}

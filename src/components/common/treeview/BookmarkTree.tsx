@@ -30,8 +30,10 @@ const BookmarkTree: React.FC<{ nodes: TreeNode[]; renderRow: (node: TreeNode) =>
   return (
     <div>
       {nodes.map(n => (
-        <div key={n.id} style={{ display: 'flex', alignItems: 'center' }}>
-          {renderRow(n)}
+        <div key={n.id} style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+          <div style={{ flex: 1 }}>
+            {renderRow(n)}
+          </div>
         </div>
       ))}
     </div>
