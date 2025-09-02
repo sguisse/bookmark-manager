@@ -1,0 +1,431 @@
+{
+    "global": {
+        "splitterSize": 3,
+        "tabEnableRename": false,
+        "tabSetEnableClose": true,
+        "tabSetMinWidth": 20,
+        "tabSetMinHeight": 50,
+        "borderEnableAutoHide": true
+    },
+    "borders": [
+        {
+            "type": "border",
+            "location": "left",
+            "children": []
+        },
+        {
+            "type": "border",
+            "size": 360,
+            "location": "right",
+            "children": [
+                {
+                    "type": "tab",
+                    "id": "d575144c-f47a-4513-9dae-c07a37d7aedc",
+                    "name": "Chrome bookmarks",
+                    "component": "BrowserFavorites",
+                    "config": {
+                        "id": "d575144c-f47a-4513-9dae-c07a37d7aedc",
+                        "title": "Chrome bookmarks",
+                        "component": "BrowserFavorites",
+                        "createdDate": "2025-08-28T11:48:48.774Z",
+                        "lastModifiedDate": "2025-08-28T11:54:20.928Z",
+                        "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC60lEQVR4nFRTz0tUURT+zn3vzaTOKCqmmaEJtZQW/qhRKvqxCiSbpKRVi5ZSG4mCNi2L2lj/QRQ1TVDRIhE0XIQEIYMQST+UyjJHZ8aZcZx5793TeW/U6j4eXO4993zf+c53FGQxM2FzseOcZceOu8xrWi6839vLedy7247bfEPeRhbnmBurmEdBNOhHuC5QLLK/DwQIprn1NpYHhkNES/7bzWwNYD0OUh3IZlw8fgC8nVacSkuAAa5rYI70aYqeBtVUywEnBOiEAC/7DMBuDGREsThXwt3LFt5/E/Sg/MJCBcE7aqBtDRzshnH7pi1sApIk7rE1heoADHlc/OXg9aAFnSTsqmdu7iR0RMBkQr+bAX78Zlw4R1oZlqA6gh4V8gPEuvicEeinr1cdzNwysFgHNF0hDFwDGyb8Gu0CsLIq57u3lBb1TE+fl5KAM4ATxsdO8GqCoA8AvdMSYIFLJSykFLQISJ6GRQ0pBKEgcVONVM7IehDV7OTB9hKUJYo0HSeGBcU28mzh4kMgU2AYiqFE0lwJfGwf073zgkFUvd0baA1X+LJgKI+l3x2gYDPWHUmpCAGJLmlCyQtEucOmYK6RURl2zXrkNpYpnR5DW4vtl2CaNu6IdZR87CrceMVIrTOFK4SkUNeaswJmT0p+SlWfcj+I5aays/zsy3W42kaFaaGv3UKk3cBMPonPnOSStcHdbdr10B2mSa8jZwAjXrSXnViix5jKztMnauWaUD911R4VfwXx5mcOE/M7WGeaqSe0h8eGdrpVQTLFrFHfSOL2GImRvudnSyOzl6yJbAErbjMc15JSKwSqUcTYixYx6pMjXfahxnBAyMYNMdK2lWVsxkmsnLLT7v2FGF4k59RSMU9aK9SaDXw4FNEj+3vRWlVpaEZCNP1rZW+YZJoauYpHCeVhstnFhpYWiNpBZVGAyg2Tgxjl88MUCv03TH6SsjAyzsxDJoyT0uhwucWccwhjEvPIJHr675s/AAAA//+MVvV7AAAABklEQVQDAB5cl68baz6yAAAAAElFTkSuQmCC"
+                    },
+                    "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAC60lEQVR4nFRTz0tUURT+zn3vzaTOKCqmmaEJtZQW/qhRKvqxCiSbpKRVi5ZSG4mCNi2L2lj/QRQ1TVDRIhE0XIQEIYMQST+UyjJHZ8aZcZx5793TeW/U6j4eXO4993zf+c53FGQxM2FzseOcZceOu8xrWi6839vLedy7247bfEPeRhbnmBurmEdBNOhHuC5QLLK/DwQIprn1NpYHhkNES/7bzWwNYD0OUh3IZlw8fgC8nVacSkuAAa5rYI70aYqeBtVUywEnBOiEAC/7DMBuDGREsThXwt3LFt5/E/Sg/MJCBcE7aqBtDRzshnH7pi1sApIk7rE1heoADHlc/OXg9aAFnSTsqmdu7iR0RMBkQr+bAX78Zlw4R1oZlqA6gh4V8gPEuvicEeinr1cdzNwysFgHNF0hDFwDGyb8Gu0CsLIq57u3lBb1TE+fl5KAM4ATxsdO8GqCoA8AvdMSYIFLJSykFLQISJ6GRQ0pBKEgcVONVM7IehDV7OTB9hKUJYo0HSeGBcU28mzh4kMgU2AYiqFE0lwJfGwf073zgkFUvd0baA1X+LJgKI+l3x2gYDPWHUmpCAGJLmlCyQtEucOmYK6RURl2zXrkNpYpnR5DW4vtl2CaNu6IdZR87CrceMVIrTOFK4SkUNeaswJmT0p+SlWfcj+I5aays/zsy3W42kaFaaGv3UKk3cBMPonPnOSStcHdbdr10B2mSa8jZwAjXrSXnViix5jKztMnauWaUD911R4VfwXx5mcOE/M7WGeaqSe0h8eGdrpVQTLFrFHfSOL2GImRvudnSyOzl6yJbAErbjMc15JSKwSqUcTYixYx6pMjXfahxnBAyMYNMdK2lWVsxkmsnLLT7v2FGF4k59RSMU9aK9SaDXw4FNEj+3vRWlVpaEZCNP1rZW+YZJoauYpHCeVhstnFhpYWiNpBZVGAyg2Tgxjl88MUCv03TH6SsjAyzsxDJoyT0uhwucWccwhjEvPIJHr675s/AAAA//+MVvV7AAAABklEQVQDAB5cl68baz6yAAAAAElFTkSuQmCC"
+                }
+            ]
+        },
+        {
+            "type": "border",
+            "location": "top",
+            "children": []
+        },
+        {
+            "type": "border",
+            "location": "bottom",
+            "children": []
+        }
+    ],
+    "layout": {
+        "type": "row",
+        "id": "#b45cebfe-5a27-46bd-85ea-e2842b38221f",
+        "children": [
+            {
+                "type": "row",
+                "id": "#637fc6e5-e1ce-4583-800b-05262fd9e22c",
+                "children": [
+                    {
+                        "type": "tabset",
+                        "id": "#740607b3-e92e-4207-8faa-601afb8a0544",
+                        "weight": 11.20917917034422,
+                        "children": [
+                            {
+                                "type": "tab",
+                                "id": "b17563f4-d8c3-4c88-9bbc-54302807c6e9",
+                                "name": "Deployment control",
+                                "component": "Markdown",
+                                "config": {
+                                    "id": "b17563f4-d8c3-4c88-9bbc-54302807c6e9",
+                                    "component": "Markdown",
+                                    "title": "Deployment control",
+                                    "fontSize": "16px",
+                                    "content": "### Here is how you can control your deployment is correctly done\n\n * You have below links by environment and platform to do the verification",
+                                    "createdDate": "2025-08-21T00:00:00.000Z",
+                                    "createdBy": "user-1",
+                                    "lastModifiedDate": "2025-09-02T06:38:00.816Z",
+                                    "lastModifiedBy": "user-2"
+                                }
+                            }
+                        ],
+                        "active": true
+                    },
+                    {
+                        "type": "row",
+                        "id": "#df33ca03-9b27-43cf-b6d3-264ad69298a3",
+                        "weight": 88.79082082965579,
+                        "children": [
+                            {
+                                "type": "row",
+                                "id": "#d8939aae-01a9-4f40-b13e-6a7df4d22ef7",
+                                "weight": 53.3801580333626,
+                                "children": [
+                                    {
+                                        "type": "tabset",
+                                        "id": "#25cf66c5-80b6-414c-8b64-664bd759dcdf",
+                                        "weight": 51.64506480558325,
+                                        "children": [
+                                            {
+                                                "type": "tab",
+                                                "id": "4d639a2f-e50b-4383-9964-b880646dc54b",
+                                                "name": "Flow-A4S-Test-QUAL-EU",
+                                                "component": "bookmarks",
+                                                "config": {
+                                                    "id": "4d639a2f-e50b-4383-9964-b880646dc54b",
+                                                    "title": "Flow-A4S-Test-QUAL-EU",
+                                                    "bookmarks": [
+                                                        {
+                                                            "id": "2e282936-c0d9-45bd-8c8b-b3693813dad1",
+                                                            "title": "Repo : Resultat build",
+                                                            "url": "https://github.com/dktunited/transport-capetm/actions",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "description": "To control build and docker image correctly build",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:33:11.179Z",
+                                                            "lastModifiedDate": "2025-09-02T06:33:11.179Z"
+                                                        },
+                                                        {
+                                                            "id": "c1a6c309-2a3a-471e-b373-fe83d17a371f",
+                                                            "title": "inix-aws-eu-transport",
+                                                            "url": "https://github.com/dktunited/inix-aws-eu-transport/blob/qual/transport-capetm/capetm-flow-available-shipment.yaml",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "19c91482-9c0c-42a8-bf82-968da79a2f0e",
+                                                            "title": "Vault",
+                                                            "url": "https://vault.pp.dktapp.cloud/ui/vault/secrets/transport-qual/kv/jdbc-connectors%2Fcapetm-flow-available-shipment%2Feu/details?namespace=inix",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABR0lEQVR4nISSPU7DQBCF12sDEhIgKjoqOAAtBYoEQnAEGkq4CIXlG0FAsVAuwA0oklRJFUX5j/MmeROPHStZ6bO9OzNvZmfsnXNNkIEZWBiyEtY241kzxKMNXtx6BS5fGuT4LtuEd4/HJxGxuXHyPNN3wKA596s4Va2BH2bydP4DY3AIBuAGHFNAfO5BGtE5Bd/gkUFH7E0PnIAWuKaAxHwxJvDmbrGpQEo9Y/ApOGfZ2pdYe+ZNgxqgDg6474I+mIAOK/PM3qDPIjQNy1jqK78l8wgMwRO4pPgb+NcYFcioKIZbcAUumHUKntkXyf5hJlKYrV6nZiYS0Tal/YHNU9/Vhy7tRcpMEe8/Zul12gKX/2AFAVtR4vKJhPxOSj6VAnYiWoXOfdP5XQI2g8xa//m4ZNtyrjqXwF/u78xZYUV7BJKKs8JaAgAA//+xC1B+AAAABklEQVQDAGesZZFfczzgAAAAAElFTkSuQmCC",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "26451a33-b43c-463f-a93e-f10eef75ccf6",
+                                                            "title": "capetm",
+                                                            "url": "https://cape-qual.pp.dktapp.cloud/capetm/index.jsp",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADfUlEQVR4nFxTbWhbVRh+zrk3ubfJTZOmaZo2a6eypnaEFQRhVlGZIPMLgqBQfzpE/eNAhhXEEUQUtgyUjf3rHxGKA9E/6sCNldZh7bSwdktrdGbtli7J0qT5uPfmfuQcT+uEsQPP4Xy85z3P+/HIeGBkNhuR7y6upmzbfnVdN+HxKBgIqJVoT/Db44nRSwdHSON+e7I7p9NUgD0/s/Dmcv7Ox1uOG+ayrDBKAS7uGeeyRKzhoC//zN740emX9s+lxRsBRjjnRAyeOP3Th5vV5keO6tMsy4Hfp8KVZQS8Xvg8MorizLFthByj+s74w6c+Pzz+WToNusvgyKXbb391YS6THI5rfcEANxlDSFHgEQ5UiUIiBNuOg7+2m6TQMuGtV1unn0um3zif+JLMzy+Nn7y8fL6ghGPxR8ZYn18hxLWJJFxL9yLku+DQO4wTgRvbTToos/InfO1rOle131ppe2N7NYWN6hs0UrlBKOdgjMMRTGwBV0Bs0Suo5K0OVT0yC+YuR9ekEJevbBlJNRJjjqbRvNlAPOgXgf33sysc/c/BdV1cI13QyzkMllbpgqMy/a6zIq/frdkHk0niCLOqoqHSpaBlmuiSJPSqXqDTgSN5UICK6J+zCLdqyHI/rnn7SXdD94ksEjlfqsAnSjbs86DdNrFQrOD6Vm0naVhsU1h6A49mf4RTLWKZhrESGgV1TCL5QyGZ+rXcbDb37EA4hICqYLlQRElkumRpWDE4DjWXEKAmKtUSfohNwCAqJH17N7ioQm9SwjDjVbxE0OZty8I/jTZAFQzVN/BU8XeMlFdRbjv4fiSFNqPwddro2A7v4uzOQ63Vn+XJmLZYaBnZbLU5Jjcs9rhiEbuaJwdaG4h0mjiz50WguxdDdh3wq1xUiOdqdbpPk+czx45t0fdfnzCfiEdPubf/JnT9Kt23dgGp0q/8irKHZwZT3ALhVq0smovz/ZEeEvZ10X6ZGE8P9J7DTiCLn05NBCq3Elc7nuMNoxme7pkI/hYaA2xDNJILJsTERSWS8RgUUakA4Xq/UT/7zXsvTwkpcXL9yKFbhhL8o9KXyEz2vxYhzfJJ3WhGO47jheyVwRmEVkAYc6KStP5kuPvMuaOHz94TIycfzCwNnph8bHNnvZPZqelftIsufaXeaqZEIx2gYDRK4Q6p6mycWCe+ePeFm/fL+V8AAAD//0ljsjwAAAAGSURBVAMAStmtjUgz4LEAAAAASUVORK5CYII=",
+                                                            "description": null,
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "39d09d0f-4d0b-4da6-8a12-c5a69af18a27",
+                                                            "title": "Topic",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-generic-preprod/topic/public_transport-order-delivery-qual-eu_cdc-available-shipments-avro_v1/data?sort=Newest&partition=All",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "d23260c3-67f3-41e4-98ad-6e2af0ee892e",
+                                                            "title": "KConnect 3 topics info",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-generic-preprod/topic?search=private_transport-order-delivery-qual-eu_available-shipment-jdbc-connector&topicListView=ALL&page=1",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "description": "Link to the 3 topics used to get kconnect information :\n  - connector_config_v1 \n  - connector_offset_v1\n  - connector_status_ v1",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:42:17.201Z",
+                                                            "lastModifiedDate": "2025-09-02T06:42:17.201Z"
+                                                        }
+                                                    ],
+                                                    "createdDate": "2025-09-02T06:24:12.799Z",
+                                                    "lastModifiedDate": "2025-09-02T07:36:00.676Z",
+                                                    "markColor": "#1db420",
+                                                    "component": "bookmarks",
+                                                    "toggleTabViewMode": "row"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "tabset",
+                                        "id": "#48c61d73-292c-41c1-82bf-75428fe8bba0",
+                                        "weight": 48.35493519441675,
+                                        "children": [
+                                            {
+                                                "type": "tab",
+                                                "id": "57ee39dc-99ca-4e02-bd41-9b923000b750",
+                                                "name": "Flow-A4S-Test-PREPROD-EU",
+                                                "component": "bookmarks",
+                                                "config": {
+                                                    "id": "57ee39dc-99ca-4e02-bd41-9b923000b750",
+                                                    "title": "Flow-A4S-Test-PREPROD-EU",
+                                                    "bookmarks": [
+                                                        {
+                                                            "id": "2e282936-c0d9-45bd-8c8b-b3693813dad1",
+                                                            "title": "Repo : Resultat build",
+                                                            "url": "https://github.com/dktunited/transport-capetm/actions",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "description": "To control build and docker image correctly build",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:33:11.179Z",
+                                                            "lastModifiedDate": "2025-09-02T06:33:11.179Z"
+                                                        },
+                                                        {
+                                                            "id": "c1a6c309-2a3a-471e-b373-fe83d17a371f",
+                                                            "title": "inix-aws-eu-transport",
+                                                            "url": "https://github.com/dktunited/inix-aws-eu-transport/blob/preprod/transport-capetm/capetm-flow-available-shipment.yaml",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "19c91482-9c0c-42a8-bf82-968da79a2f0e",
+                                                            "title": "Vault",
+                                                            "url": "https://vault.pp.dktapp.cloud/ui/vault/secrets/transport/kv/jdbc-connectors%2Fcapetm-flow-available-shipment%2Feu/details?namespace=inix",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABR0lEQVR4nISSPU7DQBCF12sDEhIgKjoqOAAtBYoEQnAEGkq4CIXlG0FAsVAuwA0oklRJFUX5j/MmeROPHStZ6bO9OzNvZmfsnXNNkIEZWBiyEtY241kzxKMNXtx6BS5fGuT4LtuEd4/HJxGxuXHyPNN3wKA596s4Va2BH2bydP4DY3AIBuAGHFNAfO5BGtE5Bd/gkUFH7E0PnIAWuKaAxHwxJvDmbrGpQEo9Y/ApOGfZ2pdYe+ZNgxqgDg6474I+mIAOK/PM3qDPIjQNy1jqK78l8wgMwRO4pPgb+NcYFcioKIZbcAUumHUKntkXyf5hJlKYrV6nZiYS0Tal/YHNU9/Vhy7tRcpMEe8/Zul12gKX/2AFAVtR4vKJhPxOSj6VAnYiWoXOfdP5XQI2g8xa//m4ZNtyrjqXwF/u78xZYUV7BJKKs8JaAgAA//+xC1B+AAAABklEQVQDAGesZZFfczzgAAAAAElFTkSuQmCC",
+                                                            "description": null,
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "26451a33-b43c-463f-a93e-f10eef75ccf6",
+                                                            "title": "capetm",
+                                                            "url": "https://cape-preprod.pp.dktapp.cloud/capetm/index.jsp",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADfUlEQVR4nFxTbWhbVRh+zrk3ubfJTZOmaZo2a6eypnaEFQRhVlGZIPMLgqBQfzpE/eNAhhXEEUQUtgyUjf3rHxGKA9E/6sCNldZh7bSwdktrdGbtli7J0qT5uPfmfuQcT+uEsQPP4Xy85z3P+/HIeGBkNhuR7y6upmzbfnVdN+HxKBgIqJVoT/Db44nRSwdHSON+e7I7p9NUgD0/s/Dmcv7Ox1uOG+ayrDBKAS7uGeeyRKzhoC//zN740emX9s+lxRsBRjjnRAyeOP3Th5vV5keO6tMsy4Hfp8KVZQS8Xvg8MorizLFthByj+s74w6c+Pzz+WToNusvgyKXbb391YS6THI5rfcEANxlDSFHgEQ5UiUIiBNuOg7+2m6TQMuGtV1unn0um3zif+JLMzy+Nn7y8fL6ghGPxR8ZYn18hxLWJJFxL9yLku+DQO4wTgRvbTToos/InfO1rOle131ppe2N7NYWN6hs0UrlBKOdgjMMRTGwBV0Bs0Suo5K0OVT0yC+YuR9ekEJevbBlJNRJjjqbRvNlAPOgXgf33sysc/c/BdV1cI13QyzkMllbpgqMy/a6zIq/frdkHk0niCLOqoqHSpaBlmuiSJPSqXqDTgSN5UICK6J+zCLdqyHI/rnn7SXdD94ksEjlfqsAnSjbs86DdNrFQrOD6Vm0naVhsU1h6A49mf4RTLWKZhrESGgV1TCL5QyGZ+rXcbDb37EA4hICqYLlQRElkumRpWDE4DjWXEKAmKtUSfohNwCAqJH17N7ioQm9SwjDjVbxE0OZty8I/jTZAFQzVN/BU8XeMlFdRbjv4fiSFNqPwddro2A7v4uzOQ63Vn+XJmLZYaBnZbLU5Jjcs9rhiEbuaJwdaG4h0mjiz50WguxdDdh3wq1xUiOdqdbpPk+czx45t0fdfnzCfiEdPubf/JnT9Kt23dgGp0q/8irKHZwZT3ALhVq0smovz/ZEeEvZ10X6ZGE8P9J7DTiCLn05NBCq3Elc7nuMNoxme7pkI/hYaA2xDNJILJsTERSWS8RgUUakA4Xq/UT/7zXsvTwkpcXL9yKFbhhL8o9KXyEz2vxYhzfJJ3WhGO47jheyVwRmEVkAYc6KStP5kuPvMuaOHz94TIycfzCwNnph8bHNnvZPZqelftIsufaXeaqZEIx2gYDRK4Q6p6mycWCe+ePeFm/fL+V8AAAD//0ljsjwAAAAGSURBVAMAStmtjUgz4LEAAAAASUVORK5CYII=",
+                                                            "description": null,
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "39d09d0f-4d0b-4da6-8a12-c5a69af18a27",
+                                                            "title": "Topic",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-generic-preprod/topic/public_transport-order-delivery-pp-eu_cdc-available-shipments-avro_v1/data?sort=Newest&partition=All",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "d23260c3-67f3-41e4-98ad-6e2af0ee892e",
+                                                            "title": "KConnect 3 topics info",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-generic-preprod/topic?search=private_transport-order-delivery-pp-eu_available-shipment-jdbc-connector&topicListView=ALL&page=1",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "description": "Link to the 3 topics used to get kconnect information :\n  - connector_config_v1 \n  - connector_offset_v1\n  - connector_status_ v1",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:42:17.201Z",
+                                                            "lastModifiedDate": "2025-09-02T06:42:17.201Z"
+                                                        }
+                                                    ],
+                                                    "createdDate": "2025-09-02T06:51:42.218Z",
+                                                    "lastModifiedDate": "2025-09-02T07:31:36.649Z",
+                                                    "markColor": "#1db420",
+                                                    "component": "bookmarks",
+                                                    "toggleTabViewMode": "row"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "row",
+                                "id": "#04c49528-1210-455b-9708-c236dacd2d07",
+                                "weight": 46.6198419666374,
+                                "children": [
+                                    {
+                                        "type": "tabset",
+                                        "id": "#44c1b0c9-0091-4403-872e-0e5809e17a2e",
+                                        "weight": 25.523429710867397,
+                                        "children": [
+                                            {
+                                                "type": "tab",
+                                                "id": "8d190b38-21ae-40f8-9e9c-cfd453ac07e3",
+                                                "name": "Flow-A4S-Test-QUAL-AS",
+                                                "component": "bookmarks",
+                                                "config": {
+                                                    "id": "8d190b38-21ae-40f8-9e9c-cfd453ac07e3",
+                                                    "title": "Flow-A4S-Test-QUAL-AS",
+                                                    "bookmarks": [
+                                                        {
+                                                            "id": "2e282936-c0d9-45bd-8c8b-b3693813dad1",
+                                                            "title": "Repo : Resultat build",
+                                                            "url": "https://github.com/dktunited/transport-capetm/actions",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "description": "To control build and docker image correctly build",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:33:11.179Z",
+                                                            "lastModifiedDate": "2025-09-02T06:33:11.179Z"
+                                                        },
+                                                        {
+                                                            "id": "c1a6c309-2a3a-471e-b373-fe83d17a371f",
+                                                            "title": "inix-aws-as-transport",
+                                                            "url": "https://github.com/dktunited/inix-aws-as-transport/blob/qual/transport-capetm/capetm-flow-available-shipment.yaml",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "19c91482-9c0c-42a8-bf82-968da79a2f0e",
+                                                            "title": "Vault",
+                                                            "url": "https://vault.pp.dktapp.cloud/ui/vault/secrets/transport-qual/kv/jdbc-connectors%2Fcapetm-flow-available-shipment%2Fas/details?namespace=inix",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABR0lEQVR4nISSPU7DQBCF12sDEhIgKjoqOAAtBYoEQnAEGkq4CIXlG0FAsVAuwA0oklRJFUX5j/MmeROPHStZ6bO9OzNvZmfsnXNNkIEZWBiyEtY241kzxKMNXtx6BS5fGuT4LtuEd4/HJxGxuXHyPNN3wKA596s4Va2BH2bydP4DY3AIBuAGHFNAfO5BGtE5Bd/gkUFH7E0PnIAWuKaAxHwxJvDmbrGpQEo9Y/ApOGfZ2pdYe+ZNgxqgDg6474I+mIAOK/PM3qDPIjQNy1jqK78l8wgMwRO4pPgb+NcYFcioKIZbcAUumHUKntkXyf5hJlKYrV6nZiYS0Tal/YHNU9/Vhy7tRcpMEe8/Zul12gKX/2AFAVtR4vKJhPxOSj6VAnYiWoXOfdP5XQI2g8xa//m4ZNtyrjqXwF/u78xZYUV7BJKKs8JaAgAA//+xC1B+AAAABklEQVQDAGesZZFfczzgAAAAAElFTkSuQmCC",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "26451a33-b43c-463f-a93e-f10eef75ccf6",
+                                                            "title": "capetm",
+                                                            "url": "https://cape-qual-asia.pp.dktapp.cloud/capetm/index.jsp",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADfUlEQVR4nFxTbWhbVRh+zrk3ubfJTZOmaZo2a6eypnaEFQRhVlGZIPMLgqBQfzpE/eNAhhXEEUQUtgyUjf3rHxGKA9E/6sCNldZh7bSwdktrdGbtli7J0qT5uPfmfuQcT+uEsQPP4Xy85z3P+/HIeGBkNhuR7y6upmzbfnVdN+HxKBgIqJVoT/Db44nRSwdHSON+e7I7p9NUgD0/s/Dmcv7Ox1uOG+ayrDBKAS7uGeeyRKzhoC//zN740emX9s+lxRsBRjjnRAyeOP3Th5vV5keO6tMsy4Hfp8KVZQS8Xvg8MorizLFthByj+s74w6c+Pzz+WToNusvgyKXbb391YS6THI5rfcEANxlDSFHgEQ5UiUIiBNuOg7+2m6TQMuGtV1unn0um3zif+JLMzy+Nn7y8fL6ghGPxR8ZYn18hxLWJJFxL9yLku+DQO4wTgRvbTToos/InfO1rOle131ppe2N7NYWN6hs0UrlBKOdgjMMRTGwBV0Bs0Suo5K0OVT0yC+YuR9ekEJevbBlJNRJjjqbRvNlAPOgXgf33sysc/c/BdV1cI13QyzkMllbpgqMy/a6zIq/frdkHk0niCLOqoqHSpaBlmuiSJPSqXqDTgSN5UICK6J+zCLdqyHI/rnn7SXdD94ksEjlfqsAnSjbs86DdNrFQrOD6Vm0naVhsU1h6A49mf4RTLWKZhrESGgV1TCL5QyGZ+rXcbDb37EA4hICqYLlQRElkumRpWDE4DjWXEKAmKtUSfohNwCAqJH17N7ioQm9SwjDjVbxE0OZty8I/jTZAFQzVN/BU8XeMlFdRbjv4fiSFNqPwddro2A7v4uzOQ63Vn+XJmLZYaBnZbLU5Jjcs9rhiEbuaJwdaG4h0mjiz50WguxdDdh3wq1xUiOdqdbpPk+czx45t0fdfnzCfiEdPubf/JnT9Kt23dgGp0q/8irKHZwZT3ALhVq0smovz/ZEeEvZ10X6ZGE8P9J7DTiCLn05NBCq3Elc7nuMNoxme7pkI/hYaA2xDNJILJsTERSWS8RgUUakA4Xq/UT/7zXsvTwkpcXL9yKFbhhL8o9KXyEz2vxYhzfJJ3WhGO47jheyVwRmEVkAYc6KStP5kuPvMuaOHz94TIycfzCwNnph8bHNnvZPZqelftIsufaXeaqZEIx2gYDRK4Q6p6mycWCe+ePeFm/fL+V8AAAD//0ljsjwAAAAGSURBVAMAStmtjUgz4LEAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "39d09d0f-4d0b-4da6-8a12-c5a69af18a27",
+                                                            "title": "Topic",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-singapore-preprod/topic/public_transport-order-delivery-qual-as_cdc-available-shipments-avro_v1/data?sort=Newest&partition=All",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "d23260c3-67f3-41e4-98ad-6e2af0ee892e",
+                                                            "title": "KConnect 3 topics info",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-singapore-preprod/topic?search=private_transport-order-delivery-qual-as_available-shipment-jdbc-connector&topicListView=ALL&page=1",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "description": "Link to the 3 topics used to get kconnect information :\n  - connector_config_v1 \n  - connector_offset_v1\n  - connector_status_ v1",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:42:17.201Z",
+                                                            "lastModifiedDate": "2025-09-02T06:42:17.201Z"
+                                                        }
+                                                    ],
+                                                    "createdDate": "2025-09-02T06:52:18.059Z",
+                                                    "lastModifiedDate": "2025-09-02T07:35:47.605Z",
+                                                    "markColor": "#95c828",
+                                                    "component": "bookmarks",
+                                                    "toggleTabViewMode": "row"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "tabset",
+                                        "id": "#20215571-1bf2-4c13-99f5-46fd38536e24",
+                                        "weight": 25.523429710867397,
+                                        "children": [
+                                            {
+                                                "type": "tab",
+                                                "id": "45ca2a33-b325-447f-9f7e-94f82a40ccc8",
+                                                "name": "Flow-A4S-Test-PREPROD-AS",
+                                                "component": "bookmarks",
+                                                "config": {
+                                                    "id": "45ca2a33-b325-447f-9f7e-94f82a40ccc8",
+                                                    "title": "Flow-A4S-Test-PREPROD-AS",
+                                                    "bookmarks": [
+                                                        {
+                                                            "id": "2e282936-c0d9-45bd-8c8b-b3693813dad1",
+                                                            "title": "Repo : Resultat build",
+                                                            "url": "https://github.com/dktunited/transport-capetm/actions",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "description": "To control build and docker image correctly build",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:33:11.179Z",
+                                                            "lastModifiedDate": "2025-09-02T06:33:11.179Z"
+                                                        },
+                                                        {
+                                                            "id": "c1a6c309-2a3a-471e-b373-fe83d17a371f",
+                                                            "title": "inix-aws-as-transport",
+                                                            "url": "https://github.com/dktunited/inix-aws-as-transport/blob/preprod/transport-capetm/capetm-flow-available-shipment.yaml",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACqElEQVR4nGxTz0tUURQ+98ebN/5gZGa0CaE0e/4qJGijgS3aRxCtWuQialMUuAmUglbRogiyjKx/ICiKtkZhrQyKJCufxugkKpaTk1Tqm3vu9dw3IzMMXmbgvPPO953vfPc8CYXD6G9s0OR1HBHCOccBjlFiN6UZA7akgb3WWj2am/k6DmWHlcVOS0fXTUpcYJxHwRj6mZCUMcvBwGizTqmhtP95gNJ6m4CaeQSOPpXSOa415Qu4Mv7SMxcclMo/S09NnqYECvu2pb3xdiQS6VNKvUKDV6ldPWesQRu9RNAcCXBIzzgqHCDy6kjEPRGL17ur2Z+jrNnr7BFSjgnpCJUPHqb9yYtEKtvaDqWC4E/W9kXXTcz7/gqFQUt71x3pOJcQ85sqj72SC3GeZo4YjVawoiKrCqenJxbK/FksziPICUVjCsZ4Nef6LCmFo9YtTQZt5NV9Cy4Wsx3MRgX5YdD412JotF5ugDWGFoP5tZCemi0W6jLntl0MnzO+/4OCRYsg3D5u2U3B9ppEwquq6Fx5WCqVilJxzITrAcKOkLF4kpOsTTrdxU5yhxFszrh1yR4C7SruSIYD6nfAQyH/HCkfN7W2dkLBzMoR1F7vwEFHiKGQkViI4y1r8joPSyk/aGPuUm4P3cpJrfGFRn19dvrLhC0OgY68QoBTVFNjyazviNjNM9+/fTQGH0ghLgdBcEOjukX9av9vqrVS+2CDZuizYBK+Tk2kAX2PvotPVjtPY9BP9zjmRt0ntH3vKR5czvjbNwLzSi2QwmUbCyGqUKmXabU5aLFlRjVH97fHRrjkZ0g+ZDfW4rm5uZx9k/C8WFxW0UpzpPFGaFv7KR2EhCWXc2o1u/y8rr7hDbmzsoTBKORy1kxY/52AeNJxUZlrszOTw1BaNtgCAAD//2yGulAAAAAGSURBVAMAJsVHc9JrNmMAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "19c91482-9c0c-42a8-bf82-968da79a2f0e",
+                                                            "title": "Vault",
+                                                            "url": "https://vault.pp.dktapp.cloud/ui/vault/secrets/transport/kv/jdbc-connectors%2Fcapetm-flow-available-shipment%2Fas/details?namespace=inix",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAABR0lEQVR4nISSPU7DQBCF12sDEhIgKjoqOAAtBYoEQnAEGkq4CIXlG0FAsVAuwA0oklRJFUX5j/MmeROPHStZ6bO9OzNvZmfsnXNNkIEZWBiyEtY241kzxKMNXtx6BS5fGuT4LtuEd4/HJxGxuXHyPNN3wKA596s4Va2BH2bydP4DY3AIBuAGHFNAfO5BGtE5Bd/gkUFH7E0PnIAWuKaAxHwxJvDmbrGpQEo9Y/ApOGfZ2pdYe+ZNgxqgDg6474I+mIAOK/PM3qDPIjQNy1jqK78l8wgMwRO4pPgb+NcYFcioKIZbcAUumHUKntkXyf5hJlKYrV6nZiYS0Tal/YHNU9/Vhy7tRcpMEe8/Zul12gKX/2AFAVtR4vKJhPxOSj6VAnYiWoXOfdP5XQI2g8xa//m4ZNtyrjqXwF/u78xZYUV7BJKKs8JaAgAA//+xC1B+AAAABklEQVQDAGesZZFfczzgAAAAAElFTkSuQmCC",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "26451a33-b43c-463f-a93e-f10eef75ccf6",
+                                                            "title": "capetm",
+                                                            "url": "https://cape-preprod-asia.pp.dktapp.cloud/capetm/index.jsp",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADfUlEQVR4nFxTbWhbVRh+zrk3ubfJTZOmaZo2a6eypnaEFQRhVlGZIPMLgqBQfzpE/eNAhhXEEUQUtgyUjf3rHxGKA9E/6sCNldZh7bSwdktrdGbtli7J0qT5uPfmfuQcT+uEsQPP4Xy85z3P+/HIeGBkNhuR7y6upmzbfnVdN+HxKBgIqJVoT/Db44nRSwdHSON+e7I7p9NUgD0/s/Dmcv7Ox1uOG+ayrDBKAS7uGeeyRKzhoC//zN740emX9s+lxRsBRjjnRAyeOP3Th5vV5keO6tMsy4Hfp8KVZQS8Xvg8MorizLFthByj+s74w6c+Pzz+WToNusvgyKXbb391YS6THI5rfcEANxlDSFHgEQ5UiUIiBNuOg7+2m6TQMuGtV1unn0um3zif+JLMzy+Nn7y8fL6ghGPxR8ZYn18hxLWJJFxL9yLku+DQO4wTgRvbTToos/InfO1rOle131ppe2N7NYWN6hs0UrlBKOdgjMMRTGwBV0Bs0Suo5K0OVT0yC+YuR9ekEJevbBlJNRJjjqbRvNlAPOgXgf33sysc/c/BdV1cI13QyzkMllbpgqMy/a6zIq/frdkHk0niCLOqoqHSpaBlmuiSJPSqXqDTgSN5UICK6J+zCLdqyHI/rnn7SXdD94ksEjlfqsAnSjbs86DdNrFQrOD6Vm0naVhsU1h6A49mf4RTLWKZhrESGgV1TCL5QyGZ+rXcbDb37EA4hICqYLlQRElkumRpWDE4DjWXEKAmKtUSfohNwCAqJH17N7ioQm9SwjDjVbxE0OZty8I/jTZAFQzVN/BU8XeMlFdRbjv4fiSFNqPwddro2A7v4uzOQ63Vn+XJmLZYaBnZbLU5Jjcs9rhiEbuaJwdaG4h0mjiz50WguxdDdh3wq1xUiOdqdbpPk+czx45t0fdfnzCfiEdPubf/JnT9Kt23dgGp0q/8irKHZwZT3ALhVq0smovz/ZEeEvZ10X6ZGE8P9J7DTiCLn05NBCq3Elc7nuMNoxme7pkI/hYaA2xDNJILJsTERSWS8RgUUakA4Xq/UT/7zXsvTwkpcXL9yKFbhhL8o9KXyEz2vxYhzfJJ3WhGO47jheyVwRmEVkAYc6KStP5kuPvMuaOHz94TIycfzCwNnph8bHNnvZPZqelftIsufaXeaqZEIx2gYDRK4Q6p6mycWCe+ePeFm/fL+V8AAAD//0ljsjwAAAAGSURBVAMAStmtjUgz4LEAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "39d09d0f-4d0b-4da6-8a12-c5a69af18a27",
+                                                            "title": "Topic",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-singapore-preprod/topic/public_transport-order-delivery-pp-as_cdc-available-shipments-avro_v1/data?sort=Newest&partition=All",
+                                                            "createdDate": "2025-09-01T15:11:38.000Z",
+                                                            "lastModifiedDate": "2025-09-01T15:11:38.000Z",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "collapsed": true
+                                                        },
+                                                        {
+                                                            "id": "d23260c3-67f3-41e4-98ad-6e2af0ee892e",
+                                                            "title": "KConnect 3 topics info",
+                                                            "url": "https://atm-akhq.pp.dktapp.cloud/ui/aws-singapore-preprod/topic?search=private_transport-order-delivery-pp-as_available-shipment-jdbc-connector&topicListView=ALL&page=1",
+                                                            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAB90lEQVR4nIxSPWgUURCeeW9zuYTTxL1dVCIoiJWliGJ1IdxZacCAIGKVIhERCQhiq4WCiCCCgoWChZBGsLEJLEIKwVIEGznlUoi72T309HK5fW/81nDhQpJNBh7zfub7Zuab51CfhYveHmrTjGJ7TizX4R+61eQT5ZjqP3BbrjHJTRGOiOmEMD/5GfgHdkWQBKOjcBcBfOlVl6fwMg2iYyq1p3ZFYNvKklAX21I9OFJkkRHsNUgkj4D7D+GCNwPgHWzrWFnpBxHxtECrd7tmYNiR9M/es78SRp9bEsg8FSLXqymyFWT+tnZJtxAVAjMCTRL4B+5EPN8j4bzyslZKaesNYg8L8SNmOYPrihJ7vjcdlUfgduJhgMeQ5pVfjZ6D5B7yasP6eC8mlyAedP8C8ANrIloon4SfxLWjrWn0Ypx+gATkxMYdR6YKPlKD0lYD2Q/haT/Ab1GNhcjP9jWTj1sSLJvyZQTeh0BLrMQTIR+g99aqK5mIllXsu+Fnrv0fN20QET+upI28a/62jdPTza9XLxTN3KWh2dTwnF+LXtM2tq6Bk6YaTQx2VqQVxnbsy3erQN9RynYpxzaMEULdRgs32iuyWCjQUc28ygMyVR6Pl3asILPUOI/hXgwVeVJrNuh5Ng+8qYLMMi2UsdehdlCuxh9oB/sHAAD//0sMfWIAAAAGSURBVAMA3O/SE0/uHJEAAAAASUVORK5CYII=",
+                                                            "description": "Link to the 3 topics used to get kconnect information :\n  - connector_config_v1 \n  - connector_offset_v1\n  - connector_status_ v1",
+                                                            "collapsed": true,
+                                                            "createdDate": "2025-09-02T06:42:17.201Z",
+                                                            "lastModifiedDate": "2025-09-02T06:42:17.201Z"
+                                                        }
+                                                    ],
+                                                    "createdDate": "2025-09-02T06:46:26.594Z",
+                                                    "lastModifiedDate": "2025-09-02T07:31:34.389Z",
+                                                    "markColor": "#95c828",
+                                                    "component": "bookmarks",
+                                                    "toggleTabViewMode": "row"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "popouts": {}
+}
