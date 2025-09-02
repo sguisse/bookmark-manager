@@ -86,15 +86,36 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
     <div
       ref={setNodeRef}
       {...attributes}
-      {...listeners}
       className="bookmark-row-view"
-      onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
+  onPointerDown={(e: React.PointerEvent) => { console.debug('[BookmarksViewer] row onPointerDown', { id: bookmark.id, shift: e.shiftKey, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }); if (onSelect) { onSelect(bookmark.id, e as unknown as React.MouseEvent); } }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{ ...dragStyle, backgroundColor: isSelected ? (theme.colors.primary + '20') : 'transparent', borderRadius: 4 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 0, flex: 1 }}>
-        <div style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Drag handle for native HTML5 drag (keeps DataTransfer available). */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role, jsx-a11y/no-noninteractive-element-interactions */}
+        <div
+          role="button"
+          aria-label="drag-handle"
+          tabIndex={0}
+          draggable
+          {...listeners}
+          onDragStart={(e) => {
+            try {
+              const payload = { nodes: [{ id: bookmark.id, title: bookmark.title, url: bookmark.url, icon: bookmark.icon }] };
+              e.dataTransfer?.setData('application/x-bookmarks', JSON.stringify(payload));
+              // also set a plain text fallback
+              e.dataTransfer?.setData('text/plain', bookmark.url || bookmark.title || '');
+              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
+            } catch (err) {
+              console.debug('RowView dragstart failed', err);
+            }
+          }}
+          onDragEnd={() => { /* noop */ }}
+          onMouseDown={(e) => e.stopPropagation()}
+          style={{ width: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
           <Image value={bookmark.icon || '🌐'} size={16} rounded={true} />
         </div>
         <div style={{ flex: 1, position: 'relative' }}>
@@ -204,8 +225,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
     <div
       ref={setNodeRef}
       {...attributes}
-      {...listeners}
-      onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
+  onPointerDown={(e: React.PointerEvent) => { console.debug('[BookmarksViewer] card onPointerDown', { id: bookmark.id, shift: e.shiftKey, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }); if (onSelect) { onSelect(bookmark.id, e as unknown as React.MouseEvent); } }}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onOpen(bookmark.url); } }}
       style={{
         ...dragStyle,
@@ -230,7 +250,28 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
       {/* header: icon + title on the left, actions on the right (positioned over title on hover) */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Drag handle for native dragstart */}
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role, jsx-a11y/no-noninteractive-element-interactions */}
+          <div
+            role="button"
+            aria-label="drag-handle"
+            tabIndex={0}
+            draggable
+            {...listeners}
+            onDragStart={(e) => {
+              try {
+                const payload = { nodes: [{ id: bookmark.id, title: bookmark.title, url: bookmark.url, icon: bookmark.icon }] };
+                e.dataTransfer?.setData('application/x-bookmarks', JSON.stringify(payload));
+                e.dataTransfer?.setData('text/plain', bookmark.url || bookmark.title || '');
+                if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
+              } catch (err) {
+                console.debug('CardView dragstart failed', err);
+              }
+            }}
+            onDragEnd={() => {}}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8 }}
+          >
             <Image value={bookmark.icon || '🌐'} size={18} rounded={true} />
           </div>
           <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>

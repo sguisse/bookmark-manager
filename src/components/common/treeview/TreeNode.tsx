@@ -186,9 +186,6 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         ref={nodeRef}
         role="treeitem"
         tabIndex={0}
-        draggable
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -205,9 +202,49 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
           borderRadius,
           border: isDropTarget && dropPosition === 'inside' ? '1px dashed #9c27b0' : 'none',
           userSelect: 'none',
-          outline: 'none'
+          outline: 'none',
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
+    {/* Drag handle: small area that initiates native dragstart */}
+    {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-element-to-interactive-role */}
+    <div
+          role="button"
+          aria-label="drag-handle"
+          tabIndex={0}
+          draggable
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              // fallback for keyboard users: treat as select
+              handleClick();
+            }
+          }}
+          onMouseDown={(e) => { e.stopPropagation(); }}
+          style={{
+            width: '16px',
+            height: '16px',
+            marginRight: '8px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'grab',
+            flex: '0 0 16px'
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <circle cx="5" cy="5" r="1.5" fill="currentColor" />
+            <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+            <circle cx="5" cy="19" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="5" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="19" r="1.5" fill="currentColor" />
+          </svg>
+        </div>
+
         {renderNode ? (
           renderNode(node, renderOptions)
         ) : (

@@ -38,6 +38,7 @@ function selectionReducer(state: SelectionState, action: SelectionAction): Selec
     case 'CLEAR':
       return { selectedIds: [], lastSelectedIndex: null };
     default:
+      console.warn('[useBookmarksTabHandlers] unknown selection action', action);
       return state;
   }
 }
@@ -63,6 +64,8 @@ export function useBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     const isCmd = e.ctrlKey || e.metaKey;
     const isShift = e.shiftKey;
     const isAlt = e.altKey;
+
+    console.debug('[useBookmarksTabHandlers] handleSelect', { id, index, isCmd, isShift, isAlt });
 
     if ((isShift || isAlt) && selectionState.lastSelectedIndex !== null) {
       const start = Math.min(selectionState.lastSelectedIndex, index);

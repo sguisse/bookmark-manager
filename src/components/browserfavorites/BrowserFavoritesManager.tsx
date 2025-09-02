@@ -6,6 +6,7 @@ import BrowserFavoritesDropHandler from './BrowserFavoritesDropHandler';
 
 import '../../styles/index.css';
 import { BrowserFavoritesService } from '../../services/BrowserFavoritesService';
+import { DragHandle } from '../common/treeview/BookmarkTree';
 
 type Props = {};
 
@@ -155,25 +156,25 @@ const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (
           onMouseMove={moveTooltip}
           onMouseLeave={hideTooltip}
           onBlur={hideTooltip}
-          draggable={true}
-          onDragStart={(e) => {
-            try {
-              // send the full BrowserBookmarkNode for richer handling on drop
-              const urls = collectUrls(node);
-              const payload = JSON.stringify({ title: node.title || 'Bookmarks', node, urls });
-              e.dataTransfer?.setData('application/x-bookmarks-folder', payload);
-              // set a plain text fallback
-              e.dataTransfer?.setData('text/plain', `${node.title || 'Bookmarks'} (${urls.length} links)`);
-              console.debug('BrowserFavorites: dragstart folder', { nodeId: node.id, title: node.title, urls: urls.length });
-              // allow move/copy
-              if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
-            } catch (err) {
-              console.warn('Failed to set drag data for bookmarks folder', err);
-            }
-          }}
         >
           <span className="bf-node-left">
-            <Icon icon={node.icon || null} isFolder />
+            <DragHandle
+              onDragStart={(e) => {
+                try {
+                  const urls = collectUrls(node);
+                  const payload = JSON.stringify({ title: node.title || 'Bookmarks', node, urls });
+                  e.dataTransfer?.setData('application/x-bookmarks-folder', payload);
+                  e.dataTransfer?.setData('text/plain', `${node.title || 'Bookmarks'} (${urls.length} links)`);
+                  console.debug('BrowserFavorites: dragstart folder', { nodeId: node.id, title: node.title, urls: urls.length });
+                  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
+                } catch (err) {
+                  console.warn('Failed to set drag data for bookmarks folder', err);
+                }
+              }}
+              onDragEnd={() => {}}
+            >
+              <Icon icon={node.icon || null} isFolder />
+            </DragHandle>
             <span className="bf-node-text">{node.title}</span>
           </span>
         </button>
@@ -223,61 +224,57 @@ const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (
         onClick={(e) => {
           if (onSelect) onSelect(node.id, e);
         }}
-        draggable={true}
-        onDragStart={(e) => {
-          try {
-            // If multiple selected and this node is part of selection, drag all selected bookmarks
-            const sel = (selectedIds && selectedIds.length > 0) ? selectedIds : [node.id];
-            // try to obtain node objects for selected ids via helper if provided
-            let payloadNodes: any[] = [];
-            if (getNodesByIds) {
-              payloadNodes = getNodesByIds(sel).filter(Boolean).map(n => ({ id: n.id, title: n.title, url: n.url, icon: n.icon, createdDate: n.createdDate, lastModifiedDate: n.lastModifiedDate, description: n.description }));
-            }
-            if (payloadNodes.length === 0) payloadNodes = [{ id: node.id, title: node.title, url: node.url }];
-
-            const payload = JSON.stringify({ nodes: payloadNodes });
-            e.dataTransfer?.setData('application/x-bookmarks', payload);
-            e.dataTransfer?.setData('text/plain', payloadNodes.map((p: any) => p.url || p.title).join('\n'));
-
-            // show a small drag badge indicating number of items being dragged using setDragImage
-            try {
-              const count = payloadNodes.length;
-              const badge = document.createElement('div');
-              badge.className = 'bf-drag-badge';
-              badge.textContent = String(count);
-              // basic inline style to ensure visibility if CSS not loaded
-              badge.style.position = 'absolute';
-              badge.style.top = '0px';
-              badge.style.left = '0px';
-              badge.style.padding = '6px 8px';
-              badge.style.borderRadius = '999px';
-              badge.style.background = 'var(--color-primary)';
-              badge.style.color = 'white';
-              badge.style.fontWeight = '600';
-              badge.style.zIndex = '99999';
-              badge.style.fontSize = '12px';
-              document.body.appendChild(badge);
-              // use the badge as drag image
-              if (e.dataTransfer && typeof e.dataTransfer.setDragImage === 'function') {
-                e.dataTransfer.setDragImage(badge, 16, 16);
-              }
-              // remove badge after a short delay; keep slightly longer to ensure drag image used
-              setTimeout(() => { try { document.body.removeChild(badge); } catch (err) { console.warn('Failed to remove temp drag badge', err); } }, 500);
-            } catch (err) {
-              // Log drag image failures (non-fatal)
-              // eslint-disable-next-line no-console
-              console.warn('Failed to create drag image badge', err);
-            }
-
-            if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
-            console.debug('BrowserFavorites: dragstart bookmark', { nodeId: node.id, selectedIds: selectedIds });
-          } catch (err) {
-            console.warn('Failed to set drag data for bookmark', err);
-          }
-        }}
       >
         <span className="bf-node-left">
-          <Icon icon={node.icon || null} />
+          <DragHandle
+            onDragStart={(e) => {
+              try {
+                const sel = (selectedIds && selectedIds.length > 0) ? selectedIds : [node.id];
+                let payloadNodes: any[] = [];
+                if (getNodesByIds) {
+                  payloadNodes = getNodesByIds(sel).filter(Boolean).map(n => ({ id: n.id, title: n.title, url: n.url, icon: n.icon, createdDate: n.createdDate, lastModifiedDate: n.lastModifiedDate, description: n.description }));
+                }
+                if (payloadNodes.length === 0) payloadNodes = [{ id: node.id, title: node.title, url: node.url }];
+
+                const payload = JSON.stringify({ nodes: payloadNodes });
+                e.dataTransfer?.setData('application/x-bookmarks', payload);
+                e.dataTransfer?.setData('text/plain', payloadNodes.map((p: any) => p.url || p.title).join('\n'));
+
+                try {
+                  const count = payloadNodes.length;
+                  const badge = document.createElement('div');
+                  badge.className = 'bf-drag-badge';
+                  badge.textContent = String(count);
+                  badge.style.position = 'absolute';
+                  badge.style.top = '0px';
+                  badge.style.left = '0px';
+                  badge.style.padding = '6px 8px';
+                  badge.style.borderRadius = '999px';
+                  badge.style.background = 'var(--color-primary)';
+                  badge.style.color = 'white';
+                  badge.style.fontWeight = '600';
+                  badge.style.zIndex = '99999';
+                  badge.style.fontSize = '12px';
+                  document.body.appendChild(badge);
+                  if (e.dataTransfer && typeof e.dataTransfer.setDragImage === 'function') {
+                    e.dataTransfer.setDragImage(badge, 16, 16);
+                  }
+                  setTimeout(() => { try { document.body.removeChild(badge); } catch (err) { console.warn('Failed to remove temp drag badge', err); } }, 500);
+                } catch (err) {
+                  // eslint-disable-next-line no-console
+                  console.warn('Failed to create drag image badge', err);
+                }
+
+                if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
+                console.debug('BrowserFavorites: dragstart bookmark', { nodeId: node.id, selectedIds: selectedIds });
+              } catch (err) {
+                console.warn('Failed to set drag data for bookmark', err);
+              }
+            }}
+            onDragEnd={() => {}}
+          >
+            <Icon icon={node.icon || null} />
+          </DragHandle>
           <span className="bf-node-text">{node.title}</span>
         </span>
         <div

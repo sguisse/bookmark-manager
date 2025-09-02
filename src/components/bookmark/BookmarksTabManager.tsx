@@ -4,6 +4,7 @@ import { crossTabBookmarkService } from '../../services/CrossTabBookmarkService'
 import { Bookmark, BookmarksTabConfig } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
+import BookmarkTree from '../common/treeview/BookmarkTree';
 import { useOptionalGlobalDnd } from './dnd/GlobalDndProvider';
 import { useBookmarksTabHandlers } from './useBookmarksTabHandlers';
 
@@ -335,16 +336,23 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       {bookmarks.length === 0 ? (
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
-  <div className="grid" data-bookmarks-list-id={nodeId || config?.id || localTabIdRef.current} style={{ gap: '5px' }}>
-          {bookmarks.map((b, i) => (
-            <BookmarkTableRow key={b.id}
-                              bookmark={b}
-                              onSelect={(id, e) => handleSelect(id, i, e)}
-                              onEdit={handleEdit}
-                              onDelete={handleDelete}
-                              onToggleCollapsed={handleToggleCollapsed}
-                              isSelected={selectionState.selectedIds.includes(b.id)} />
-          ))}
+        <div className="grid" data-bookmarks-list-id={nodeId || config?.id || localTabIdRef.current} style={{ gap: '5px' }}>
+          <BookmarkTree
+            nodes={bookmarks.map(b => ({ id: b.id, parent: null, text: b.title || b.url || 'Bookmark', icon: b.icon, data: b }))}
+            renderRow={(n) => {
+              const b = (n.data as Bookmark);
+              const idx = bookmarks.findIndex(x => x.id === b.id);
+              return (
+                <BookmarkTableRow key={b.id}
+                                  bookmark={b}
+                                  onSelect={(id, e) => { console.debug('[BookmarksTabManager] onSelect invoked for', { id, idx }); handleSelect(id, idx, e); }}
+                                  onEdit={handleEdit}
+                                  onDelete={handleDelete}
+                                  onToggleCollapsed={handleToggleCollapsed}
+                                  isSelected={selectionState.selectedIds.includes(b.id)} />
+              );
+            }}
+          />
         </div>
       )}
       {isBookmarkFormOpen && (
