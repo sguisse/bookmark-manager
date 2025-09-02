@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import type { Bookmark } from '../../../types/bookmark';
 import { getRowRect, registerRow } from './rowRegistry';
+import { crossTabBookmarkService } from '../../../services/CrossTabBookmarkService';
 import { DndKitPreviewMarker } from './DndKitPreviewMarker';
 
 export type DropEffect = 'move' | 'copy' | 'none';
@@ -26,6 +27,8 @@ export interface DndKitMultiDragProviderProps {
   visibleList: Bookmark[];
   selectedIds: string[];
   tabId?: string;
+  // optional helper to build a transferable payload for cross-tab drag copies
+  getPayloadForIds?: (ids: string[]) => Promise<{ id: string; title?: string; url?: string; [k: string]: any }[]>;
   onPerformDrop: (opts: { sourceIds: string[]; sourceTabId?: string; targetIndex: number; effect: DropEffect }) => Promise<void>;
   children: React.ReactNode;
 }
@@ -33,6 +36,7 @@ export interface DndKitMultiDragProviderProps {
 export function DndKitMultiDragProvider({ visibleList, selectedIds, tabId, onPerformDrop, children }: DndKitMultiDragProviderProps) {
   const [overlay, setOverlay] = useState<React.ReactNode | null>(null);
   const [effect, setEffect] = useState<DropEffect>('move');
+  const [preview, setPreview] = useState<null | { top: number; left: number; width: number; effect: DropEffect; count: number; targetIndex: number; height: number }>(null);
   const dragSourceTab = useRef<string | undefined>(tabId);
   const isDraggingRef = useRef(false);
   const dragCountRef = useRef<number>(1);
@@ -66,7 +70,23 @@ export function DndKitMultiDragProvider({ visibleList, selectedIds, tabId, onPer
       color: '#007bff',
       boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
     }}>
-      <div>{count > 1 ? `${count} bookmarks` : '1 bookmark'}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div>{count > 1 ? `${count} bookmarks` : '1 bookmark'}</div>
+        {count > 1 && (
+          <div style={{
+            background: '#222',
+            color: '#fff',
+            borderRadius: 10,
+            width: 28,
+            height: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 700,
+            fontSize: 12
+          }}>{count}</div>
+        )}
+      </div>
       {eff === 'copy' && (
         <div style={{
           marginLeft: 6,
@@ -117,7 +137,25 @@ export function DndKitMultiDragProvider({ visibleList, selectedIds, tabId, onPer
     setEffect(initialEffect);
     isDraggingRef.current = true;
     dragCountRef.current = ids.length;
-    setOverlay(renderOverlay(dragCountRef.current, initialEffect));
+  setOverlay(renderOverlay(dragCountRef.current, initialEffect));
+  setPreview(null);
+
+  // record the originating tab id for this drag and cache payload for cross-tab drops
+  // prefer the explicit `tabId` prop (used for flexLayout tabs in-app); fall back to global if present
+  dragSourceTab.current = tabId ?? (window as any).__CURRENT_TAB_ID__;
+  // debug logging
+  console.debug('[DndKit] dragStart', { id, ids, initialEffect, providedTabId: tabId, resolvedSourceTab: dragSourceTab.current });
+    // If a payload builder was provided, cache the selected bookmarks for cross-tab drops
+    try {
+      if (typeof crossTabBookmarkService !== 'undefined' && (dragSourceTab.current || tabId)) {
+        const sourceTabId = dragSourceTab.current || tabId || `tab-${Math.random().toString(36).slice(2)}`;
+        const payloadItems = visibleList.filter(b => ids.includes(b.id)).map(b => ({ ...b }));
+        console.debug('[DndKit] caching drag payload', { sourceTabId, count: payloadItems.length });
+        if (payloadItems.length > 0) crossTabBookmarkService.cacheDragData(sourceTabId, ids, payloadItems);
+      }
+    } catch (err) {
+      console.warn('[DndKit] cache drag payload failed', err);
+    }
 
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -139,26 +177,34 @@ export function DndKitMultiDragProvider({ visibleList, selectedIds, tabId, onPer
     const overId = event.over?.id;
     if (overId) {
       const rect = getRowRect(String(overId));
-      if (rect) {
-        // position the marker at the top edge of the over element
-        const top = rect.top;
-        const left = rect.left;
-        const width = rect.width;
-        const eff = nativeEvent ? (nativeEvent.altKey ? 'copy' : 'move') : effect;
-        // render marker into overlay (we keep overlay for label; render both)
-        setOverlay(prev => (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {prev}
-            <DndKitPreviewMarker top={top} left={left} width={width} effect={eff as 'move' | 'copy'} count={dragCountRef.current} />
-          </div>
-        ));
-      }
+        if (rect) {
+          // decide before/after using pointer Y (clientY)
+          const clientY = (nativeEvent as MouseEvent)?.clientY ?? ((nativeEvent as any)?.touches?.[0]?.clientY) ?? (rect.top + rect.height / 2);
+          const mid = rect.top + rect.height / 2;
+          const insertBefore = clientY < mid;
+          // Use exact row height for the placeholder so it matches
+          const placeholderTop = insertBefore ? rect.top : rect.bottom - rect.height;
+          const placeholderHeight = Math.max(24, Math.round(rect.height));
+          const left = rect.left;
+          const width = rect.width;
+          const eff = nativeEvent ? (nativeEvent.altKey ? 'copy' : 'move') : effect;
+          const baseIndex = visibleList.findIndex(b => b.id === String(overId));
+          let targetIndex: number;
+          if (baseIndex === -1) targetIndex = visibleList.length;
+          else targetIndex = insertBefore ? baseIndex : baseIndex + 1;
+          setPreview({ top: placeholderTop, left, width, effect: eff, count: dragCountRef.current, targetIndex, height: placeholderHeight });
+          // keep overlay label visible
+          setOverlay(renderOverlay(dragCountRef.current, eff));
+        }
+    } else {
+      setPreview(null);
     }
   }, [effect]);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     setOverlay(null);
+    setPreview(null);
     isDraggingRef.current = false;
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
@@ -170,7 +216,13 @@ export function DndKitMultiDragProvider({ visibleList, selectedIds, tabId, onPer
     const targetIndex = visibleList.findIndex(b => b.id === targetId);
     // prefer runtime effect
     const dropEffect: DropEffect = effect;
-    await onPerformDrop({ sourceIds, sourceTabId: dragSourceTab.current, targetIndex, effect: dropEffect });
+    try {
+      console.debug('[DndKit] dragEnd', { active: sourceId, over: targetId, sourceIds, sourceTabId: dragSourceTab.current, targetIndex, dropEffect });
+      await onPerformDrop({ sourceIds, sourceTabId: dragSourceTab.current, targetIndex, effect: dropEffect });
+      console.debug('[DndKit] onPerformDrop completed', { sourceIds, targetIndex, dropEffect });
+    } catch (err) {
+      console.warn('[DndKit] onPerformDrop error', err);
+    }
   }, [selectedIds, visibleList, onPerformDrop, effect]);
 
   return (
@@ -185,6 +237,9 @@ export function DndKitMultiDragProvider({ visibleList, selectedIds, tabId, onPer
         {children}
       </SortableContext>
       <DragOverlay dropAnimation={null}>{overlay}</DragOverlay>
+      {preview && preview.effect !== 'none' && (
+        <DndKitPreviewMarker top={preview.top} left={preview.left} width={preview.width} effect={preview.effect as 'move' | 'copy'} count={preview.count} height={preview.height} />
+      )}
     </DndContext>
   );
 }
