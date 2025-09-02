@@ -40,6 +40,66 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
     }
   }, [selectedMenuItem]);
 
+  // listen for duplicate tab requests from tab UI
+  useEffect(() => {
+    const duplicateHandler = (e: Event) => {
+      try {
+        const ce = e as CustomEvent<{ nodeId: string }>;
+        const nid = ce?.detail?.nodeId;
+        if (!nid || !modelRef.current) return;
+
+        const jsonDoc = modelRef.current.toJson();
+
+        // find the tab and its parent array reference so we can insert next to it
+        const findParentArrayAndIndex = (children: any[] | undefined, parent: any = null): { arr: any[] | null; idx: number; parentNode: any } | null => {
+          if (!Array.isArray(children)) return null;
+          for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.type === 'tab' && child.id === nid) {
+              return { arr: children, idx: i, parentNode: parent };
+            }
+            const found = findParentArrayAndIndex(child.children as any[] | undefined, child);
+            if (found) return found;
+          }
+          return null;
+        };
+
+        const found = findParentArrayAndIndex([jsonDoc.layout], null) || null;
+        if (!found || !found.arr) return;
+
+        const original = found.arr[found.idx];
+        if (!original) return;
+
+        // deep clone config
+        const originalConfig = JSON.parse(JSON.stringify(original.config || {}));
+        const newId = uuidv4();
+        const newTitle = (originalConfig.title || original.name || 'Tab') + ' - copy';
+
+        const newTab = {
+          type: 'tab',
+          id: newId,
+          name: newTitle,
+          component: original.component,
+          config: { ...(originalConfig || {}), id: newId, title: newTitle, createdDate: new Date(), lastModifiedDate: new Date() }
+        };
+
+        // insert next to original (after)
+        found.arr.splice(found.idx + 1, 0, newTab);
+
+        // recreate model and persist
+        const newModel = Model.fromJson(jsonDoc);
+        setModel(newModel);
+        modelRef.current = newModel;
+        FlexLayoutService.saveConfig(selectedMenuItem?.id || '', jsonDoc);
+      } catch (err) {
+        console.warn('Failed to duplicate tab', err);
+      }
+    };
+
+    window.addEventListener('flexlayout:tab:duplicate', duplicateHandler as EventListener);
+    return () => window.removeEventListener('flexlayout:tab:duplicate', duplicateHandler as EventListener);
+  }, [selectedMenuItem]);
+
   // Listen for sidebar item deletion events and clear selection if the current item was deleted
   useEffect(() => {
     const handleItemDeleted = (event: Event) => {

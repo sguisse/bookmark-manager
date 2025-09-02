@@ -8,7 +8,7 @@ import { FlexLayoutTabConfig } from '../../types/flexTab';
 import { BookmarksTabConfig } from '../../types/bookmark';
 import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
-import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink } from 'lucide-react';
+import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink, Copy } from 'lucide-react';
 import Image from '../common/image/Image';
 import { FormDisplayMode } from '../../types/app';
 
@@ -43,6 +43,23 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
             title="Add new Tab"
           >
             <Plus size={16} />
+          </button>
+        );
+
+        // duplicate selected tab
+        renderValues.stickyButtons.push(
+          <button
+            key="tab-duplicate"
+            className="flexlayout__tab_toolbar_button"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              const nodeId = selectedTabNode.getId();
+              try { console.log('[FlexLayoutTabFactory] duplicate-tab clicked', { nodeId }); } catch (err) { console.warn('Debug log failed', err); }
+              try { window.dispatchEvent(new CustomEvent('flexlayout:tab:duplicate', { detail: { nodeId } })); } catch (err) { console.warn('Event dispatch failed', err); }
+            }}
+            title="Duplicate tab"
+          >
+            <Copy size={16} />
           </button>
         );
 
