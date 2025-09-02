@@ -5,6 +5,8 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { Layout, Model } from 'flexlayout-react';
 import createFlexLayoutFactory from './FlexLayoutTabFactory';
 import { v4 as uuidv4 } from 'uuid';
+import { setParentTabsetSelected } from './flexlayoutUtils';
+import { crossTabBookmarkService } from '../../services/CrossTabBookmarkService';
 import { FormDisplayMode } from '../../types/app';
 import FlexLayoutTabForm from './FlexLayoutTabForm';
 import { SidebarItem } from '../../types/sidebar';
@@ -64,10 +66,10 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           return null;
         };
 
-        const found = findParentArrayAndIndex([jsonDoc.layout], null) || null;
-        if (!found || !found.arr) return;
+  const found = findParentArrayAndIndex([jsonDoc.layout], null) || null;
+  if (!found?.arr) { return; }
 
-        const original = found.arr[found.idx];
+  const original = found.arr[found.idx];
         if (!original) return;
 
         // deep clone config
@@ -372,6 +374,83 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
 
   // header-level drops previously created bookmarks tabs; that behavior
   // has been removed in favor of the unified in-list external drop flow.
+
+  // Listen for tabset header drop events to create a new Bookmarks tab.
+  useEffect(() => {
+    const handler = async (e: Event) => {
+      try {
+        const ce = e as CustomEvent<{ sourceTabId?: string; sourceIds?: string[]; effect?: string; tabsetId?: string }>;
+        const { sourceTabId, sourceIds, effect, tabsetId } = ce?.detail || {};
+        if (!modelRef.current) return;
+
+        // fetch cached payload from cross-tab service
+        let payload: any = null;
+        try {
+          if (sourceTabId) payload = crossTabBookmarkService.getDragData(sourceTabId);
+        } catch (err) {
+          console.warn('[FlexLayoutManager] failed to get cached drag payload', err);
+        }
+
+        if (!payload || !Array.isArray(payload.bookmarks) || payload.bookmarks.length === 0) return;
+
+        // build a new tab config for bookmarks
+        const newId = uuidv4();
+  const bookmarks = payload.bookmarks.map((b: any) => ({ ...b, id: uuidv4() }));
+        const newTab = {
+          type: 'tab',
+          id: newId,
+          name: 'Bookmarks',
+          component: 'Bookmarks',
+          config: { id: newId, title: 'Bookmarks', bookmarks, createdDate: new Date(), lastModifiedDate: new Date() }
+        };
+
+        // Determine where to insert: try to find the tabset by id, otherwise append to top-level
+        const json = modelRef.current.toJson();
+
+  const findTabsetById = (children: any[] | undefined): Record<string, any> | null => {
+          if (!Array.isArray(children)) return null;
+          for (const child of children) {
+            if ((child.type === 'tabset' || child.type === 'row' || child.type === 'column') && (child.id === tabsetId || child.getId && child.getId() === tabsetId)) return child;
+            const found = findTabsetById(child.children as any[] | undefined);
+            if (found) return found;
+          }
+          return null;
+        };
+
+        const target = json.layout ? findTabsetById([json.layout]) : null;
+
+        if (target && Array.isArray(target.children)) {
+          target.children.push(newTab);
+        } else if (json.layout && Array.isArray((json.layout as any).children)) {
+          (json.layout as any).children.push(newTab);
+        } else {
+          json.layout = { type: 'row', children: [{ type: 'tabset', children: [newTab] }] } as any;
+        }
+
+        // After inserting the new tab, ensure the parent tabset selects the newly added tab
+        setParentTabsetSelected(json, newId);
+
+        const newModel = Model.fromJson(json as any);
+        setModel(newModel);
+        modelRef.current = newModel;
+        FlexLayoutService.saveConfig(selectedMenuItem?.id || '', json as any);
+
+        // If this was a move, notify the source to remove originals
+        try {
+          if (effect === 'move' && sourceTabId && Array.isArray(sourceIds) && sourceIds.length > 0) {
+            crossTabBookmarkService.notifyMove(sourceTabId, sourceIds);
+          }
+        } catch (err) {
+          console.warn('[FlexLayoutManager] notifyMove failed', err);
+        }
+      } catch (err) {
+        console.warn('[FlexLayoutManager] create-bookmarks-tab handler failed', err);
+      }
+    };
+
+    window.addEventListener('app:flexlayout:create-bookmarks-tab', handler as EventListener);
+    return () => window.removeEventListener('app:flexlayout:create-bookmarks-tab', handler as EventListener);
+  }, [selectedMenuItem]);
 
   const { factory, onRenderTabSet, onRenderTab } = (createFlexLayoutFactory as any)(handleChildConfigChange, openTabEditor);
 

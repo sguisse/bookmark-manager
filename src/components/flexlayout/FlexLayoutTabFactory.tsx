@@ -10,6 +10,7 @@ import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink, Copy } from 'lucide-react';
 import Image from '../common/image/Image';
+import TabsetDropTarget from './TabsetDropTarget';
 import { FormDisplayMode } from '../../types/app';
 
 
@@ -45,6 +46,21 @@ const buildOnRenderTabSet = (openTabEditor?: (nodeId: string, mode?: FormDisplay
             <Plus size={16} />
           </button>
         );
+
+      // ensure a small droppable overlay is present in the tabset header so
+      // users can drop bookmarks onto the tabset to create a new Bookmarks tab
+      try {
+        const tabsetId = String((tabSetNode as any).getId ? (tabSetNode as any).getId() : (tabSetNode as any).id || '');
+        if (tabsetId) {
+          renderValues.stickyButtons.push(
+            <div key="tabset-drop-target" style={{ position: 'relative', minWidth: 0, minHeight: 0 }}>
+              <TabsetDropTarget tabsetId={tabsetId} />
+            </div>
+          );
+        }
+      } catch (err) {
+        // non-fatal
+      }
 
         // duplicate selected tab
         renderValues.stickyButtons.push(

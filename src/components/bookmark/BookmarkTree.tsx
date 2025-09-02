@@ -1,5 +1,5 @@
 import React from 'react';
-import { TreeNode } from './types';
+import { TreeNode } from '../common/treeview/types';
 
 export const DragHandle: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }> = ({ children, ...rest }) => {
   return (

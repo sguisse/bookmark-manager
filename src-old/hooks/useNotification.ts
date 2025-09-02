@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface Notification {
   id: string;
@@ -12,7 +13,7 @@ export function useNotification() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id'>) => {
-    const id = `notification-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+  const id = `notification-${Date.now()}-${uuidv4()}`;
     const newNotification: Notification = {
       id,
       duration: 3000,

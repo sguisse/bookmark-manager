@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import BookmarkForm from './BookmarkForm';
 import { crossTabBookmarkService } from '../../services/CrossTabBookmarkService';
 import { Bookmark, BookmarksTabConfig } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
-import BookmarkTree from '../common/treeview/BookmarkTree';
+import BookmarkTree from './BookmarkTree';
 import { useOptionalGlobalDnd } from './dnd/GlobalDndProvider';
 import { useBookmarksTabHandlers } from './useBookmarksTabHandlers';
 
@@ -17,7 +18,7 @@ interface BookmarksTabProps {
 export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> = {}) {
   const { config, onConfigChange, nodeId } = props;
   // stable local tab id used by provider to identify this tab as drag source
-  const localTabIdRef = useRef<string>(nodeId || config?.id || `tab-${Math.random().toString(36).slice(2)}`);
+  const localTabIdRef = useRef<string>(nodeId || config?.id || `tab-${uuidv4()}`);
   const [isBookmarkFormOpen, setIsBookmarkFormOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
 
@@ -58,11 +59,11 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         if (sourceTabId) {
           const payload = crossTabBookmarkService.getDragData(sourceTabId);
           if (payload && payload.bookmarks) {
-            copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: Math.random().toString(36).slice(2) }));
+            copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: uuidv4() }));
           }
         }
         if (copies.length === 0) {
-          copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+          copies = moving.map(b => ({ ...b, id: uuidv4() }));
         }
 
         newBookmarks = [...before, ...copies, ...after];
@@ -73,7 +74,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
           console.warn('Failed to select copies after cross-tab drop', err);
         }
       } catch (err) {
-        const copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+  const copies = moving.map(b => ({ ...b, id: uuidv4() }));
         newBookmarks = [...before, ...copies, ...after];
       }
     } else if (effect === 'move') {
@@ -83,10 +84,10 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
           const payload = crossTabBookmarkService.getDragData(sourceTabId);
           let copies: Bookmark[] = [];
           if (payload && payload.bookmarks) {
-            copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: Math.random().toString(36).slice(2) }));
+            copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: uuidv4() }));
           }
           if (copies.length === 0) {
-            copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+            copies = moving.map(b => ({ ...b, id: uuidv4() }));
           }
           newBookmarks = [...before, ...copies, ...after];
           try { crossTabBookmarkService.notifyMove(sourceTabId, sourceIds); } catch (err) { console.warn('[BookmarksTabManager] notifyMove failed', err); }
@@ -97,7 +98,7 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
             console.warn('Failed to select moved copies after cross-tab drop', err);
           }
         } catch (err) {
-          const copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+          const copies = moving.map(b => ({ ...b, id: uuidv4() }));
           newBookmarks = [...before, ...copies, ...after];
         }
       } else {
@@ -259,11 +260,11 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         if (detail.node && detail.node.isFolder) {
           const folder = detail.node;
           // folder placeholder (url empty string to satisfy Bookmark type)
-          copies.push({ id: Math.random().toString(36).slice(2), title: folder.title || 'Folder', url: '', icon: folder.icon || '📁', createdDate: new Date(), lastModifiedDate: new Date(), description: folder.description || '' });
+          copies.push({ id: uuidv4(), title: folder.title || 'Folder', url: '', icon: folder.icon || '📁', createdDate: new Date(), lastModifiedDate: new Date(), description: folder.description || '' });
           const leaves: any[] = [];
           collectLeafNodes(folder, leaves);
           for (const n of leaves) {
-            copies.push({ id: Math.random().toString(36).slice(2), title: n.title || n.url || 'Bookmark', url: n.url || '', icon: n.icon, createdDate: n.createdDate || new Date(), lastModifiedDate: n.lastModifiedDate || new Date(), description: n.description });
+            copies.push({ id: uuidv4(), title: n.title || n.url || 'Bookmark', url: n.url || '', icon: n.icon, createdDate: n.createdDate || new Date(), lastModifiedDate: n.lastModifiedDate || new Date(), description: n.description });
           }
         }
 
@@ -271,20 +272,20 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
         for (const n of rawNodes) {
           if (n && n.isFolder) {
             // folder: create placeholder + leaves
-            copies.push({ id: Math.random().toString(36).slice(2), title: n.title || 'Folder', url: '', icon: n.icon || '📁', createdDate: new Date(), lastModifiedDate: new Date(), description: n.description || '' });
+            copies.push({ id: uuidv4(), title: n.title || 'Folder', url: '', icon: n.icon || '📁', createdDate: new Date(), lastModifiedDate: new Date(), description: n.description || '' });
             const leaves: any[] = [];
             collectLeafNodes(n, leaves);
             for (const l of leaves) {
-              copies.push({ id: Math.random().toString(36).slice(2), title: l.title || l.url || 'Bookmark', url: l.url || '', icon: l.icon, createdDate: l.createdDate || new Date(), lastModifiedDate: l.lastModifiedDate || new Date(), description: l.description });
+              copies.push({ id: uuidv4(), title: l.title || l.url || 'Bookmark', url: l.url || '', icon: l.icon, createdDate: l.createdDate || new Date(), lastModifiedDate: l.lastModifiedDate || new Date(), description: l.description });
             }
           } else if (n) {
-            copies.push({ id: Math.random().toString(36).slice(2), title: n.title || n.url || 'Bookmark', url: n.url || '', icon: n.icon, createdDate: n.createdDate || new Date(), lastModifiedDate: n.lastModifiedDate || new Date(), description: n.description });
+            copies.push({ id: uuidv4(), title: n.title || n.url || 'Bookmark', url: n.url || '', icon: n.icon, createdDate: n.createdDate || new Date(), lastModifiedDate: n.lastModifiedDate || new Date(), description: n.description });
           }
         }
 
         // simple url list
         for (const u of urls) {
-          copies.push({ id: Math.random().toString(36).slice(2), title: u, url: u, createdDate: new Date(), lastModifiedDate: new Date() });
+          copies.push({ id: uuidv4(), title: u, url: u, createdDate: new Date(), lastModifiedDate: new Date() });
         }
 
         if (copies.length === 0) return;

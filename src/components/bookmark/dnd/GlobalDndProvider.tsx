@@ -54,6 +54,7 @@ export const useOptionalGlobalDnd = () => {
 export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const listsRef = useRef<Map<string, RegisteredList>>(new Map());
   const idToTab = useRef<Map<string, string>>(new Map());
+  const [listsVersion, setListsVersion] = useState(0);
 
   const [overlay, setOverlay] = useState<React.ReactNode | null>(null);
   const [effect, setEffect] = useState<DropEffect>('move');
@@ -81,16 +82,19 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const registerList = useCallback((list: RegisteredList) => {
     listsRef.current.set(list.tabId, list);
     rebuildIdMap();
+    setListsVersion(v => v + 1);
   }, [rebuildIdMap]);
 
   const updateList = useCallback((list: RegisteredList) => {
     listsRef.current.set(list.tabId, list);
     rebuildIdMap();
+    setListsVersion(v => v + 1);
   }, [rebuildIdMap]);
 
   const unregisterList = useCallback((tabId: string) => {
     listsRef.current.delete(tabId);
     rebuildIdMap();
+    setListsVersion(v => v + 1);
   }, [rebuildIdMap]);
 
   const renderOverlay = (count: number, eff: DropEffect) => (
@@ -201,6 +205,27 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return (ne as MouseEvent).clientY ?? (rect.top + rect.height / 2);
   };
 
+  const renderTabsetOverlay = (count: number, eff: DropEffect) => (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      background: eff === 'copy' ? 'rgba(0,123,255,0.12)' : 'rgba(0,200,83,0.08)',
+      border: '1px dashed #888',
+      borderRadius: 6,
+      padding: '8px 12px',
+      minWidth: 160,
+      fontWeight: 600,
+      color: '#333',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div>{count > 1 ? `${count} bookmarks` : '1 bookmark'}</div>
+      </div>
+      <div style={{ marginLeft: '6px', fontSize: 13, color: '#666' }}>{eff === 'copy' ? 'Create as copy' : 'Create new tab'}</div>
+    </div>
+  );
+
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const nativeEvent = (event as any).event as (MouseEvent | KeyboardEvent | undefined);
 
@@ -241,7 +266,15 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return { placeholderTop, placeholderHeight, left, width, eff, targetTab, targetIndex } as const;
     };
 
-    const overInfo = getOverInfo(event.over?.id as string | undefined, nativeEvent);
+    const overId = event.over?.id as string | undefined;
+    // If we're over a tabset drop target, show a tabset overlay and do not show the row placeholder
+    if (overId?.startsWith('flex-tabset-')) {
+      setPreview(null);
+      setOverlay(renderTabsetOverlay(dragCountRef.current, nativeEvent?.altKey ? 'copy' : 'move'));
+      return;
+    }
+
+    const overInfo = getOverInfo(overId, nativeEvent);
     if (overInfo) {
       setPreview({ top: overInfo.placeholderTop, left: overInfo.left, width: overInfo.width, effect: overInfo.eff, count: dragCountRef.current, targetTab: overInfo.targetTab, targetIndex: overInfo.targetIndex, height: overInfo.placeholderHeight });
       setOverlay(renderOverlay(dragCountRef.current, overInfo.eff));
@@ -293,7 +326,7 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     }
     return out;
-  }, [listsRef.current]);
+  }, [listsVersion]);
 
   const ctxValue = useMemo(() => ({ registerList, updateList, unregisterList }), [registerList, updateList, unregisterList]);
 

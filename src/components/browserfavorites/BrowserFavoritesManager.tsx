@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { BrowserBookmarkNode, BrowserFavorites, BrowserFavoritesFormData } from '../../types/browser';
 import { FormDisplayMode } from '../../types/app';
 import BrowserFavoritesForm from './BrowserFavoritesForm';
@@ -6,7 +7,7 @@ import BrowserFavoritesDropHandler from './BrowserFavoritesDropHandler';
 
 import '../../styles/index.css';
 import { BrowserFavoritesService } from '../../services/BrowserFavoritesService';
-import { DragHandle } from '../common/treeview/BookmarkTree';
+import { DragHandle } from '../bookmark/BookmarkTree';
 import { useOptionalGlobalDnd } from '../bookmark/dnd/GlobalDndProvider';
 import { useSortable } from '@dnd-kit/sortable';
 import type { Bookmark } from '../../types/bookmark';
@@ -242,7 +243,7 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
   const lastRemovedIdsRef = React.useRef<string[] | null>(null);
   const lastRemovedRecordsRef = React.useRef<null | { node: BrowserBookmarkNode; parentId: string | null; index: number }[]>(null);
-  const localTabIdRef = useRef<string>(`bf-${Math.random().toString(36).slice(2)}`);
+  const localTabIdRef = useRef<string>(`bf-${uuidv4()}`);
   const formMode = FormDisplayMode.Edit; // Always in edit mode since form is always visible
   const globalDnd = useOptionalGlobalDnd();
 
