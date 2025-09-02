@@ -23,9 +23,15 @@ type OnPerformDrop = (opts: { sourceIds: string[]; sourceTabId?: string; targetI
 
 type RegisteredList = {
   tabId: string;
+  // items are the bookmark records visible in the list (leaf bookmarks)
   items: Bookmark[];
+  // selectedIds are the bookmark ids currently selected (leaf ids)
   selectedIds: string[];
   onPerformDrop: OnPerformDrop;
+  // optional: nodeIds includes all draggable node ids in the list (may include folder ids)
+  nodeIds?: string[];
+  // optional: given node ids (possibly folder ids), return the bookmark payloads (leaf bookmarks)
+  getPayloadForIds?: (ids: string[]) => Bookmark[];
 };
 
 const GlobalDndContext = createContext<{
@@ -64,7 +70,11 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const rebuildIdMap = useCallback(() => {
     idToTab.current.clear();
     for (const [tabId, rl] of listsRef.current.entries()) {
-      for (const b of rl.items) idToTab.current.set(b.id, tabId);
+      if (rl.nodeIds && rl.nodeIds.length > 0) {
+        for (const id of rl.nodeIds) idToTab.current.set(id, tabId);
+      } else {
+        for (const b of rl.items) idToTab.current.set(b.id, tabId);
+      }
     }
   }, []);
 
@@ -171,7 +181,7 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     try {
       if (dragSourceTab.current) {
-        const payloadItems = sourceList?.items.filter(b => ids.includes(b.id)).map(b => ({ ...b })) || [];
+        const payloadItems = sourceList?.getPayloadForIds ? sourceList.getPayloadForIds(ids).map(b => ({ ...b })) : sourceList?.items.filter(b => ids.includes(b.id)).map(b => ({ ...b })) || [];
         console.debug('[GlobalDnd] caching drag payload', { sourceTab: dragSourceTab.current, count: payloadItems.length });
         if (payloadItems.length > 0) crossTabBookmarkService.cacheDragData(dragSourceTab.current, ids, payloadItems);
       }
@@ -276,7 +286,11 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const allIds = useMemo(() => {
     const out: string[] = [];
     for (const rl of listsRef.current.values()) {
-      for (const b of rl.items) out.push(b.id);
+      if (rl.nodeIds && rl.nodeIds.length > 0) {
+        for (const id of rl.nodeIds) out.push(id);
+      } else {
+        for (const b of rl.items) out.push(b.id);
+      }
     }
     return out;
   }, [listsRef.current]);

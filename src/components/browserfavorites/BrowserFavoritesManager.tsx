@@ -181,9 +181,10 @@ const FolderNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle:
 
   const totalLinks = countLinks(node);
   if (totalLinks >= 0) tooltipLines.push(`${totalLinks} links`);
+  const { attributes, listeners, setNodeRef } = useSortable({ id: node.id });
 
   return (
-    <div className="bf-node bf-folder relative" role="treeitem" aria-expanded={open} aria-selected={selected}>
+    <div className="bf-node bf-folder relative" role="treeitem" aria-expanded={open} aria-selected={selected} ref={setNodeRef as any}>
       <div
         className={"bf-node-label bf-folder-toggle" + (selected ? ' bf-node-selected' : '')}
         style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', padding: '4px 6px' }}
@@ -203,7 +204,7 @@ const FolderNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle:
         onBlur={hideTooltip}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-          <DragHandle>
+          <DragHandle {...listeners} {...(attributes as any)}>
             <Icon icon={node.icon || null} isFolder />
           </DragHandle>
           <span className="bf-node-text">{node.title}</span>
@@ -332,7 +333,63 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
     const visible: Bookmark[] = [];
     flatten(tree, expanded, visible);
 
-    const list: any = { tabId: localTabIdRef.current, items: visible, selectedIds, onPerformDrop: async (_opts: any) => { /* BF is primarily a source: no-op */ } };
+    // collect all node ids (folders + leaves) so folder ids are recognized as draggable
+    const collectAllNodeIds = (nodes: BrowserBookmarkNode[], out: string[]) => {
+      for (const n of nodes) {
+        out.push(n.id);
+        if (n.children) collectAllNodeIds(n.children, out);
+      }
+    };
+
+    const allNodeIds: string[] = [];
+    collectAllNodeIds(tree, allNodeIds);
+
+    // helper to convert a BrowserBookmarkNode to Bookmark
+    const nodeToBookmark = (n: BrowserBookmarkNode): Bookmark => ({
+      id: n.id,
+      title: n.title || n.url || 'Bookmark',
+      url: n.url || '',
+      icon: n.icon || '',
+      createdDate: n.createdDate || new Date(),
+      lastModifiedDate: n.lastModifiedDate || new Date(),
+      description: n.description || ''
+    });
+
+    // collect all leaf Bookmark nodes under a node (recursive, ignore expanded)
+    const collectAllLeafNodes = (node: BrowserBookmarkNode, out: BrowserBookmarkNode[]) => {
+      if (!node) return;
+      if (!node.isFolder) {
+        out.push(node);
+        return;
+      }
+      if (node.children) {
+        for (const c of node.children) collectAllLeafNodes(c, out);
+      }
+    };
+
+    const list: any = {
+      tabId: localTabIdRef.current,
+      items: visible,
+      selectedIds,
+      onPerformDrop: async (_opts: any) => { /* BF is primarily a source: no-op */ },
+      nodeIds: allNodeIds,
+      getPayloadForIds: (ids: string[]) => {
+        const out: Bookmark[] = [];
+        for (const id of ids) {
+          const node = findNodeById(tree, id);
+          if (!node) continue;
+          if (!node.isFolder) {
+            out.push(nodeToBookmark(node));
+            continue;
+          }
+          // folder: include all leaf descendants
+          const leaves: BrowserBookmarkNode[] = [];
+          collectAllLeafNodes(node, leaves);
+          for (const l of leaves) out.push(nodeToBookmark(l));
+        }
+        return out;
+      }
+    };
 
     try { globalDnd.registerList(list); } catch (err) { console.warn('[BrowserFavoritesManager] registerList failed', err); }
     return () => { try { globalDnd.unregisterList(localTabIdRef.current); } catch (err) { console.warn('[BrowserFavoritesManager] unregisterList failed', err); } };
