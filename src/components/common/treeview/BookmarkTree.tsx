@@ -1,16 +1,14 @@
 import React from 'react';
 import { TreeNode } from './types';
 
-export const DragHandle: React.FC<{ onDragStart?: (e: React.DragEvent) => void; onDragEnd?: (e: React.DragEvent) => void; children?: React.ReactNode }> = ({ onDragStart, onDragEnd, children }) => {
+export const DragHandle: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { children?: React.ReactNode }> = ({ children, ...rest }) => {
   return (
     <button
       type="button"
       aria-label="drag-handle"
-      draggable
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
       onMouseDown={(e) => e.stopPropagation()}
       style={{ width: 16, height: 16, marginRight: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'grab', flex: '0 0 16px', background: 'none', border: 'none', padding: 0 }}
+      {...rest}
     >
       {children ?? (
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>

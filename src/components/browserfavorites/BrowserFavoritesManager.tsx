@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserBookmarkNode, BrowserFavorites, BrowserFavoritesFormData } from '../../types/browser';
 import { FormDisplayMode } from '../../types/app';
 import BrowserFavoritesForm from './BrowserFavoritesForm';
@@ -7,6 +7,9 @@ import BrowserFavoritesDropHandler from './BrowserFavoritesDropHandler';
 import '../../styles/index.css';
 import { BrowserFavoritesService } from '../../services/BrowserFavoritesService';
 import { DragHandle } from '../common/treeview/BookmarkTree';
+import { useOptionalGlobalDnd } from '../bookmark/dnd/GlobalDndProvider';
+import { useSortable } from '@dnd-kit/sortable';
+import type { Bookmark } from '../../types/bookmark';
 
 type Props = {};
 
@@ -91,216 +94,143 @@ const insertGroupHelper = (nodes: BrowserBookmarkNode[], parentId: string | null
   return walkAndInsert(nodes);
 };
 
-const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (id: string) => void; expanded: Record<string, boolean>; selected?: boolean; onSelect?: (id: string, e: React.MouseEvent) => void; selectedIds?: string[]; getNodesByIds?: (ids: string[]) => BrowserBookmarkNode[] }> = ({ node, open, onToggle, expanded, selected, onSelect, selectedIds, getNodesByIds }) => {
-  const tooltipLines: string[] = [];
-  const dateStr = formatAddDate(node.createdDate);
-  if (dateStr) tooltipLines.push(dateStr);
-  if (node.url) tooltipLines.push(node.url || '');
+const LeafNode: React.FC<{ node: BrowserBookmarkNode; selected?: boolean; onSelect?: (id: string, e: React.MouseEvent) => void }> = ({ node, selected, onSelect }) => {
+  const { attributes, listeners, setNodeRef } = useSortable({ id: node.id });
 
-  // tooltip follows mouse cursor: track position and visibility per node
+  // tooltip state
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const tooltipTimerRef = React.useRef<number | null>(null);
 
-  const showTooltip = (e: React.MouseEvent | React.FocusEvent) => {
-    // schedule tooltip after 1 second
+  const showTooltip = (e: any) => {
     if (tooltipTimerRef.current) window.clearTimeout(tooltipTimerRef.current);
-    // MouseEvent has clientX/Y; FocusEvent does not. Use currentTarget for focus.
-    if ('clientX' in e && 'clientY' in e) {
+    if (e && 'clientX' in e && 'clientY' in e) {
       setTooltipPos({ x: e.clientX, y: e.clientY });
     } else {
       const el = e.currentTarget as HTMLElement | null;
       if (el) {
         const r = el.getBoundingClientRect();
         setTooltipPos({ x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) });
-      } else {
-        setTooltipPos(null);
-      }
+      } else setTooltipPos(null);
     }
     tooltipTimerRef.current = window.setTimeout(() => setTooltipVisible(true), 1000);
   };
-
-  const moveTooltip = (e: React.MouseEvent) => {
-    setTooltipPos({ x: e.clientX, y: e.clientY });
-  };
-  const hideTooltip = () => {
-    if (tooltipTimerRef.current) {
-      window.clearTimeout(tooltipTimerRef.current);
-      tooltipTimerRef.current = null;
-    }
-    setTooltipVisible(false);
-  };
-
-  if (node.isFolder) {
-    // include total links count in folder tooltip
-    const totalLinks = countLinks(node);
-    if (totalLinks >= 0) tooltipLines.push(`${totalLinks} links`);
-    return (
-      <div className="bf-node bf-folder relative">
-          <button
-            type="button"
-            className={"bf-node-label bf-folder-toggle" + (selected ? ' bf-node-selected' : '')}
-            onClick={(e) => {
-              const meta = (e as React.MouseEvent).metaKey || (e as React.MouseEvent).ctrlKey || (e as React.MouseEvent).altKey || (e as React.MouseEvent).shiftKey;
-              if (meta) {
-                // when modifier keys are used allow selection of the folder (selection will be resolved later to leaf nodes)
-                if (onSelect) onSelect(node.id, e as unknown as React.MouseEvent);
-              } else {
-                // normal click toggles expansion
-                onToggle(node.id);
-              }
-            }}
-          aria-expanded={open}
-          onMouseEnter={showTooltip}
-          onFocus={showTooltip}
-          onMouseMove={moveTooltip}
-          onMouseLeave={hideTooltip}
-          onBlur={hideTooltip}
-        >
-          <span className="bf-node-left">
-            <DragHandle
-              onDragStart={(e) => {
-                try {
-                  const urls = collectUrls(node);
-                  const payload = JSON.stringify({ title: node.title || 'Bookmarks', node, urls });
-                  e.dataTransfer?.setData('application/x-bookmarks-folder', payload);
-                  e.dataTransfer?.setData('text/plain', `${node.title || 'Bookmarks'} (${urls.length} links)`);
-                  console.debug('BrowserFavorites: dragstart folder', { nodeId: node.id, title: node.title, urls: urls.length });
-                  if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
-                } catch (err) {
-                  console.warn('Failed to set drag data for bookmarks folder', err);
-                }
-              }}
-              onDragEnd={() => {}}
-            >
-              <Icon icon={node.icon || null} isFolder />
-            </DragHandle>
-            <span className="bf-node-text">{node.title}</span>
-          </span>
-        </button>
-        <div
-          className="bf-node-tooltip"
-          role="tooltip"
-          aria-hidden={tooltipLines.length === 0 || !tooltipVisible}
-          style={(() => {
-            const base: React.CSSProperties = {};
-            if (tooltipPos) {
-              base.position = 'fixed';
-              base.left = `${tooltipPos.x + 12}px`;
-              base.top = `${tooltipPos.y + 12}px`;
-            }
-            // also mirror visibility state inline to ensure consistent behavior
-            base.visibility = tooltipLines.length === 0 || !tooltipVisible ? 'hidden' : 'visible';
-            base.opacity = tooltipVisible ? 1 : 0;
-            base.pointerEvents = tooltipVisible ? 'auto' : 'none';
-            return base;
-          })()}
-        >
-          {tooltipLines.map((l) => (
-            <div key={l} className="bf-tooltip-line">{l}</div>
-          ))}
-        </div>
-        {open && node.children && (
-          <div className="bf-children">
-            {node.children.map((c) => (
-              <TreeNode key={c.id} node={c} open={!!expanded[c.id]} onToggle={onToggle} expanded={expanded} selected={!!(selectedIds?.includes(c.id))} onSelect={onSelect} selectedIds={selectedIds} getNodesByIds={getNodesByIds} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
+  const moveTooltip = (e: React.MouseEvent) => setTooltipPos({ x: e.clientX, y: e.clientY });
+  const hideTooltip = () => { if (tooltipTimerRef.current) { window.clearTimeout(tooltipTimerRef.current); tooltipTimerRef.current = null; } setTooltipVisible(false); };
 
   return (
-    <div className="bf-node bf-bookmark relative">
-      <button
-        type="button"
+    <div className="bf-node bf-bookmark relative" role="treeitem" aria-selected={selected} ref={setNodeRef as any}>
+      <div
         className={"bf-node-label" + (selected ? ' bf-node-selected' : '')}
+        style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', padding: '4px 6px' }}
+        onPointerDown={(e: React.PointerEvent) => { if (onSelect) onSelect(node.id, e as unknown as React.MouseEvent); }}
+        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (onSelect) onSelect(node.id, e as unknown as React.MouseEvent); } }}
         onMouseEnter={showTooltip}
         onFocus={showTooltip}
         onMouseMove={moveTooltip}
         onMouseLeave={hideTooltip}
         onBlur={hideTooltip}
-        onClick={(e) => {
-          if (onSelect) onSelect(node.id, e);
-        }}
       >
-        <span className="bf-node-left">
-          <DragHandle
-            onDragStart={(e) => {
-              try {
-                const sel = (selectedIds && selectedIds.length > 0) ? selectedIds : [node.id];
-                let payloadNodes: any[] = [];
-                if (getNodesByIds) {
-                  payloadNodes = getNodesByIds(sel).filter(Boolean).map(n => ({ id: n.id, title: n.title, url: n.url, icon: n.icon, createdDate: n.createdDate, lastModifiedDate: n.lastModifiedDate, description: n.description }));
-                }
-                if (payloadNodes.length === 0) payloadNodes = [{ id: node.id, title: node.title, url: node.url }];
-
-                const payload = JSON.stringify({ nodes: payloadNodes });
-                e.dataTransfer?.setData('application/x-bookmarks', payload);
-                e.dataTransfer?.setData('text/plain', payloadNodes.map((p: any) => p.url || p.title).join('\n'));
-
-                try {
-                  const count = payloadNodes.length;
-                  const badge = document.createElement('div');
-                  badge.className = 'bf-drag-badge';
-                  badge.textContent = String(count);
-                  badge.style.position = 'absolute';
-                  badge.style.top = '0px';
-                  badge.style.left = '0px';
-                  badge.style.padding = '6px 8px';
-                  badge.style.borderRadius = '999px';
-                  badge.style.background = 'var(--color-primary)';
-                  badge.style.color = 'white';
-                  badge.style.fontWeight = '600';
-                  badge.style.zIndex = '99999';
-                  badge.style.fontSize = '12px';
-                  document.body.appendChild(badge);
-                  if (e.dataTransfer && typeof e.dataTransfer.setDragImage === 'function') {
-                    e.dataTransfer.setDragImage(badge, 16, 16);
-                  }
-                  setTimeout(() => { try { document.body.removeChild(badge); } catch (err) { console.warn('Failed to remove temp drag badge', err); } }, 500);
-                } catch (err) {
-                  // eslint-disable-next-line no-console
-                  console.warn('Failed to create drag image badge', err);
-                }
-
-                if (e.dataTransfer) e.dataTransfer.effectAllowed = 'copyMove';
-                console.debug('BrowserFavorites: dragstart bookmark', { nodeId: node.id, selectedIds: selectedIds });
-              } catch (err) {
-                console.warn('Failed to set drag data for bookmark', err);
-              }
-            }}
-            onDragEnd={() => {}}
-          >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+          <DragHandle {...listeners} {...(attributes as any)}>
             <Icon icon={node.icon || null} />
           </DragHandle>
           <span className="bf-node-text">{node.title}</span>
-        </span>
+        </div>
         <div
           className="bf-node-tooltip"
           role="tooltip"
-          aria-hidden={tooltipLines.length === 0 || !tooltipVisible}
+          aria-hidden={!tooltipVisible}
           style={(() => {
             const base: React.CSSProperties = {};
             if (tooltipPos) {
-              base.position = 'fixed';
-              base.left = `${tooltipPos.x + 12}px`;
-              base.top = `${tooltipPos.y + 12}px`;
+              base.position = 'fixed'; base.left = `${tooltipPos.x + 12}px`; base.top = `${tooltipPos.y + 12}px`;
             }
-            base.visibility = tooltipLines.length === 0 || !tooltipVisible ? 'hidden' : 'visible';
-            base.opacity = tooltipVisible ? 1 : 0;
-            base.pointerEvents = tooltipVisible ? 'auto' : 'none';
+            base.visibility = !tooltipVisible ? 'hidden' : 'visible'; base.opacity = tooltipVisible ? 1 : 0; base.pointerEvents = tooltipVisible ? 'auto' : 'none';
             return base;
           })()}
         >
-          {tooltipLines.map((l) => (
-            <div key={l} className="bf-tooltip-line">{l}</div>
-          ))}
+          {node.url}
         </div>
-  </button>
+      </div>
     </div>
   );
+};
+
+const FolderNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (id: string) => void; expanded: Record<string, boolean>; selected?: boolean; onSelect?: (id: string, e: React.MouseEvent) => void; selectedIds?: string[] }> = ({ node, open, onToggle, expanded, selected, onSelect, selectedIds }) => {
+  const tooltipLines: string[] = [];
+  const dateStr = formatAddDate(node.createdDate);
+  if (dateStr) tooltipLines.push(dateStr);
+  if (node.url) tooltipLines.push(node.url || '');
+
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const tooltipTimerRef = React.useRef<number | null>(null);
+
+  const showTooltip = (e: React.MouseEvent | React.FocusEvent) => {
+    if (tooltipTimerRef.current) window.clearTimeout(tooltipTimerRef.current);
+    if ('clientX' in e && 'clientY' in e) setTooltipPos({ x: e.clientX, y: e.clientY });
+    else {
+      const el = e.currentTarget as HTMLElement | null;
+      if (el) { const r = el.getBoundingClientRect(); setTooltipPos({ x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }); } else setTooltipPos(null);
+    }
+    tooltipTimerRef.current = window.setTimeout(() => setTooltipVisible(true), 1000);
+  };
+  const moveTooltip = (e: React.MouseEvent) => setTooltipPos({ x: e.clientX, y: e.clientY });
+  const hideTooltip = () => { if (tooltipTimerRef.current) { window.clearTimeout(tooltipTimerRef.current); tooltipTimerRef.current = null; } setTooltipVisible(false); };
+
+  const totalLinks = countLinks(node);
+  if (totalLinks >= 0) tooltipLines.push(`${totalLinks} links`);
+
+  return (
+    <div className="bf-node bf-folder relative" role="treeitem" aria-expanded={open} aria-selected={selected}>
+      <div
+        className={"bf-node-label bf-folder-toggle" + (selected ? ' bf-node-selected' : '')}
+        style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', padding: '4px 6px' }}
+        onPointerDown={(e: React.PointerEvent) => {
+          const meta = (e as React.PointerEvent).metaKey || (e as React.PointerEvent).ctrlKey || (e as React.PointerEvent).altKey || (e as React.PointerEvent).shiftKey;
+          if (meta) {
+            if (onSelect) onSelect(node.id, e as unknown as React.MouseEvent);
+          } else {
+            onToggle(node.id);
+          }
+        }}
+        onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(node.id); } }}
+        onMouseEnter={showTooltip}
+        onFocus={showTooltip}
+        onMouseMove={moveTooltip}
+        onMouseLeave={hideTooltip}
+        onBlur={hideTooltip}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+          <DragHandle>
+            <Icon icon={node.icon || null} isFolder />
+          </DragHandle>
+          <span className="bf-node-text">{node.title}</span>
+        </div>
+      </div>
+      <div className="bf-node-tooltip" role="tooltip" aria-hidden={tooltipLines.length === 0 || !tooltipVisible} style={(() => {
+        const base: React.CSSProperties = {};
+        if (tooltipPos) { base.position = 'fixed'; base.left = `${tooltipPos.x + 12}px`; base.top = `${tooltipPos.y + 12}px`; }
+        base.visibility = tooltipLines.length === 0 || !tooltipVisible ? 'hidden' : 'visible'; base.opacity = tooltipVisible ? 1 : 0; base.pointerEvents = tooltipVisible ? 'auto' : 'none';
+        return base;
+      })()}>
+        {tooltipLines.map((l) => (<div key={l} className="bf-tooltip-line">{l}</div>))}
+      </div>
+      {open && node.children && (
+        <div className="bf-children">
+          {node.children.map((c) => (
+            c.isFolder ? <FolderNode key={c.id} node={c} open={!!expanded[c.id]} onToggle={onToggle} expanded={expanded} selected={!!(selectedIds?.includes(c.id))} onSelect={onSelect} /> : <LeafNode key={c.id} node={c} selected={!!(selectedIds?.includes(c.id))} onSelect={onSelect} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TreeNode: React.FC<{ node: BrowserBookmarkNode; open: boolean; onToggle: (id: string) => void; expanded: Record<string, boolean>; selected?: boolean; onSelect?: (id: string, e: React.MouseEvent) => void; selectedIds?: string[] }> = ({ node, open, onToggle, expanded, selected, onSelect, selectedIds }) => {
+  if (node.isFolder) return <FolderNode node={node} open={open} onToggle={onToggle} expanded={expanded} selected={selected} onSelect={onSelect} selectedIds={selectedIds} />;
+  return <LeafNode node={node} selected={selected} onSelect={onSelect} />;
 };
 
 export const BrowserFavoritesManager: React.FC<Props> = () => {
@@ -311,7 +241,9 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
   const lastRemovedIdsRef = React.useRef<string[] | null>(null);
   const lastRemovedRecordsRef = React.useRef<null | { node: BrowserBookmarkNode; parentId: string | null; index: number }[]>(null);
+  const localTabIdRef = useRef<string>(`bf-${Math.random().toString(36).slice(2)}`);
   const formMode = FormDisplayMode.Edit; // Always in edit mode since form is always visible
+  const globalDnd = useOptionalGlobalDnd();
 
   // Global debug hooks: listen for native dragstart and pointer events to diagnose when
   // drags from TreeNode fail to fire. These are temporary diagnostics and can be removed
@@ -378,6 +310,33 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
       console.warn('Failed to load stored BrowserFavorites', err);
     }
   }, []);
+
+  // expose current tab id for crossTab service compatibility
+  useEffect(() => {
+    try { (window as any).__CURRENT_TAB_ID__ = localTabIdRef.current; } catch (err) { /* ignore */ }
+  }, []);
+
+  // Register this BrowserFavorites as a drag source list with the GlobalDndProvider
+  useEffect(() => {
+    if (!globalDnd) return;
+    const flatten = (nodes: BrowserBookmarkNode[], expandedMap: Record<string, boolean>, out: Bookmark[]) => {
+      for (const n of nodes) {
+        if (!n.isFolder) {
+          out.push({ id: n.id, title: n.title || n.url || 'Bookmark', url: n.url || '', icon: n.icon || '', createdDate: n.createdDate || new Date(), lastModifiedDate: n.lastModifiedDate || new Date(), description: n.description || '' } as Bookmark);
+        } else if (expandedMap[n.id] && n.children) {
+          flatten(n.children, expandedMap, out);
+        }
+      }
+    };
+
+    const visible: Bookmark[] = [];
+    flatten(tree, expanded, visible);
+
+    const list: any = { tabId: localTabIdRef.current, items: visible, selectedIds, onPerformDrop: async (_opts: any) => { /* BF is primarily a source: no-op */ } };
+
+    try { globalDnd.registerList(list); } catch (err) { console.warn('[BrowserFavoritesManager] registerList failed', err); }
+    return () => { try { globalDnd.unregisterList(localTabIdRef.current); } catch (err) { console.warn('[BrowserFavoritesManager] unregisterList failed', err); } };
+  }, [globalDnd, tree, expanded, selectedIds]);
 
   // Listen for external requests to remove nodes (e.g. when bookmarks are moved to another tab)
   React.useEffect(() => {
@@ -821,7 +780,7 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
           <div className="bf-empty">No bookmarks loaded. Import a Chrome bookmarks HTML file.</div>
         ) : (
           tree.map((n) => (
-            <TreeNode key={n.id} node={n} open={!!expanded[n.id]} onToggle={(id) => toggleNodeExpanded(id)} expanded={expanded} selected={!!selectedIds.includes(n.id)} onSelect={handleSelect} selectedIds={selectedIds} getNodesByIds={(ids) => ids.map(i => findNodeById(tree, i)).filter(Boolean) as BrowserBookmarkNode[]} />
+            <TreeNode key={n.id} node={n} open={!!expanded[n.id]} onToggle={(id) => toggleNodeExpanded(id)} expanded={expanded} selected={!!selectedIds.includes(n.id)} onSelect={handleSelect} selectedIds={selectedIds} />
           ))
         )}
       </div>
