@@ -4,7 +4,7 @@ import { crossTabBookmarkService } from '../../services/CrossTabBookmarkService'
 import { Bookmark, BookmarksTabConfig } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 import BookmarkTableRow from './BookmarksViewer';
-import { DndKitMultiDragProvider } from './dnd/DndKitMultiDragProvider';
+import { useOptionalGlobalDnd } from './dnd/GlobalDndProvider';
 import { useBookmarksTabHandlers } from './useBookmarksTabHandlers';
 
 interface BookmarksTabProps {
@@ -37,6 +37,104 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
     setIsBookmarkFormOpen,
     editingBookmark
   });
+
+  // register this tab's list with the global dnd provider if available
+  const globalDnd = useOptionalGlobalDnd();
+
+  const onPerformDrop = async ({ sourceIds, sourceTabId, targetIndex, effect }: { sourceIds: string[]; sourceTabId?: string; targetIndex: number; effect: 'move' | 'copy' | 'none' }) => {
+    try { console.debug('[BookmarksTabManager] onPerformDrop', { sourceIds, sourceTabId, targetIndex, effect }); } catch (e) {}
+    if (!onConfigChange) return;
+    const sourceSet = new Set(sourceIds);
+    const moving = bookmarks.filter(b => sourceSet.has(b.id));
+    const remaining = bookmarks.filter(b => !sourceSet.has(b.id));
+    const before = remaining.slice(0, targetIndex);
+    const after = remaining.slice(targetIndex);
+
+    let newBookmarks: Bookmark[];
+    if (effect === 'copy') {
+      try {
+        let copies: Bookmark[] = [];
+        if (sourceTabId) {
+          const payload = crossTabBookmarkService.getDragData(sourceTabId);
+          if (payload && payload.bookmarks) {
+            copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: Math.random().toString(36).slice(2) }));
+          }
+        }
+        if (copies.length === 0) {
+          copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+        }
+
+        newBookmarks = [...before, ...copies, ...after];
+        try {
+          const newIds = newBookmarks.slice(before.length, before.length + copies.length).map(c => c.id);
+          dispatch({ type: 'RANGE_SELECT', ids: newIds, index: targetIndex, union: false });
+        } catch (err) {
+          console.warn('Failed to select copies after cross-tab drop', err);
+        }
+      } catch (err) {
+        const copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+        newBookmarks = [...before, ...copies, ...after];
+      }
+    } else if (effect === 'move') {
+      // Cross-tab move: if the source is a different tab, create copies here and ask source to remove originals
+      if (sourceTabId && sourceTabId !== localTabIdRef.current) {
+        try {
+          const payload = crossTabBookmarkService.getDragData(sourceTabId);
+          let copies: Bookmark[] = [];
+          if (payload && payload.bookmarks) {
+            copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: Math.random().toString(36).slice(2) }));
+          }
+          if (copies.length === 0) {
+            copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+          }
+          newBookmarks = [...before, ...copies, ...after];
+          try { crossTabBookmarkService.notifyMove(sourceTabId, sourceIds); } catch (err) { /* ignore */ }
+          try {
+            const newIds = newBookmarks.slice(before.length, before.length + copies.length).map(c => c.id);
+            dispatch({ type: 'RANGE_SELECT', ids: newIds, index: targetIndex, union: false });
+          } catch (err) {
+            console.warn('Failed to select moved copies after cross-tab drop', err);
+          }
+        } catch (err) {
+          const copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
+          newBookmarks = [...before, ...copies, ...after];
+        }
+      } else {
+        // Local move within the same tab
+        newBookmarks = [...before, ...moving, ...after];
+      }
+    } else {
+      newBookmarks = [...before, ...moving, ...after];
+    }
+
+    const base = config ? config : ({ id: nodeId || 'tab-unknown', title: 'Bookmarks', component: 'Bookmarks', bookmarks: [], toggleTabViewMode: tabToggleViewMode } as unknown as BookmarksTabConfig);
+    const newCfg: BookmarksTabConfig = { ...base, id: base.id || (nodeId || 'tab-unknown'), bookmarks: newBookmarks } as BookmarksTabConfig;
+    onConfigChange(newCfg);
+  };
+
+  useEffect(() => {
+    if (!globalDnd) return;
+    const list = { tabId: localTabIdRef.current, items: bookmarks, selectedIds: selectionState.selectedIds, onPerformDrop };
+    try {
+      globalDnd.registerList(list);
+    } catch (err) {
+      console.warn('[BookmarksTabManager] registerList failed', err);
+    }
+    return () => {
+      try { globalDnd.unregisterList(localTabIdRef.current); } catch (err) { /* ignore */ }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // update the registered list when bookmarks or selection changes
+  useEffect(() => {
+    if (!globalDnd) return;
+    try {
+      globalDnd.updateList({ tabId: localTabIdRef.current, items: bookmarks, selectedIds: selectionState.selectedIds, onPerformDrop });
+    } catch (err) {
+      console.warn('[BookmarksTabManager] updateList failed', err);
+    }
+  }, [bookmarks, selectionState.selectedIds]);
 
     // Listen for toolbar events dispatched from FlexLayoutManager for this node
     useEffect(() => {
@@ -99,93 +197,17 @@ export default function BookmarksTabManager(props: Readonly<BookmarksTabProps> =
       {bookmarks.length === 0 ? (
         <div className="text-secondary p-4 text-center">No bookmarks</div>
       ) : (
-        <DndKitMultiDragProvider
-          visibleList={bookmarks}
-          selectedIds={selectionState.selectedIds}
-          tabId={localTabIdRef.current}
-          onPerformDrop={async ({ sourceIds, sourceTabId, targetIndex, effect }) => {
-            try { console.debug('[BookmarksTabManager] onPerformDrop', { sourceIds, sourceTabId, targetIndex, effect }); } catch (e) {}
-            if (!onConfigChange) return;
-            const sourceSet = new Set(sourceIds);
-            const moving = bookmarks.filter(b => sourceSet.has(b.id));
-            const remaining = bookmarks.filter(b => !sourceSet.has(b.id));
-            const before = remaining.slice(0, targetIndex);
-            const after = remaining.slice(targetIndex);
-
-            let newBookmarks: Bookmark[];
-            if (effect === 'copy') {
-              try {
-                let copies: Bookmark[] = [];
-                if (sourceTabId) {
-                  const payload = crossTabBookmarkService.getDragData(sourceTabId);
-                  if (payload && payload.bookmarks) {
-                    copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: Math.random().toString(36).slice(2) }));
-                  }
-                }
-                if (copies.length === 0) {
-                  copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
-                }
-
-                newBookmarks = [...before, ...copies, ...after];
-                try {
-                  const newIds = newBookmarks.slice(before.length, before.length + copies.length).map(c => c.id);
-                  dispatch({ type: 'RANGE_SELECT', ids: newIds, index: targetIndex, union: false });
-                } catch (err) {
-                  console.warn('Failed to select copies after cross-tab drop', err);
-                }
-              } catch (err) {
-                const copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
-                newBookmarks = [...before, ...copies, ...after];
-              }
-            } else if (effect === 'move') {
-              // Cross-tab move: if the source is a different tab, create copies here and ask source to remove originals
-              if (sourceTabId && sourceTabId !== localTabIdRef.current) {
-                try {
-                  const payload = crossTabBookmarkService.getDragData(sourceTabId);
-                  let copies: Bookmark[] = [];
-                  if (payload && payload.bookmarks) {
-                    copies = payload.bookmarks.map((b: any) => ({ ...(b as Bookmark), id: Math.random().toString(36).slice(2) }));
-                  }
-                  if (copies.length === 0) {
-                    copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
-                  }
-                  newBookmarks = [...before, ...copies, ...after];
-                  try { crossTabBookmarkService.notifyMove(sourceTabId, sourceIds); } catch (err) { /* ignore */ }
-                  try {
-                    const newIds = newBookmarks.slice(before.length, before.length + copies.length).map(c => c.id);
-                    dispatch({ type: 'RANGE_SELECT', ids: newIds, index: targetIndex, union: false });
-                  } catch (err) {
-                    console.warn('Failed to select moved copies after cross-tab drop', err);
-                  }
-                } catch (err) {
-                  const copies = moving.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }));
-                  newBookmarks = [...before, ...copies, ...after];
-                }
-              } else {
-                // Local move within the same tab
-                newBookmarks = [...before, ...moving, ...after];
-              }
-            } else {
-              newBookmarks = [...before, ...moving, ...after];
-            }
-
-            const base = config ? config : ({ id: nodeId || 'tab-unknown', title: 'Bookmarks', component: 'Bookmarks', bookmarks: [], toggleTabViewMode: tabToggleViewMode } as unknown as BookmarksTabConfig);
-            const newCfg: BookmarksTabConfig = { ...base, id: base.id || (nodeId || 'tab-unknown'), bookmarks: newBookmarks } as BookmarksTabConfig;
-            onConfigChange(newCfg);
-          }}
-        >
-          <div className="grid" style={{ gap: '5px' }}>
-            {bookmarks.map((b, i) => (
-              <BookmarkTableRow key={b.id}
-                                bookmark={b}
-                                onSelect={(id, e) => handleSelect(id, i, e)}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                onToggleCollapsed={handleToggleCollapsed}
-                                isSelected={selectionState.selectedIds.includes(b.id)} />
-            ))}
-          </div>
-        </DndKitMultiDragProvider>
+        <div className="grid" style={{ gap: '5px' }}>
+          {bookmarks.map((b, i) => (
+            <BookmarkTableRow key={b.id}
+                              bookmark={b}
+                              onSelect={(id, e) => handleSelect(id, i, e)}
+                              onEdit={handleEdit}
+                              onDelete={handleDelete}
+                              onToggleCollapsed={handleToggleCollapsed}
+                              isSelected={selectionState.selectedIds.includes(b.id)} />
+          ))}
+        </div>
       )}
       {isBookmarkFormOpen && (
         <div className="modal-overlay">

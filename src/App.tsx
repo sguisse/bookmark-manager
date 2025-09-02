@@ -2,6 +2,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ApplicationProvider } from './contexts/ApplicationContext';
 import { BookmarkDragDropProvider } from './contexts/BookmarkDragDropContext';
+import { GlobalDndProvider } from './components/bookmark/dnd/GlobalDndProvider';
 import DashboardLayout from './components/layout/DashboardLayout';
 
 function AppContent() {
@@ -17,9 +18,11 @@ export default function App() {
     <ThemeProvider>
       <NotificationProvider>
         <ApplicationProvider>
-          <BookmarkDragDropProvider>
-            <AppContent />
-          </BookmarkDragDropProvider>
+          <GlobalDndProvider>
+            <BookmarkDragDropProvider>
+              <AppContent />
+            </BookmarkDragDropProvider>
+          </GlobalDndProvider>
         </ApplicationProvider>
       </NotificationProvider>
     </ThemeProvider>

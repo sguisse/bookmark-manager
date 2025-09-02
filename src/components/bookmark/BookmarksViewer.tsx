@@ -4,7 +4,7 @@ import { Bookmark } from '../../types/bookmark';
 import { formatDate, calculateVisibleCharacters } from '../../services/Utils';
 import { Edit, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import Image from '../common/image/Image';
-import { useDndKitSortableRow } from './dnd/DndKitMultiDragProvider';
+import { useDndKitSortableRow } from './dnd/useDndKitSortableRow';
 
 /*
  * BookmarksViewer Structure:
