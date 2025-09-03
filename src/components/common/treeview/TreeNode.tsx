@@ -63,11 +63,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     // Create a drag ghost if dragging multiple items
     if (ids.length > 1 && typeof document !== 'undefined') {
       try {
-        const ghost = document.createElement('div');
-        ghost.style.position = 'absolute';
-        ghost.style.top = '-9999px';
-        ghost.style.left = '-9999px';
-        ghost.style.padding = '6px 10px';
+  const ghost = document.createElement('div');
+  ghost.style.position = 'absolute';
+  ghost.style.top = '-9999px';
+  ghost.style.left = '-9999px';
+  // ensure the left padding provides space so the count isn't occluded by the cursor
+  ghost.style.padding = '6px 10px';
+  ghost.style.paddingLeft = '35px';
         ghost.style.background = '#222';
         ghost.style.color = '#fff';
         ghost.style.borderRadius = '8px';
@@ -77,8 +79,8 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         ghost.style.zIndex = '99999';
         ghost.textContent = `${ids.length} items`;
         document.body.appendChild(ghost);
-        // small offset so the pointer doesn't occlude the ghost
-        e.dataTransfer.setDragImage(ghost, 12, 12);
+  // move the drag image further to the right so the pointer doesn't occlude the count
+  e.dataTransfer.setDragImage(ghost, 20, 12);
         ghostRef.current = ghost;
       } catch (err) {
         // ignore DOM errors in some environments

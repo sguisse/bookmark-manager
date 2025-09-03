@@ -34,6 +34,7 @@ export const useTree = ({
   const [openNodes, setOpenNodes] = useState<Set<string>>(new Set(initialOpenNodes));
   const [selectedIds, setSelectedIds] = useState<Set<string>>(initialSelectedId ? new Set([initialSelectedId]) : new Set());
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(initialSelectedId ? initialNodes.findIndex(n => n.id === initialSelectedId) : null);
 
   const toggleNode = useCallback((nodeId: string) => {
     setOpenNodes(prev => {
@@ -48,8 +49,29 @@ export const useTree = ({
   }, []);
 
   const selectNode = useCallback((nodeId: string, e?: React.MouseEvent) => {
-    // If ctrl/meta is pressed, toggle selection
     const isCmd = e ? (e.ctrlKey || e.metaKey) : false;
+    const isShift = e ? e.shiftKey : false;
+
+    // If shift is pressed and we have a lastSelectedIndex, select range
+    if (isShift && lastSelectedIndex !== null) {
+      const idx = nodes.findIndex(n => n.id === nodeId);
+      if (idx === -1) {
+        setSelectedIds(new Set([nodeId]));
+        setSelectedId(nodeId);
+        setLastSelectedIndex(idx);
+        return;
+      }
+
+      const start = Math.min(lastSelectedIndex, idx);
+      const end = Math.max(lastSelectedIndex, idx);
+      const idsInRange = nodes.slice(start, end + 1).map(n => n.id);
+      setSelectedIds(new Set(idsInRange));
+      setSelectedId(idsInRange.length ? idsInRange[idsInRange.length - 1] : nodeId);
+      setLastSelectedIndex(idx);
+      return;
+    }
+
+    // If ctrl/meta is pressed, toggle selection
     if (isCmd) {
       setSelectedIds(prev => {
         const next = new Set(prev);
@@ -57,6 +79,9 @@ export const useTree = ({
         else next.add(nodeId);
         // keep last selectedId in sync
         setSelectedId(next.size ? Array.from(next).pop()! : null);
+        // update lastSelectedIndex
+        const idx = nodes.findIndex(n => n.id === nodeId);
+        setLastSelectedIndex(idx === -1 ? null : idx);
         return next;
       });
       return;
@@ -65,7 +90,9 @@ export const useTree = ({
     // Otherwise select single
     setSelectedIds(new Set([nodeId]));
     setSelectedId(nodeId);
-  }, []);
+    const idx = nodes.findIndex(n => n.id === nodeId);
+    setLastSelectedIndex(idx === -1 ? null : idx);
+  }, [nodes, lastSelectedIndex]);
 
   const expandNode = useCallback((nodeId: string) => {
     setOpenNodes(prev => new Set(prev).add(nodeId));
