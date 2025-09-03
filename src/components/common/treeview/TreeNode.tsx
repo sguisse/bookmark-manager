@@ -10,8 +10,9 @@ interface TreeNodeProps {
   isSelected: boolean;
   openNodes: Set<string>;
   selectedId?: string | null;
+  selectedIds?: Set<string>;
   onToggle?: (nodeId: string) => void;
-  onSelect?: (nodeId: string) => void;
+  onSelect?: (nodeId: string, e?: React.MouseEvent) => void;
   onDrop: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => void;
   canDrop?: (draggedNode: TreeNodeType, targetNode: TreeNodeType | null) => boolean;
   renderNode?: (node: TreeNodeType, options: RenderNodeOptions) => React.ReactNode;
@@ -26,9 +27,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   nodes,
   depth,
   isOpen,
-  isSelected,
   openNodes,
   selectedId,
+  selectedIds,
   onToggle,
   onSelect,
   onDrop,
@@ -128,7 +129,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   };
 
   const handleClick = () => {
+    // Keyboard activation (no mouse event) — treat as single select
     onSelect?.(node.id);
+  };
+
+  const handleMouseClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSelect?.(node.id, e);
   };
 
   const handleToggle = (e: React.MouseEvent) => {
@@ -150,7 +157,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   // Calculate background color
   let backgroundColor = 'transparent';
   let borderRadius = '0px';
-  if (isSelected) {
+  // Compute effective selection: prefer multi-selection when provided
+  const effectiveIsSelected = selectedIds ? selectedIds.has(node.id) : (selectedId === node.id);
+  if (effectiveIsSelected) {
     backgroundColor = '#e3f2fd';
     borderRadius = '4px';
   } else if (isDropTarget && dropPosition === 'inside') {
@@ -165,7 +174,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     isDragging,
     isDropTarget,
     hasChildren,
-    isSelected
+    isSelected: effectiveIsSelected
   };
 
   return (
@@ -192,9 +201,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={handleClick}
+  onClick={handleMouseClick}
         onKeyDown={handleKeyDown}
-        aria-selected={isSelected}
+  aria-selected={effectiveIsSelected}
         aria-expanded={hasChildren ? isOpen : undefined}
         style={{
           paddingLeft: `${depth * 16}px`,
@@ -259,6 +268,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               isSelected={selectedId === child.id}
               openNodes={openNodes}
               selectedId={selectedId}
+              selectedIds={selectedIds}
               onToggle={onToggle}
               onSelect={onSelect}
               onDrop={onDrop}

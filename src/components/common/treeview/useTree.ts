@@ -11,9 +11,12 @@ export interface UseTreeOptions {
 export interface UseTreeResult {
   nodes: TreeNode[];
   openNodes: Set<string>;
+  /** Multi-selection set */
+  selectedIds: Set<string>;
   selectedId: string | null;
   toggleNode: (nodeId: string) => void;
-  selectNode: (nodeId: string) => void;
+  /** Select with modifiers: ctrl/meta to toggle, shift/range handled by caller */
+  selectNode: (nodeId: string, event?: React.MouseEvent) => void;
   expandNode: (nodeId: string) => void;
   collapseNode: (nodeId: string) => void;
   expandAll: () => void;
@@ -29,6 +32,7 @@ export const useTree = ({
 }: UseTreeOptions): UseTreeResult => {
   const [nodes, setNodes] = useState<TreeNode[]>(initialNodes);
   const [openNodes, setOpenNodes] = useState<Set<string>>(new Set(initialOpenNodes));
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(initialSelectedId ? new Set([initialSelectedId]) : new Set());
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
 
   const toggleNode = useCallback((nodeId: string) => {
@@ -43,7 +47,23 @@ export const useTree = ({
     });
   }, []);
 
-  const selectNode = useCallback((nodeId: string) => {
+  const selectNode = useCallback((nodeId: string, e?: React.MouseEvent) => {
+    // If ctrl/meta is pressed, toggle selection
+    const isCmd = e ? (e.ctrlKey || e.metaKey) : false;
+    if (isCmd) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        if (next.has(nodeId)) next.delete(nodeId);
+        else next.add(nodeId);
+        // keep last selectedId in sync
+        setSelectedId(next.size ? Array.from(next).pop()! : null);
+        return next;
+      });
+      return;
+    }
+
+    // Otherwise select single
+    setSelectedIds(new Set([nodeId]));
     setSelectedId(nodeId);
   }, []);
 
@@ -86,6 +106,7 @@ export const useTree = ({
   return {
     nodes,
     openNodes,
+    selectedIds,
     selectedId,
     toggleNode,
     selectNode,

@@ -67,27 +67,31 @@ export const BrowserFavoritesRenderer: React.FC<Props> = ({ bookmarksTree: props
     const updatedNodes = moveItem(draggedId, targetId, position);
     // convert back to hierarchical browser nodes
     const updatedTree = convertTreeNodesToBrowser(updatedNodes);
-    setBookmarksTree(updatedTree);
+    // Only update state / persist if the tree actually changed (avoid feedback loops)
+    const same = JSON.stringify(updatedTree) === JSON.stringify(bookmarksTree);
+    if (!same) {
+      setBookmarksTree(updatedTree);
 
-    // If parent provided an onChange handler, call it and do not persist here
-    if (onChange) {
-      onChange(updatedTree);
-      return;
-    }
+      // If parent provided an onChange handler, call it and do not persist here
+      if (onChange) {
+        onChange(updatedTree);
+        return;
+      }
 
-    // persist locally when uncontrolled
-    if (currentFavorites) {
-      const updated: BrowserFavorites = {
-        ...currentFavorites,
-        bookmarksTree: updatedTree,
-        lastModifiedDate: new Date()
-      };
-      setCurrentFavorites(updated);
-      try {
-        BrowserFavoritesService.saveToStorage(updated);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('Failed to persist BrowserFavorites after move', err);
+      // persist locally when uncontrolled
+      if (currentFavorites) {
+        const updated: BrowserFavorites = {
+          ...currentFavorites,
+          bookmarksTree: updatedTree,
+          lastModifiedDate: new Date()
+        };
+        setCurrentFavorites(updated);
+        try {
+          BrowserFavoritesService.saveToStorage(updated);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to persist BrowserFavorites after move', err);
+        }
       }
     }
   };
@@ -111,28 +115,31 @@ export const BrowserFavoritesRenderer: React.FC<Props> = ({ bookmarksTree: props
       }
     };
     applyExpanded(updatedTree);
+    // Avoid updating/persisting if nothing changed to prevent an update loop
+    const same = JSON.stringify(updatedTree) === JSON.stringify(bookmarksTree);
+    if (!same) {
+      setBookmarksTree(updatedTree);
 
-    setBookmarksTree(updatedTree);
+      // If parent provided an onChange handler, call it and do not persist here
+      if (onChange) {
+        onChange(updatedTree);
+        return;
+      }
 
-    // If parent provided an onChange handler, call it and do not persist here
-    if (onChange) {
-      onChange(updatedTree);
-      return;
-    }
-
-    // persist locally when uncontrolled
-    if (currentFavorites) {
-      const updated: BrowserFavorites = {
-        ...currentFavorites,
-        bookmarksTree: updatedTree,
-        lastModifiedDate: new Date()
-      };
-      setCurrentFavorites(updated);
-      try {
-        BrowserFavoritesService.saveToStorage(updated);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('Failed to persist BrowserFavorites after expand/collapse', err);
+      // persist locally when uncontrolled
+      if (currentFavorites) {
+        const updated: BrowserFavorites = {
+          ...currentFavorites,
+          bookmarksTree: updatedTree,
+          lastModifiedDate: new Date()
+        };
+        setCurrentFavorites(updated);
+        try {
+          BrowserFavoritesService.saveToStorage(updated);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('Failed to persist BrowserFavorites after expand/collapse', err);
+        }
       }
     }
   }, [openNodes, nodes, onChange, currentFavorites]);
