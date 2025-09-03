@@ -1,6 +1,9 @@
-import React from 'react';
-import BookmarkForm from './BookmarkForm';
+import React, { useEffect, useRef } from 'react';
+import { TreeView, useTree, RenderNodeOptions } from '../common/treeview';
+import { TreeNode } from '../common/treeview/types';
+import { buildTreeFromBookmarks, buildBookmarksFromTree } from './bookmarksTreeAdapter';
 import BookmarkTableRow from './BookmarksRenderer';
+import BookmarkForm from './BookmarkForm';
 import { Bookmark } from '../../types/bookmark';
 import { FormDisplayMode } from '../../types/app';
 
@@ -17,6 +20,8 @@ interface BookmarksPanelProps {
   onToggleCollapsed: (id: string) => void;
   onSubmit: (data: any, editingBookmark: Bookmark | null) => void;
   onCloseForm: () => void;
+  // Optional: called when the tree order or expanded state changes
+  onChange?: (updatedBookmarks: Bookmark[]) => void;
 }
 
 export default function BookmarksPanel(props: Readonly<BookmarksPanelProps>) {
@@ -30,26 +35,90 @@ export default function BookmarksPanel(props: Readonly<BookmarksPanelProps>) {
     onDelete,
     onToggleCollapsed,
     onSubmit,
-    onCloseForm
+    onCloseForm,
+    onChange
   } = props;
 
+  const initialNodes: TreeNode[] = buildTreeFromBookmarks(bookmarks || []);
+  const initialOpen = (bookmarks || []).filter(b => !(b.collapsed ?? true)).map(b => b.id);
+
+  const { nodes, openNodes, selectedId, toggleNode, selectNode, moveItem, setNodes } = useTree({
+    nodes: initialNodes,
+    initialOpenNodes: initialOpen,
+    initialSelectedId: null
+  });
+
+  // When bookmarks prop changes (controlled), refresh nodes
+  useEffect(() => {
+    setNodes(buildTreeFromBookmarks(bookmarks || []));
+  }, [bookmarks, setNodes]);
+
+  // Handle node move (reorder)
+  const handleDrop = (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => {
+    const updatedNodes = moveItem(draggedId, targetId, position);
+    const updatedBookmarks = buildBookmarksFromTree(updatedNodes);
+    onChange?.(updatedBookmarks);
+  };
+
+  // Sync expanded state (openNodes) back to bookmarks.collapsed and call onChange
+  const openSyncMounted = useRef(false);
+  useEffect(() => {
+    if (!openSyncMounted.current) {
+      openSyncMounted.current = true;
+      return;
+    }
+
+    const updated = buildBookmarksFromTree(nodes);
+    const applyExpanded = (items: any[]) => {
+      for (const it of items) {
+        it.collapsed = !openNodes.has(it.id);
+      }
+    };
+    applyExpanded(updated);
+    onChange?.(updated);
+  }, [openNodes, nodes, onChange]);
+
+  const renderNode = (node: TreeNode, _options: RenderNodeOptions) => {
+    const data = node.data as Bookmark | undefined;
+    // _options contains isOpen/hasChildren/isSelected etc. We don't need it here.
+
+    const idx = (bookmarks || []).findIndex(b => b.id === node.id);
+
+    return (
+      <div style={{ padding: 2 }}>
+        {data ? (
+          <BookmarkTableRow
+            bookmark={data}
+            isSelected={selectionState?.selectedIds?.includes(data.id)}
+            onSelect={(id, e) => onSelect?.(id, idx, e)}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onToggleCollapsed={() => { toggleNode(node.id); onToggleCollapsed(node.id); }}
+          />
+        ) : null}
+      </div>
+    );
+  };
+
+  const canDrop = (_dragged: TreeNode, _target: TreeNode | null) => true;
+
   return (
-    <div className="p-0">
-      {bookmarks.length === 0 ? (
-        <div className="text-secondary p-4 text-center">No bookmarks</div>
-      ) : (
-        <div className="grid" style={{ gap: '5px' }}>
-          {bookmarks.map((b, i) => (
-            <BookmarkTableRow key={b.id}
-                              bookmark={b}
-                              onSelect={(id, e) => onSelect(id, i, e)}
-                              onEdit={onEdit}
-                              onDelete={onDelete}
-                              onToggleCollapsed={onToggleCollapsed}
-                              isSelected={selectionState?.selectedIds?.includes(b.id)} />
-          ))}
-        </div>
-      )}
+    <div style={{ padding: 2 }}>
+      <TreeView
+        nodes={nodes}
+        rootId={null}
+        selectedId={selectedId || undefined}
+        openNodes={openNodes}
+        onDrop={handleDrop}
+        onSelect={(id) => {
+          selectNode(id);
+        }}
+        onToggle={(id) => toggleNode(id)}
+        renderNode={renderNode}
+        canDrop={canDrop}
+        className="bookmarks-tree"
+      />
+
       {isBookmarkFormOpen && (
         <div className="modal-overlay">
           <button
