@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { FlexLayoutConfig, FlexLayoutService } from '../../services/flexLayoutService';
 import { useApplication } from '../../contexts/ApplicationContext';
 import { useNotifications } from '../../contexts/NotificationContext';
+import * as FlexLayout from 'flexlayout-react';
 import { Layout, Model } from 'flexlayout-react';
 import createFlexLayoutFactory from './FlexLayoutTabFactory';
 import { v4 as uuidv4 } from 'uuid';
@@ -38,6 +39,75 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
       // Clear layout when no menu item is selected
       setLayout(null);
     }
+  }, [selectedMenuItem]);
+
+    // listen for duplicate tab requests from tab UI
+  useEffect(() => {
+    const duplicateHandler = (e: Event) => {
+      try {
+        const ce = e as CustomEvent<{ nodeId: string }>;
+        const nid = ce?.detail?.nodeId;
+        if (!nid || !modelRef.current) return;
+
+        const jsonDoc = modelRef.current.toJson();
+
+        // find the tab and its parent array reference so we can insert next to it
+        const findParentArrayAndIndex = (children: any[] | undefined, parent: any = null): { arr: any[] | null; idx: number; parentNode: any } | null => {
+          if (!Array.isArray(children)) return null;
+          for (let i = 0; i < children.length; i++) {
+            const child = children[i];
+            if (child.type === 'tab' && child.id === nid) {
+              return { arr: children, idx: i, parentNode: parent };
+            }
+            const found = findParentArrayAndIndex(child.children as any[] | undefined, child);
+            if (found) return found;
+          }
+          return null;
+        };
+
+        const found = findParentArrayAndIndex([jsonDoc.layout], null) || null;
+        if (!found || !found.arr) return;
+
+        const original = found.arr[found.idx];
+        if (!original) return;
+
+        // deep clone config
+        const originalConfig = JSON.parse(JSON.stringify(original.config || {}));
+        const newId = uuidv4();
+        const newTitle = (originalConfig.title || original.name || 'Tab') + ' - copy';
+
+        const newTab = {
+          type: 'tab',
+          id: newId,
+          name: newTitle,
+          component: original.component,
+          config: { ...(originalConfig || {}), id: newId, title: newTitle, createdDate: new Date(), lastModifiedDate: new Date() }
+        };
+
+        // insert next to original (after)
+        found.arr.splice(found.idx + 1, 0, newTab);
+
+        // recreate model and persist
+        const newModel = Model.fromJson(jsonDoc);
+        setModel(newModel);
+        modelRef.current = newModel;
+        // Defer selection until after the Layout has mounted for the new model.
+        // We use pendingSelectRef so a dedicated effect can perform the select
+        // after remount. This avoids races where the Layout hasn't registered
+        // model listeners yet.
+        try {
+          pendingSelectRef.current = newId;
+        } catch (err) {
+          console.warn('Failed to schedule pending select for duplicated tab', err);
+        }
+        FlexLayoutService.saveConfig(selectedMenuItem?.id || '', jsonDoc);
+      } catch (err) {
+        console.warn('Failed to duplicate tab', err);
+      }
+    };
+
+    window.addEventListener('flexlayout:tab:duplicate', duplicateHandler as EventListener);
+    return () => window.removeEventListener('flexlayout:tab:duplicate', duplicateHandler as EventListener);
   }, [selectedMenuItem]);
 
   // Listen for sidebar item deletion events and clear selection if the current item was deleted
@@ -79,6 +149,39 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
   useEffect(() => {
     modelRef.current = model;
   }, [model]);
+
+  // layout ref and key to force a remount when the model changes. Some flexlayout
+  // internals only register listeners on mount, so forcing a remount ensures
+  // model actions (like selectTab) are handled predictably.
+  const layoutRef = useRef<any>(null);
+  const [modelKey, setModelKey] = useState(0);
+  useEffect(() => {
+    // bump the key whenever the model object reference changes
+    setModelKey((k) => k + 1);
+  }, [model]);
+
+  // pending tab id to select after the Layout has mounted for the new model
+  const pendingSelectRef = useRef<string | null>(null);
+  useEffect(() => {
+    const toSelect = pendingSelectRef.current;
+    if (!toSelect || !model) return;
+
+    // Small delay to allow Layout to mount and register listeners. This delay
+    // has been increased slightly to be more robust across environments.
+    const t = setTimeout(() => {
+      try {
+        if (typeof model.doAction === 'function' && FlexLayout?.Actions?.selectTab) {
+          model.doAction(FlexLayout.Actions.selectTab(toSelect));
+        }
+      } catch (err) {
+        console.warn('Failed to select pending tab after model update', err);
+      } finally {
+        pendingSelectRef.current = null;
+      }
+    }, 200);
+
+    return () => clearTimeout(t);
+  }, [model, modelKey]);
 
   // keep a ref to the last-known selected menu item id so we can still
   // persist layout even if the selection transiently becomes null
@@ -489,6 +592,8 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
         // .flexlayout__layout element. Use flex:1 so it grows to fill available space.
         <div style={{ flex: 1, position: 'relative' }}>
           <Layout
+            key={modelKey}
+            ref={layoutRef}
             model={model}
             factory={factory}
             onAction={onAction}
