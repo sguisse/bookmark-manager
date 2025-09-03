@@ -241,16 +241,18 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const config = node.getConfig() as FlexLayoutTabConfig;
     const compKey = String(component || '').toLowerCase();
 
+    // Allow runtime disabling of the scoped bookmark DnD provider for debugging.
+    // Set `window.__DISABLE_BOOKMARK_DND = true` in the browser console to disable dnd-kit wrappers
+    // and test whether FlexLayout native tab drag works without dnd-kit present.
+    const enableScopedDnd = typeof window !== 'undefined' ? !(window as any).__DISABLE_BOOKMARK_DND : true;
+
     if (compKey === 'markdown') {
       return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
     }
 
     if (compKey === 'bookmarks') {
-      return (
-        <GlobalDndProvider>
-          <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />
-        </GlobalDndProvider>
-      );
+        const content = <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
+        return enableScopedDnd ? <GlobalDndProvider>{content}</GlobalDndProvider> : content;
     }
 
     if (compKey === 'web') {
@@ -258,11 +260,8 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     }
 
     if (compKey === 'browserfavorites' || compKey === 'browser_favorites') {
-      return (
-        <GlobalDndProvider>
-          <BrowserFavorites />
-        </GlobalDndProvider>
-      );
+      const content = <BrowserFavorites />;
+      return enableScopedDnd ? <GlobalDndProvider>{content}</GlobalDndProvider> : content;
     }
 
     return (

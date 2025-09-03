@@ -75,7 +75,9 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const dragCountRef = useRef<number>(1);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    // Add a small press delay and tolerance so quick native HTML5 drags (e.g. FlexLayout tab reordering)
+    // are not captured by dnd-kit. This makes dnd-kit less aggressive and reduces conflicts.
+    useSensor(PointerSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
     useSensor(KeyboardSensor)
   );
 
@@ -323,6 +325,13 @@ export const GlobalDndProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [listsVersion]);
 
   const ctxValue = useMemo(() => ({ registerList, updateList, unregisterList }), [registerList, updateList, unregisterList]);
+  // Debugging: expose a mount/unmount log so testers can see whether dnd-kit
+  // provider is mounted for the current tab content. This helps determine if
+  // dnd-kit is still present when FlexLayout native tab drag is blocked.
+  React.useEffect(() => {
+    console.log('[GlobalDndProvider] mounted');
+    return () => { console.log('[GlobalDndProvider] unmounted'); };
+  }, []);
 
   return (
     <GlobalDndContext.Provider value={ctxValue}>

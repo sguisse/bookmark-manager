@@ -149,6 +149,153 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
             hasTabSetEnableDrop: !!m.toJson().global?.tabSetEnableDrop
           });
         };
+        // Scan the DOM for elements that may be overlaying the FlexLayout tabbar
+        (window as any).scanFlexLayoutOverlays = () => {
+          try {
+            const selectors = [
+              '.flexlayout__tabbar',
+              '.flexlayout__tabset_tabbar',
+              '.flexlayout__tabset_tabbar_inner_tab_container',
+              '.flexlayout__tabset',
+              '.flexlayout__layout',
+              '.flexlayout__tabbar_inner',
+              '.flexlayout__tabset_tabbar_outer'
+            ];
+
+            let tabbar: Element | null = null;
+            for (const s of selectors) {
+              tabbar = document.querySelector(s);
+              if (tabbar) break;
+            }
+
+            // Fallback: look for any element whose className contains 'flexlayout' or 'tabbar' or 'tabset'
+            if (!tabbar) {
+              const candidates = Array.from(document.querySelectorAll('[class]'))
+                .filter((el) => {
+                  const cn = (el.className || '').toString();
+                  return /flexlayout|tabbar|tabset|flexlayout__tab/i.test(cn);
+                })
+                .slice(0, 20);
+
+              if (candidates.length > 0) {
+                console.log('scanFlexLayoutOverlays fallback candidates (first 20):', candidates.map(e => ({ tag: e.tagName, class: (e.className || '').toString() })));
+                tabbar = candidates[0];
+              }
+            }
+
+            if (!tabbar) {
+              console.warn('No flexlayout tabbar element found by selectors or heuristics');
+              return null;
+            }
+
+            const rect = tabbar.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const elems = Array.from(document.elementsFromPoint(centerX, centerY));
+            const report = elems.map((el: Element, idx) => {
+              const style = window.getComputedStyle(el);
+              return {
+                idx,
+                tag: el.tagName,
+                selector: el instanceof HTMLElement ? (el.className || el.id || el.getAttribute('role') || '') : '',
+                pointerEvents: style.pointerEvents,
+                zIndex: style.zIndex,
+                position: style.position,
+                display: style.display,
+                opacity: style.opacity,
+                bounding: el instanceof Element && typeof el.getBoundingClientRect === 'function' ? el.getBoundingClientRect() : null
+              };
+            });
+            console.log('Elements at center of detected tabbar (top-first):', report);
+            return report;
+          } catch (err) {
+            console.warn('scanFlexLayoutOverlays failed', err);
+            return null;
+          }
+        };
+
+        // Temporarily force pointer-events and high z-index on the flexlayout tabbar/tab elements.
+        // Usage: window.forceFlexLayoutTabPointerEvents(true) -> injects CSS; false -> removes it.
+        (window as any).forceFlexLayoutTabPointerEvents = (enable: boolean) => {
+          const id = '__flexlayout_tab_pointer_fix__';
+          try {
+            if (enable) {
+              if (document.getElementById(id)) return true;
+              const style = document.createElement('style');
+              style.id = id;
+              style.innerHTML = `
+                .flexlayout__tabbar, .flexlayout__tab, .flexlayout__tab_button, .flexlayout__tabset_tabbar_inner_tab_container {
+                  pointer-events: auto !important;
+                  z-index: 20000 !important;
+                }
+              `;
+              document.head.appendChild(style);
+              console.log('Injected flexlayout tab pointer-events fix style');
+              return true;
+            } else {
+              const existing = document.getElementById(id);
+              if (existing) existing.remove();
+              console.log('Removed flexlayout tab pointer-events fix style');
+              return true;
+            }
+          } catch (err) {
+            console.warn('forceFlexLayoutTabPointerEvents failed', err);
+            return false;
+          }
+        };
+        // Automated probe: disable overlapping candidates one-by-one to find the blocker.
+        // Usage: window.autoDisableFlexLayoutOverlays(1200)
+        (window as any).autoDisableFlexLayoutOverlays = async (delayMs: number = 1200) => {
+          const tabbar = document.querySelector('.flexlayout__tabbar') || document.querySelector('.flexlayout__tabset_tabbar');
+          if (!tabbar) {
+            console.warn('No flexlayout tabbar element found to probe');
+            return null;
+          }
+          const rect = tabbar.getBoundingClientRect();
+          const centerX = rect.left + rect.width/2;
+          const centerY = rect.top + rect.height/2;
+          const elems = Array.from(document.elementsFromPoint(centerX, centerY));
+          // remove the tabbar element itself from candidates
+          const candidates = elems.filter(e => e !== tabbar && !tabbar.contains(e));
+          if (!candidates.length) {
+            console.log('No overlay candidates found at tabbar center');
+            return null;
+          }
+
+          console.log(`Found ${candidates.length} overlay candidate(s). Will disable each for ${delayMs}ms in sequence.`);
+          const toggled: Array<{ el: Element; originalPointer: string; originalCursor?: string }> = [];
+
+          for (let i = 0; i < candidates.length; i++) {
+            const el = candidates[i];
+            const origStyle = window.getComputedStyle(el).pointerEvents || '';
+            const origCursor = (el as HTMLElement).style?.cursor;
+            try {
+              // disable pointer events on candidate
+              (el as HTMLElement).style.pointerEvents = 'none';
+              (el as HTMLElement).style.cursor = 'default';
+            } catch (err) {
+              console.warn('Could not set pointerEvents on element', el, err);
+            }
+            toggled.push({ el, originalPointer: origStyle, originalCursor: origCursor });
+            console.log(`Disabled candidate ${i + 1}/${candidates.length}:`, { tag: el.tagName, selector: el instanceof HTMLElement ? el.className || el.id || '' : '' });
+            console.log('Try dragging a FlexLayout tab now (you have', delayMs, 'ms)');
+            // wait for user to try drag
+            await new Promise(res => setTimeout(res, delayMs));
+            // restore immediately after the wait so we don't permanently change UI
+            const restored = toggled.pop();
+            if (restored) {
+              try {
+                (restored.el as HTMLElement).style.pointerEvents = restored.originalPointer || '';
+                if (restored.originalCursor !== undefined) (restored.el as HTMLElement).style.cursor = restored.originalCursor;
+              } catch (err) {
+                console.warn('Failed to restore element style', restored.el, err);
+              }
+            }
+          }
+
+          console.log('autoDisableFlexLayoutOverlays finished scanning candidates. If a particular candidate unblocked dragging, note its index and selector above.');
+          return true;
+        };
       }
     } catch (err) {
       console.warn('Failed to create Model from layout', err);
@@ -215,6 +362,9 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
           }
         }
       }
+      // If the action indicates a tabset became active, run the overlay scanner to help
+      // diagnose overlays that might be intercepting pointer events over the tabbar.
+      if (atype === 'FlexLayout_SetActiveTabset') runOverlayScannerIfAvailable();
     } catch (err) {
       console.warn('onAction handler error', err);
     }
@@ -264,6 +414,18 @@ export const FlexLayoutManager: React.FC<FlexLayoutManagerProps> = (props) => {
       console.warn('Failed to update tab config', err);
     }
   }, [saveModelForSelected]);
+
+  // Helper to invoke the overlay scanner safely (keeps onAction smaller)
+  const runOverlayScannerIfAvailable = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined' && (window as any).scanFlexLayoutOverlays) {
+        const report = (window as any).scanFlexLayoutOverlays();
+        console.log('[FlexLayoutManager] scanFlexLayoutOverlays result:', report);
+      }
+    } catch (err) {
+      console.warn('runOverlayScannerIfAvailable failed', err);
+    }
+  }, []);
 
   // Called by child tab managers when their config changes.
   // This will update the flexlayout model, persist it for the selected menu item,
