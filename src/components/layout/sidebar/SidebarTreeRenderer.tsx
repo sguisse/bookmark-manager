@@ -117,11 +117,15 @@ export const SidebarTreeRenderer: React.FC<SidebarTreeRendererProps> = ({
   }, [sidebarConfig]); // Removed nodes, selectNode, onSelectItem from dependencies to prevent infinite loop
 
   // Handle drop operations
-  const handleDrop = (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => {
-    console.log('Drop:', { draggedId, targetId, position });
+  const handleDrop = (
+    draggedIds: string | string[],
+    targetId: string | null,
+    position: 'before' | 'after' | 'inside'
+  ) => {
+    console.log('Drop:', { draggedIds, targetId, position });
 
-    // Move the item and get the updated nodes
-    const updatedNodes = moveItem(draggedId, targetId, position);
+    // Move the item(s) and get the updated nodes
+    const updatedNodes = moveItem(draggedIds, targetId, position);
 
     // Convert back to sidebar config and notify parent with the fresh data
     if (onSidebarChange && updatedNodes) {

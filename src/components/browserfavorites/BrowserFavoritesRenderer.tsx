@@ -63,8 +63,12 @@ export const BrowserFavoritesRenderer: React.FC<Props> = ({ bookmarksTree: props
   }, [bookmarksTree]);
 
   // Persist tree after node move
-  const handleDrop = (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => {
-    const updatedNodes = moveItem(draggedId, targetId, position);
+  const handleDrop = (
+    draggedIds: string | string[],
+    targetId: string | null,
+    position: 'before' | 'after' | 'inside'
+  ) => {
+    const updatedNodes = moveItem(draggedIds, targetId, position);
     // convert back to hierarchical browser nodes
     const updatedTree = convertTreeNodesToBrowser(updatedNodes);
     // Only update state / persist if the tree actually changed (avoid feedback loops)

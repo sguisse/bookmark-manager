@@ -13,7 +13,7 @@ interface TreeNodeProps {
   selectedIds?: Set<string>;
   onToggle?: (nodeId: string) => void;
   onSelect?: (nodeId: string, e?: React.MouseEvent) => void;
-  onDrop: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => void;
+  onDrop: (draggedIds: string | string[], targetId: string | null, position: 'before' | 'after' | 'inside') => void;
   canDrop?: (draggedNode: TreeNodeType, targetNode: TreeNodeType | null) => boolean;
   renderNode?: (node: TreeNodeType, options: RenderNodeOptions) => React.ReactNode;
   draggedItem: DragItem | null;
@@ -41,13 +41,18 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   setDragOverTarget
 }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
+  const ghostRef = useRef<HTMLDivElement | null>(null);
   const children = getChildren(nodes, node.id);
   const hasChildren = children.length > 0;
-  const isDragging = draggedItem?.id === node.id;
+  const isDragging = !!(draggedItem && (draggedItem.id === node.id || (draggedItem.ids && draggedItem.ids.includes(node.id))));
 
   const handleDragStart = (e: React.DragEvent) => {
+    // If multiple items are selected, include their ids for multi-drag
+    const ids = selectedIds && selectedIds.size > 0 ? Array.from(selectedIds) : [node.id];
+
     const dragItem: DragItem = {
       id: node.id,
+      ids,
       type: 'tree-node',
       node
     };
@@ -55,15 +60,51 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     setDraggedItem(dragItem);
     e.dataTransfer.setData('application/json', JSON.stringify(dragItem));
     e.dataTransfer.effectAllowed = 'move';
+    // Create a drag ghost if dragging multiple items
+    if (ids.length > 1 && typeof document !== 'undefined') {
+      try {
+        const ghost = document.createElement('div');
+        ghost.style.position = 'absolute';
+        ghost.style.top = '-9999px';
+        ghost.style.left = '-9999px';
+        ghost.style.padding = '6px 10px';
+        ghost.style.background = '#222';
+        ghost.style.color = '#fff';
+        ghost.style.borderRadius = '8px';
+        ghost.style.fontSize = '12px';
+        ghost.style.fontFamily = 'sans-serif';
+        ghost.style.boxShadow = '0 6px 18px rgba(0,0,0,0.25)';
+        ghost.style.zIndex = '99999';
+        ghost.textContent = `${ids.length} items`;
+        document.body.appendChild(ghost);
+        // small offset so the pointer doesn't occlude the ghost
+        e.dataTransfer.setDragImage(ghost, 12, 12);
+        ghostRef.current = ghost;
+      } catch (err) {
+        // ignore DOM errors in some environments
+      }
+    }
   };
 
   const handleDragEnd = () => {
     setDraggedItem(null);
     setDragOverTarget(null);
+    // cleanup ghost if created
+    if (ghostRef.current && typeof document !== 'undefined') {
+      try {
+        document.body.removeChild(ghostRef.current);
+      } catch (err) {
+        // ignore
+      }
+      ghostRef.current = null;
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    if (!draggedItem || draggedItem.id === node.id) return;
+    if (!draggedItem) return;
+    // If the dragged set includes this node, ignore
+    const draggedIds = draggedItem.ids ?? (draggedItem.id ? [draggedItem.id] : []);
+    if (draggedIds.includes(node.id)) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -88,9 +129,11 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
     // Validate drop position
     const targetNode = position === 'inside' ? node : null;
+    // When multi-dragging, draggedItem.node may be undefined for some ids; use first node as representative
+    const representativeNode = draggedItem.node ?? null;
     const canDropHere = canDrop
-      ? canDrop(draggedItem.node, targetNode)
-      : canDropDefault(nodes, draggedItem.node, targetNode);
+      ? canDrop(representativeNode as any, targetNode)
+      : canDropDefault(nodes, representativeNode as any, targetNode);
 
     if (!canDropHere) {
       return;
@@ -120,10 +163,13 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!draggedItem || !dragOverTarget || dragOverTarget.targetId !== node.id) return;
 
-    onDrop(draggedItem.id, dragOverTarget.targetId, dragOverTarget.position);
+    // Pass ids if available, otherwise fallback to single id for compatibility
+    const draggedIds = draggedItem.ids ?? (draggedItem.id ? [draggedItem.id] : []);
+
+    // For backwards compatibility, if only one id, pass string; otherwise pass array
+    onDrop(draggedIds.length === 1 ? draggedIds[0] : draggedIds, dragOverTarget.targetId, dragOverTarget.position);
     setDraggedItem(null);
     setDragOverTarget(null);
   };
@@ -135,6 +181,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
 
   const handleMouseClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Debugging: log modifier keys seen on the TreeNode click
+    // eslint-disable-next-line no-console
+    console.debug('[TreeNode] click', { id: node.id, ctrl: e.ctrlKey, meta: e.metaKey, shift: e.shiftKey });
     onSelect?.(node.id, e);
   };
 

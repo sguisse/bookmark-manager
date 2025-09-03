@@ -14,7 +14,7 @@ export interface TreeProps {
   selectedId?: string | null;
   /** Multi-selection set (preferred when using multi-select) */
   selectedIds?: Set<string>;
-  onDrop: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => void;
+  onDrop: (draggedIds: string | string[], targetId: string | null, position: 'before' | 'after' | 'inside') => void;
   /** onSelect receives the clicked node id and optional mouse event (for multi-select modifiers) */
   onSelect?: (nodeId: string, e?: React.MouseEvent) => void;
   onToggle?: (nodeId: string) => void;
@@ -34,9 +34,13 @@ export interface RenderNodeOptions {
 }
 
 export interface DragItem {
-  id: string;
+  /** Primary id for legacy compatibility */
+  id?: string;
+  /** All dragged ids when multi-select dragging */
+  ids?: string[];
   type: string;
-  node: TreeNode;
+  /** optional node payload for single-drag */
+  node?: TreeNode;
 }
 
 export interface DropPosition {

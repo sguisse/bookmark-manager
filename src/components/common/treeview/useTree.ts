@@ -21,7 +21,7 @@ export interface UseTreeResult {
   collapseNode: (nodeId: string) => void;
   expandAll: () => void;
   collapseAll: () => void;
-  moveItem: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => TreeNode[];
+  moveItem: (draggedIds: string[] | string, targetId: string | null, position: 'before' | 'after' | 'inside') => TreeNode[];
   setNodes: (nodes: TreeNode[]) => void;
 }
 
@@ -91,13 +91,13 @@ export const useTree = ({
   }, []);
 
   const moveItem = useCallback((
-    draggedId: string,
+    draggedIds: string[] | string,
     targetId: string | null,
     position: 'before' | 'after' | 'inside'
   ): TreeNode[] => {
     let updatedNodes: TreeNode[] = [];
     setNodes(currentNodes => {
-      updatedNodes = moveNode(currentNodes, draggedId, targetId, position);
+      updatedNodes = moveNode(currentNodes, draggedIds, targetId, position);
       return updatedNodes;
     });
     return updatedNodes;

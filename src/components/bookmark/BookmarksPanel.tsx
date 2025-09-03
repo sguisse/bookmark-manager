@@ -42,7 +42,7 @@ export default function BookmarksPanel(props: Readonly<BookmarksPanelProps>) {
   const initialNodes: TreeNode[] = buildTreeFromBookmarks(bookmarks || []);
   const initialOpen = (bookmarks || []).filter(b => !(b.collapsed ?? true)).map(b => b.id);
 
-  const { nodes, openNodes, selectedId, toggleNode, selectNode, moveItem, setNodes } = useTree({
+  const { nodes, openNodes, selectedId, toggleNode, moveItem, setNodes } = useTree({
     nodes: initialNodes,
     initialOpenNodes: initialOpen,
     initialSelectedId: null
@@ -54,8 +54,12 @@ export default function BookmarksPanel(props: Readonly<BookmarksPanelProps>) {
   }, [bookmarks, setNodes]);
 
   // Handle node move (reorder)
-  const handleDrop = (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'inside') => {
-    const updatedNodes = moveItem(draggedId, targetId, position);
+  const handleDrop = (
+    draggedIds: string | string[],
+    targetId: string | null,
+    position: 'before' | 'after' | 'inside'
+  ) => {
+    const updatedNodes = moveItem(draggedIds, targetId, position);
     const updatedBookmarks = buildBookmarksFromTree(updatedNodes);
     onChange?.(updatedBookmarks);
   };
@@ -82,7 +86,7 @@ export default function BookmarksPanel(props: Readonly<BookmarksPanelProps>) {
     const data = node.data as Bookmark | undefined;
     // _options contains isOpen/hasChildren/isSelected etc. We don't need it here.
 
-    const idx = (bookmarks || []).findIndex(b => b.id === node.id);
+  // index not needed here any more; selection handled by outer TreeView
 
     return (
       <div style={{ padding: 2 }}>
@@ -90,7 +94,6 @@ export default function BookmarksPanel(props: Readonly<BookmarksPanelProps>) {
           <BookmarkTableRow
             bookmark={data}
             isSelected={selectionState?.selectedIds?.includes(data.id)}
-            onSelect={(id, e) => onSelect?.(id, idx, e)}
             onEdit={onEdit}
             onDelete={onDelete}
             onToggleCollapsed={() => { toggleNode(node.id); onToggleCollapsed(node.id); }}
@@ -108,10 +111,13 @@ export default function BookmarksPanel(props: Readonly<BookmarksPanelProps>) {
         nodes={nodes}
         rootId={null}
         selectedId={selectedId || undefined}
+        selectedIds={new Set(selectionState?.selectedIds || [])}
         openNodes={openNodes}
         onDrop={handleDrop}
-        onSelect={(id) => {
-          selectNode(id);
+        onSelect={(id, e) => {
+          // Forward selection events to the parent manager so selectionState stays authoritative
+          const idx = (bookmarks || []).findIndex(b => b.id === id);
+          onSelect?.(id, idx, e as React.MouseEvent);
         }}
         onToggle={(id) => toggleNode(id)}
         renderNode={renderNode}

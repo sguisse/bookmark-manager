@@ -64,6 +64,10 @@ export function useBookmarksTabHandlers(deps: BookmarksTabHandlerDeps) {
     const isShift = e.shiftKey;
     const isAlt = e.altKey;
 
+    // Debugging: log modifier keys to help trace selection issues
+    // eslint-disable-next-line no-console
+    console.debug('[useBookmarksTabHandlers] handleSelect', { id, index, isCmd, isShift, isAlt, lastSelectedIndex: selectionState.lastSelectedIndex });
+
     if ((isShift || isAlt) && selectionState.lastSelectedIndex !== null) {
       const start = Math.min(selectionState.lastSelectedIndex, index);
       const end = Math.max(selectionState.lastSelectedIndex, index);

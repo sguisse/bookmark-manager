@@ -7,6 +7,7 @@ export const TreeView: React.FC<TreeProps> = ({
   nodes,
   rootId = null,
   selectedId,
+  selectedIds,
   onDrop,
   onSelect,
   onToggle,
@@ -40,6 +41,7 @@ export const TreeView: React.FC<TreeProps> = ({
           isSelected={selectedId === node.id}
           openNodes={openNodes}
           selectedId={selectedId}
+          selectedIds={selectedIds}
           onToggle={onToggle}
           onSelect={onSelect}
           onDrop={onDrop}

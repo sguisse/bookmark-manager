@@ -57,42 +57,54 @@ export const getNodePath = (nodes: TreeNode[], nodeId: string): TreeNode[] => {
  */
 export const moveNode = (
   nodes: TreeNode[],
-  draggedId: string,
+  draggedIds: string[] | string,
   targetId: string | null,
   position: 'before' | 'after' | 'inside'
 ): TreeNode[] => {
+  const ids = Array.isArray(draggedIds) ? draggedIds : [draggedIds];
   const newNodes = [...nodes];
-  const draggedIndex = newNodes.findIndex(n => n.id === draggedId);
 
-  if (draggedIndex === -1) return nodes;
+  // Remove all dragged nodes (preserve order as in original array)
+  const draggedNodes = ids
+    .map(id => newNodes.find(n => n.id === id))
+    .filter(Boolean)
+    .map(n => ({ ...n! } as TreeNode));
 
-  const draggedNode = { ...newNodes[draggedIndex] };
-
-  // Remove the dragged node from its current position
-  newNodes.splice(draggedIndex, 1);
-
-  // Calculate new parent and position
-  if (position === 'inside' && targetId) {
-    draggedNode.parent = targetId;
-  } else if (targetId) {
-    const targetNode = findNode(newNodes, targetId);
-    draggedNode.parent = targetNode?.parent || null;
-  } else {
-    draggedNode.parent = null;
+  // Filter them out
+  for (const id of ids) {
+    const idx = newNodes.findIndex(n => n.id === id);
+    if (idx !== -1) newNodes.splice(idx, 1);
   }
 
-  // Find insertion index
-  let insertIndex = newNodes.length;
-
-  if (targetId && position !== 'inside') {
-    const targetIndex = newNodes.findIndex(n => n.id === targetId);
-    if (targetIndex !== -1) {
-      insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
+  // Prevent moving into its own descendant
+  if (targetId) {
+    for (const dragged of draggedNodes) {
+      if (isAncestor(nodes, dragged.id, targetId)) {
+        // invalid move, return original
+        return nodes;
+      }
     }
   }
 
-  // Insert the node at the new position
-  newNodes.splice(insertIndex, 0, draggedNode);
+  // Determine new parent for dragged nodes
+  let newParent: string | null = null;
+  if (position === 'inside' && targetId) newParent = targetId;
+  else if (targetId) {
+    const targetNode = findNode(newNodes, targetId);
+    newParent = targetNode?.parent || null;
+  }
+
+  for (const dn of draggedNodes) dn.parent = newParent;
+
+  // Find insertion index
+  let insertIndex = newNodes.length;
+  if (targetId && position !== 'inside') {
+    const targetIndex = newNodes.findIndex(n => n.id === targetId);
+    if (targetIndex !== -1) insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
+  }
+
+  // Insert dragged nodes preserving their order
+  newNodes.splice(insertIndex, 0, ...draggedNodes);
 
   return newNodes;
 };

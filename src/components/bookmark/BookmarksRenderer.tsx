@@ -65,7 +65,7 @@ function RowView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onEd
 	return (
 		<div
 			className="bookmark-row-view"
-			onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
+			onClick={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
 			style={{ backgroundColor: isSelected ? (theme.colors.primary + '20') : 'transparent', borderRadius: 4 }}
@@ -173,7 +173,7 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
 
 	return (
 		<div
-			onMouseDown={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
+			onClick={(e) => { if (onSelect) { onSelect(bookmark.id, e); } }}
 			onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onOpen(bookmark.url); } }}
 			style={{
 				backgroundColor: isSelected ? (theme.colors.primary + '20') : theme.colors.surface,
@@ -189,7 +189,6 @@ function CardView(props: Readonly<{ bookmark: Bookmark; isSelected: boolean; onE
 				width: '100%',
 				borderStyle: 'solid'
 			}}
-			onClick={() => onOpen(bookmark.url)}
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
 		>
