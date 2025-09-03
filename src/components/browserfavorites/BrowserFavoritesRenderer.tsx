@@ -50,7 +50,7 @@ export const BrowserFavoritesRenderer: React.FC<Props> = ({ bookmarksTree: props
   const initialNodes = convertBrowserToTreeNodes(bookmarksTree || []);
   const initialOpen = getInitialOpenNodeIds(bookmarksTree || []);
 
-  const { nodes, openNodes, selectedId, toggleNode, selectNode, moveItem, setNodes } = useTree({
+  const { nodes, openNodes, selectedId, selectedIds, toggleNode, selectNode, moveItem, setNodes } = useTree({
     nodes: initialNodes,
     initialOpenNodes: initialOpen,
     initialSelectedId: null
@@ -174,8 +174,9 @@ export const BrowserFavoritesRenderer: React.FC<Props> = ({ bookmarksTree: props
     );
   };
 
-  const handleSelect = (id: string) => {
-    selectNode(id);
+  const handleSelect = (id: string, e?: React.MouseEvent) => {
+    // forward mouse event so useTree can detect ctrl/meta/shift for multi-select
+    selectNode(id, e as any);
     onSelect?.(id);
   };
 
@@ -187,6 +188,7 @@ export const BrowserFavoritesRenderer: React.FC<Props> = ({ bookmarksTree: props
         nodes={nodes}
         rootId={null}
         selectedId={selectedId || undefined}
+        selectedIds={selectedIds}
         openNodes={openNodes}
         onDrop={handleDrop}
         onSelect={handleSelect}
