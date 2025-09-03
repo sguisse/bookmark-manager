@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { BrowserBookmarkNode, BrowserFavorites, BrowserFavoritesFormData } from '../../types/browser';
 import { FormDisplayMode } from '../../types/app';
-import BrowserFavoritesForm from './BrowserFavoritesForm';
-
 import '../../styles/index.css';
 import { BrowserFavoritesService } from '../../services/BrowserFavoritesService';
-import BrowserFavoritesRenderer from './BrowserFavoritesRenderer';
+import BrowserFavoritesPanel from './BrowserFavoritesPanel';
 
 type Props = {};
 
@@ -151,49 +149,33 @@ export const BrowserFavoritesManager: React.FC<Props> = () => {
   };
 
   return (
-    <div className="browser-favorites">
-
-      <BrowserFavoritesForm
-        browserFavorites={currentFavorites}
-        mode={formMode}
-        onSave={handleFormSave}
-        onCancel={handleFormCancel}
-      />
-
-      <div className="bf-file-uploaded" style={{ marginTop: '16px' }}>
-        {currentFavorites?.filePath && (
-          <div className="bf-file-info">
-            <strong>Loaded File:</strong> {currentFavorites.filePath}
-          </div>
-        )}
-      </div>
-
-      <div className="bf-tree" role="tree" style={{ marginTop: '16px' }}>
-        {tree.length === 0 ? (
-          <div className="bf-empty">No bookmarks loaded. Import a Chrome bookmarks HTML file.</div>
-        ) : (
-          <BrowserFavoritesRenderer bookmarksTree={tree} onChange={(updated) => {
-            // update manager state and persist
-            setTree(updated);
-            if (currentFavorites) {
-              try {
-                const updatedFav: BrowserFavorites = {
-                  ...currentFavorites,
-                  bookmarksTree: updated,
-                  lastModifiedDate: new Date()
-                };
-                setCurrentFavorites(updatedFav);
-                BrowserFavoritesService.saveToStorage(updatedFav);
-              } catch (err) {
-                // eslint-disable-next-line no-console
-                console.warn('Failed to persist BrowserFavorites after tree change', err);
-              }
-            }
-          }} onSelect={() => {/* delegate selection handling if desired */}} className="bf-renderer" />
-        )}
-      </div>
-    </div>
+    <BrowserFavoritesPanel
+      browserFavorites={currentFavorites}
+      formMode={formMode}
+      onFormSave={handleFormSave}
+      onFormCancel={handleFormCancel}
+      tree={tree}
+      onTreeChange={(updated) => {
+        // update manager state and persist
+        setTree(updated);
+        if (currentFavorites) {
+          try {
+            const updatedFav: BrowserFavorites = {
+              ...currentFavorites,
+              bookmarksTree: updated,
+              lastModifiedDate: new Date()
+            };
+            setCurrentFavorites(updatedFav);
+            BrowserFavoritesService.saveToStorage(updatedFav);
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.warn('Failed to persist BrowserFavorites after tree change', err);
+          }
+        }
+      }}
+      onSelect={() => { /* delegate selection handling if desired */ }}
+      className="bf-renderer"
+    />
   );
 };
-
 export default BrowserFavoritesManager;
