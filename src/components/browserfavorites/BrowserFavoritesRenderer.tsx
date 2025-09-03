@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { TreeView, useTree, RenderNodeOptions } from '../common/treeview';
 import { TreeNode } from '../common/treeview/types';
 import { BrowserBookmarkNode, BrowserFavorites } from '../../types/browser';
@@ -91,6 +91,51 @@ export const BrowserFavoritesRenderer: React.FC<Props> = ({ bookmarksTree: props
       }
     }
   };
+
+  // Keep expanded state (isExpanded) in the BrowserBookmarkNode tree in sync with openNodes
+  // Skip the initial run (initialOpen is used to initialize the UI)
+  const openSyncMounted = useRef(false);
+  useEffect(() => {
+    if (!openSyncMounted.current) {
+      openSyncMounted.current = true;
+      return;
+    }
+
+    // Reconstruct hierarchical tree from the flat nodes and set isExpanded flags
+    const updatedTree = convertTreeNodesToBrowser(nodes);
+
+    const applyExpanded = (items: any[]) => {
+      for (const it of items) {
+        it.isExpanded = openNodes.has(it.id);
+        if (it.children && it.children.length) applyExpanded(it.children);
+      }
+    };
+    applyExpanded(updatedTree);
+
+    setBookmarksTree(updatedTree);
+
+    // If parent provided an onChange handler, call it and do not persist here
+    if (onChange) {
+      onChange(updatedTree);
+      return;
+    }
+
+    // persist locally when uncontrolled
+    if (currentFavorites) {
+      const updated: BrowserFavorites = {
+        ...currentFavorites,
+        bookmarksTree: updatedTree,
+        lastModifiedDate: new Date()
+      };
+      setCurrentFavorites(updated);
+      try {
+        BrowserFavoritesService.saveToStorage(updated);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to persist BrowserFavorites after expand/collapse', err);
+      }
+    }
+  }, [openNodes, nodes, onChange, currentFavorites]);
 
   // Render node similar to BrowserFavoritesManager but using the TreeNode shape
   const renderNode = (node: TreeNode, options: RenderNodeOptions) => {
