@@ -34,6 +34,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
     title: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.title || ''),
     color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || undefined),
     bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.bgcolor ?? flexLayoutTab?.bgColor) || '')) || undefined),
+    tabBgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.tabBgColor ?? (flexLayoutTab as any)?.tabbgcolor) || '')) || undefined),
     icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
     component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component,
   }));
@@ -46,6 +47,7 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
       color: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(flexLayoutTab?.color || '')) || undefined),
       bgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.bgcolor ?? flexLayoutTab?.bgColor) || '')) || undefined),
       markColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.markColor ?? flexLayoutTab?.markColor) || '')) || undefined),
+      tabBgColor: mode === FormDisplayMode.Create ? '' : (normalizeColorForInput(String(((flexLayoutTab as any)?.tabBgColor ?? (flexLayoutTab as any)?.tabbgcolor) || '')) || undefined),
       icon: mode === FormDisplayMode.Create ? '' : (flexLayoutTab?.icon || ''),
       component: mode === FormDisplayMode.Create ? undefined : flexLayoutTab?.component,
     };
@@ -72,7 +74,8 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
       title: formData.title || undefined,
       color: formData.color || undefined,
       bgColor: formData.bgColor || undefined,
-      markColor: formData.markColor || undefined,
+        markColor: formData.markColor || undefined,
+        tabBgColor: formData.tabBgColor || undefined,
       icon: formData.icon || undefined,
       component: (formData.component as FlexLayoutTabComponent) || undefined,
     };
@@ -261,6 +264,28 @@ export default function FlexLayoutTabForm(props: Readonly<FlexLayoutTabFormProps
                       checked={!formData.markColor}
                       onChange={(e) => setFormData(f => ({ ...f, markColor: e.target.checked ? '' : formData.markColor }))}
                       aria-label="Default Mark color"
+                    />
+                    <span>Default</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="tabBgColor" style={{ display: 'block', marginBottom: 4 }}>Tab background</label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    id="tabBgColor"
+                    type="color"
+                    aria-label="Tab background color"
+                    value={formData.tabBgColor || '#ffffff'}
+                    onChange={(e) => setFormData(f => ({ ...f, tabBgColor: e.target.value }))}
+                    style={{ width: 48, height: 36, padding: 0, borderRadius: 6, border: `1px solid ${theme.colors.border}` }}
+                  />
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.colors.text.primary }}>
+                    <input
+                      type="checkbox"
+                      checked={!formData.tabBgColor}
+                      onChange={(e) => setFormData(f => ({ ...f, tabBgColor: e.target.checked ? '' : formData.tabBgColor }))}
+                      aria-label="Default Tab background color"
                     />
                     <span>Default</span>
                   </label>

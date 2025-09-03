@@ -11,6 +11,7 @@ import { MarkdownTabConfig } from '../../types/markdown';
 import { WebTabConfig } from '../../types/web';
 import { Plus, Settings, BookmarkPlusIcon, List, ExternalLink, Copy } from 'lucide-react';
 import Image from '../common/image/Image';
+import { readableTextColor } from '../../services/Utils';
 import { FormDisplayMode } from '../../types/app';
 
 
@@ -182,6 +183,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const cfg = node.getConfig();
     const color = cfg?.color;
     const bgColor = cfg?.bgColor;
+    const tabBgColor = (cfg as any)?.tabBgColor || (cfg as any)?.tabbgcolor;
     const markColor = cfg?.markColor;
     const icon = cfg?.icon;
     const title = cfg?.title;
@@ -191,6 +193,9 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const contentElements: any[] = [];
     const trailingElements: any[] = [];
 
+  // tabColor can be explicitly set on the tab config. Fall back to bgColor or tabBgColor.
+  const tabColor = (cfg as any)?.tabColor || bgColor || tabBgColor;
+
     if (icon) {
       // reuse module-scope helper to render emojis/text or image URLs/data URLs
       const el = renderIconElement(icon, 'icon');
@@ -198,7 +203,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     }
 
     if (title) {
-      contentElements.push(<span key="title" style={{ marginRight: 0, color: color, background: bgColor }}>{title} {bgColor}</span>);
+      contentElements.push(<span key="title" style={{ marginRight: 0, color: color , background: tabColor }}>{title}</span>);
     }
 
     if (markColor) {
@@ -207,7 +212,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
 
     if (leadingElements.length > 0) {
       renderValues.leading = (
-        <div style={{ display: 'inline-flex', alignItems: 'center'}}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', background: tabColor }}>
           {leadingElements}
         </div>
       );
@@ -215,7 +220,7 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
 
     if (contentElements.length > 0) {
       renderValues.content = (
-        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', background: tabColor }}>
           {contentElements}
         </div>
       );
@@ -223,11 +228,13 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
 
     if (trailingElements.length > 0) {
       renderValues.trailing = (
-        <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', background: tabColor }}>
           {trailingElements}
         </div>
       );
     }
+
+
 
 
   };
@@ -236,13 +243,22 @@ export const createFlexLayoutFactory = (handleChildConfigChange: (nodeId: string
     const component = node.getComponent();
     const config = node.getConfig() as FlexLayoutTabConfig;
     const compKey = String(component || '').toLowerCase();
+    const tabBgColor = (config as any)?.tabBgColor || (config as any)?.tabbgcolor;
+    const bodyBg = tabBgColor || (config as any)?.bgColor;
 
-  if (compKey === 'markdown') return <MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-  if (compKey === 'bookmarks') return <BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-  if (compKey === 'web') return <WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />;
-  if (compKey === 'browserfavorites' || compKey === 'browser_favorites') return <BrowserFavorites />;
 
-    return (
+    const wrapWithBody = (el: React.ReactElement) => (
+      <div style={{ height: '100%', background: bodyBg || undefined }}>
+        {el}
+      </div>
+    );
+
+  if (compKey === 'markdown') return wrapWithBody(<MarkdownTabManager nodeId={node.getId()} config={config as MarkdownTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />);
+  if (compKey === 'bookmarks') return wrapWithBody(<BookmarksTabManager nodeId={node.getId()} config={config as BookmarksTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />);
+  if (compKey === 'web') return wrapWithBody(<WebTabManager nodeId={node.getId()} config={config as WebTabConfig} onConfigChange={(cfg) => handleChildConfigChange(node.getId(), cfg)} />);
+  if (compKey === 'browserfavorites' || compKey === 'browser_favorites') return wrapWithBody(<BrowserFavorites />);
+
+    return wrapWithBody(
       <div style={{ padding: 12 }}>
         <div><strong>{String(component)}</strong> component not found !</div>
         <div style={{ marginTop: 8, fontSize: 16, color: '#444' }}>Here, it is his configuration :</div>

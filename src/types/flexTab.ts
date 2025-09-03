@@ -6,6 +6,7 @@ export interface FlexLayoutTabConfig extends BaseAuditing {
   color?: string;
   bgColor?: string;
   markColor?: string;
+  tabBgColor?: string;
   icon?: string;
   component: FlexLayoutTabComponent;
 }
@@ -25,6 +26,7 @@ export interface FlexLayoutTabFormData extends BaseAuditing {
   color?: string;
   bgColor?: string;
   markColor?: string;
+  tabBgColor?: string;
   icon?: string;
   component?: FlexLayoutTabComponent;
 }
